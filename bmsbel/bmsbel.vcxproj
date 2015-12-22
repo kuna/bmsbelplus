@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{29707C0A-73E2-43DE-8F6D-F2DB06808D14}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>bmsbel</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>..\\Debug\\libiconv.lib</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>..\\Release\\libiconv.lib</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bms_bar.cpp" />
+    <ClCompile Include="bms_bms.cpp" />
+    <ClCompile Include="bms_buffer.cpp" />
+    <ClCompile Include="bms_channel.cpp" />
+    <ClCompile Include="bms_exception.cpp" />
+    <ClCompile Include="bms_header_table.cpp" />
+    <ClCompile Include="bms_note.cpp" />
+    <ClCompile Include="bms_parser.cpp" />
+    <ClCompile Include="bms_parser_frame.cpp" />
+    <ClCompile Include="bms_random.cpp" />
+    <ClCompile Include="bms_regist_array.cpp" />
+    <ClCompile Include="bms_text_file_reader.cpp" />
+    <ClCompile Include="bms_time.cpp" />
+    <ClCompile Include="bms_util.cpp" />
+    <ClCompile Include="bms_word.cpp" />
+    <ClCompile Include="bms_object.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\bmsbel\bms_bar.h" />
+    <ClInclude Include="..\include\bmsbel\bms_bms.h" />
+    <ClInclude Include="..\include\bmsbel\bms_buffer.h" />
+    <ClInclude Include="..\include\bmsbel\bms_channel.h" />
+    <ClInclude Include="..\include\bmsbel\bms_define.h" />
+    <ClInclude Include="..\include\bmsbel\bms_exception.h" />
+    <ClInclude Include="..\include\bmsbel\bms_header_table.h" />
+    <ClInclude Include="..\include\bmsbel\bms_note.h" />
+    <ClInclude Include="..\include\bmsbel\bms_object.h" />
+    <ClInclude Include="..\include\bmsbel\bms_parser.h" />
+    <ClInclude Include="..\include\bmsbel\bms_parser_frame.h" />
+    <ClInclude Include="..\include\bmsbel\bms_random.h" />
+    <ClInclude Include="..\include\bmsbel\bms_regist_array.h" />
+    <ClInclude Include="..\include\bmsbel\bms_text_file_reader.h" />
+    <ClInclude Include="..\include\bmsbel\bms_time.h" />
+    <ClInclude Include="..\include\bmsbel\bms_util.h" />
+    <ClInclude Include="..\include\bmsbel\bms_word.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,35 @@
+
+!!!! BMx Sequence Basic Edit Library 
+
+BMS 等の形式のデータを編集するソフトを作る時に必要なデータ型等のライブラリです。
+略して BMSBEL でよろ。
+
+
+!! 使い方
+
+言語は C++ で BCC 用です。普通に C++ のライブラリとして使って下さい。
+具体的には各種ヘッダを取り込んで、コンパイル時に bmsbel.lib をリンクすればオッケーです。
+
+
+!! 使用許諾条件みたいの
+
+常識の範囲内で使ってください。
+
+
+!!! 開発環境
+
+コンパイラ : Borland C++ Compoler 5.5.1
+IDE        : BCC Developer
+エディタ   : xyzzy
+開発言語   : C++
+
+
+!!! 更新履歴
+
+history.txtを見て
+
+
+!!! 作った人
+
+NAME : TEM
+WEB  : CHILS'S SQUARE - http://childs.squares.net/

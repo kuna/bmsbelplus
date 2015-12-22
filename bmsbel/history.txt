@@ -1,0 +1,109 @@
+!!!! BMSBEL 更新履歴
+
+!!! 2010/02/22
+
+分母計算の修正。丸め誤差の問題があってオーバーフローするようになってた。
+
+
+!!! 2010/02/14
+
+動的分解能に対応したっぽい
+
+
+!!! 2010/01/28
+
+ハンドラあたりを整理して、例外のメッセージを作った。
+BmsBms の足し合わせる処理も作成した。
+とりあえずこれで完成かな。
+
+
+!!! 2010/01/24
+
+BmsBms::ToString と BmsRandomManager::ToString を作成した。
+他にも ToString を作ったが全部上記のから呼ぶのでこれだけー。
+ランダム構文がちゃんと再現されるのを確認してちょっと感動した。
+
+以下の残りやったら終わりかな？
+
+* BmsRandomManager の Resolve 内の BmsBms の足し合わせ処理
+* 例外のメッセージ機能
+
+
+!!! 2010/01/24
+
+BmsParser が完成。あとはデバッグ。
+しかし毎度のことでパーサは苦労するわ…。
+どうにかならんのかな。
+あとはファイル書き出し。
+
+
+!!! 2010/01/20
+
+BmsParser を半分くらい作った。
+やっぱりパーサはだるい。
+
+
+!!! 2010/01/19
+
+BmsFileReader を作った。
+パーサむじーよ
+
+
+!!! 2010/01/18
+
+以下のランダムに対応したデータ構造の為のクラスを作った
+
+* BmsRandomElement
+* BmsRandomGenerateRandomElement
+* BmsRandomIfStatementElement
+* BmsRandomGenerateRandomHandler
+* BmsRandomGenerateRandomDefaultHandler
+* BmsRandomGenerateConstantHandler
+* BmsRandomManager
+
+
+!!! 2010/01/17
+
+以下を作った
+
+* BmsChannelBuffer
+* BmsChannel
+* BmsChannelManager
+* BmsBarManager
+* BmsBms
+
+以下 ToDo
+
+* BmsParser
+  ** 特にランダム読み込みに対応をどうするのか
+* 例外
+
+
+!!! 2010/01/15
+
+BmsBuffer を作った。
+BmsChannel も作りたかったが時間切れ。
+
+
+!!! 2010/01/14
+
+BmsHeaderTable と BmsBar を作った。
+まあこの辺は殆ど新規でやる事ないし楽だわね。
+
+
+!!! 2010/01/13
+
+BmsRegistArray を作った。
+BmsUtil もちょっと更新。
+
+
+!!! 2010/01/12
+
+BmsWord を作った。
+あと BmsUtil もちょっと作った。適宜作成する。
+
+
+!!! 2010/01/11
+
+形だけ作った。
+

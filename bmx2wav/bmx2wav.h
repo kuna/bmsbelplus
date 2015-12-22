@@ -1,0 +1,22 @@
+#ifndef BMX2WAV_H_
+#define BMX2WAV_H_
+
+#define BMX2WAV_VERSION "1.3.3"
+
+// resouce ID mapping
+
+#define ID_RC_MENU_END           1100
+#define ID_RC_MENU_CONFIG_LOAD   1101
+#define ID_RC_MENU_CONFIG_SAVE   1102
+#define ID_RC_MENU_BATCH         1103
+#define ID_RC_MENU_VERSION       1104
+
+#define ID_RC_BATCH_MENU_SIMPLE_CONFIG      1200
+#define ID_RC_BATCH_MENU_CONFIG             1201
+#define ID_RC_BATCH_MENU_SHOW_LOG_DIALOG    1202
+#define ID_RC_BATCH_MENU_OPEN_DIR           1203
+#define ID_RC_BATCH_MENU_OPEN_DIR_RECURSIVE 1204
+#define ID_RC_BATCH_MENU_DELETE_DONE_ITEM   1205
+#define ID_RC_BATCH_MENU_ADD_SEPARATOR      1206
+
+#endif // BMX2WAV_RC_H_
