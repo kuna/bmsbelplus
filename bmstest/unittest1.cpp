@@ -56,20 +56,21 @@ namespace bmstest
 			BmsRandom::RootStatement root_statement;					// for #RANDOM or some etc. commands
 			BmsParser::Reactor reactor;									// handler - but don't do anything this time
 			BmsParser::StartInfo info(bms, root_statement, reactor);	// contains information about parsing BMS
-			char filename[] = "..\\test\\bms\\47_LNM(TEN).bml";
+			char filename[] = "..\\test\\bms\\allnightmokugyolonglong.bms";	// this BMS should be loaded about 1 min.
 			BmsParser::Parse(filename, info);
 			bms.CalculateTimeTable();
 
-			char filename2[] = "..\\test\\bms\\L99999999.bme";
+			/*
+			char filename2[] = "..\\test\\bms\\L99999999.bme";				// this BMS should be loaded about 10 secs.
 			bms.Clear();
 			BmsParser::Parse(filename2, info);
-			bms.CalculateTimeTable();
+			bms.CalculateTimeTable();*/
 		}
 
 		TEST_METHOD(BMS_Time_Test) {
 		}
 
-		TEST_METHOD(BMS_Time_Test) {
+		TEST_METHOD(BMS_Note_Test) {
 			BmsBms bms;
 			BmsRandom::RootStatement root_statement;
 			BmsParser::Reactor reactor;

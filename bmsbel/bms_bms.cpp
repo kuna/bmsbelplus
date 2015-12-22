@@ -425,7 +425,7 @@ BmsBms::CalculateTimeTable()
 	// check current bar
 	int barposition = 0;
 	int barlength = GetBarManager().At(0).GetLength();
-	int barleft = 0;
+	int barleft = barlength;
 	//
 	// create time data
 	//
