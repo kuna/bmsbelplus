@@ -434,7 +434,7 @@ BmsBms::CalculateTimeTable()
 	double absbeat = 0;
 	double measure = 0;
 	double measure_per_each_row = 1.0 / barlength;
-	for (int i = 0; i < end_channel_position; i++) {
+	for (int i = 0; i <= end_channel_position; i++) {
 		if (barleft == 0) {
 			barlength = barleft = GetBarManager().At(++barposition).GetLength();
 			measure_per_each_row = 1.0 / barlength;
@@ -476,6 +476,7 @@ BmsBms::CalculateTimeTable()
 			}
 		}
 		// TODO: add BPM information
+		// TODO: add is measure grid? information
 		time_manager_.AddRow(BmsTime(time, stop_sequence_time, measure, absbeat));
 
 		measure += measure_per_each_row;

@@ -51,6 +51,24 @@ namespace bmstest
 			Assert::AreEqual(false, (reader2.IsFileUTF8() == 0));
 		}
 
+		TEST_METHOD(BIG_BMS_Test) {
+			BmsBms bms;
+			BmsRandom::RootStatement root_statement;					// for #RANDOM or some etc. commands
+			BmsParser::Reactor reactor;									// handler - but don't do anything this time
+			BmsParser::StartInfo info(bms, root_statement, reactor);	// contains information about parsing BMS
+			char filename[] = "..\\test\\bms\\47_LNM(TEN).bml";
+			BmsParser::Parse(filename, info);
+			bms.CalculateTimeTable();
+
+			char filename2[] = "..\\test\\bms\\L99999999.bme";
+			bms.Clear();
+			BmsParser::Parse(filename2, info);
+			bms.CalculateTimeTable();
+		}
+
+		TEST_METHOD(BMS_Time_Test) {
+		}
+
 		TEST_METHOD(BMS_Time_Test) {
 			BmsBms bms;
 			BmsRandom::RootStatement root_statement;
