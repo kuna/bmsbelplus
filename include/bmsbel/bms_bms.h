@@ -30,7 +30,7 @@ public:
 
 	void Merge(const BmsBms& other);
 
-	std::string ToString(void) const;
+	std::wstring ToString(void) const;
 
 	void Clear(void);
 

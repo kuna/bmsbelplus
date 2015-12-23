@@ -35,10 +35,10 @@ BmsInternalException::GetLine( void ) const
 }
 
 
-std::string
+std::wstring
 BmsInternalException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "An error occured while processing command. " << file_ << "(" << line_ << ")";
   return os.str();
 }
@@ -49,10 +49,10 @@ BmsWithCauseClassException( klass )
 {
 }
 
-std::string
+std::wstring
 BmsOutOfRangeAccessException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << this->GetCauseClass().name() << "  - Tried to access over supporting range of BMS file format.";
   return os.str();
 }
@@ -69,10 +69,10 @@ BmsInvalidWordValueUsedException::GetValue( void ) const
   return value_;
 }
 
-std::string
+std::wstring
 BmsInvalidWordValueUsedException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "オブジェクトを 00 〜 ZZ の範囲外の値にしてから文字列に変換しようとしました : " << value_;
   return os.str();
 }
@@ -96,72 +96,72 @@ BmsInvalidCharUsedAsWordException::GetLsb( void ) const
   return lsb_;
 }
 
-std::string
+std::wstring
 BmsInvalidCharUsedAsWordException::GetAsString( void ) const
 {
-  std::string tmp;
+  std::wstring tmp;
   tmp.append( msb_, 1 );
   tmp.append( lsb_, 1 );
   return tmp;
 }
 
-std::string
+std::wstring
 BmsInvalidCharUsedAsWordException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "0〜9, A〜Z 以外の文字をオブジェクトにしようとしました。文字列 : " << this->GetAsString();
   return os.str();
 }
 
 // -- BmsInvalidStringConvertedAsBufferException -------------------------
-BmsInvalidStringConvertedAsBufferException::BmsInvalidStringConvertedAsBufferException( const std::string& str ) :
+BmsInvalidStringConvertedAsBufferException::BmsInvalidStringConvertedAsBufferException( const std::wstring& str ) :
 str_( str )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsInvalidStringConvertedAsBufferException::GetString( void ) const
 {
   return str_;
 }
 
-std::string
+std::wstring
 BmsInvalidStringConvertedAsBufferException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "オブジェクト配列として不正な文字列をオブジェクト配列に変換しようとしました。文字列 : " << str_;
   return os.str();
 }
 
 // -- BmsTooLongStringConvertedAsBufferException --------------------------
-BmsTooLongStringConvertedAsBufferException::BmsTooLongStringConvertedAsBufferException( const std::string& str ) :
+BmsTooLongStringConvertedAsBufferException::BmsTooLongStringConvertedAsBufferException( const std::wstring& str ) :
 str_( str )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsTooLongStringConvertedAsBufferException::GetString( void ) const
 {
   return str_;
 }
 
-std::string
+std::wstring
 BmsTooLongStringConvertedAsBufferException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "分解能を超えるオブジェクトを持つ文字列をオブジェクト配列に変換しようとしました。文字列 : " << str_;
   return os.str();
 }
 
 
 // -- BmsFileOpenException -----------------------------------------------
-BmsFileOpenException::BmsFileOpenException( const std::string& filename, unsigned int error_number ) :
+BmsFileOpenException::BmsFileOpenException( const std::wstring& filename, unsigned int error_number ) :
 filename_( filename ),
 error_number_( error_number )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsFileOpenException::GetFileName( void ) const
 {
   return filename_;
@@ -173,22 +173,49 @@ BmsFileOpenException::GetErrorNumber( void ) const
   return error_number_;
 }
 
-std::string
+std::wstring
 BmsFileOpenException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "BMS File open failed. " << filename_ << "(" << error_number_ << ")";
   return os.str();
 }
 
+// -- BmsFileNotSupportedEncoding -----------------------------------------------
+BmsFileNotSupportedEncoding::BmsFileNotSupportedEncoding(const std::wstring& filename, unsigned int error_number) :
+filename_(filename),
+error_number_(error_number)
+{
+}
+
+const std::wstring&
+BmsFileNotSupportedEncoding::GetFileName(void) const
+{
+	return filename_;
+}
+
+unsigned int
+BmsFileNotSupportedEncoding::GetErrorNumber(void) const
+{
+	return error_number_;
+}
+
+std::wstring
+BmsFileNotSupportedEncoding::Message(void) const
+{
+	std::wstringstream os;
+	os << "BMS File loader - unknown encoding. " << filename_ << "(" << error_number_ << ")";
+	return os.str();
+}
+
 // -- BmsFileAccessException -----------------------------------------------
-BmsFileAccessException::BmsFileAccessException( const std::string& filename, unsigned int error_number ) :
+BmsFileAccessException::BmsFileAccessException( const std::wstring& filename, unsigned int error_number ) :
 filename_( filename ),
 error_number_( error_number )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsFileAccessException::GetFileName( void ) const
 {
   return filename_;
@@ -200,31 +227,31 @@ BmsFileAccessException::GetErrorNumber( void ) const
   return error_number_;
 }
 
-std::string
+std::wstring
 BmsFileAccessException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "BMS File access failed. " << filename_ << "(" << error_number_ << ")";
   return os.str();
 }
 
 
 // -- BmsDuplicateHeaderException ----------------------------------------
-BmsDuplicateHeaderException::BmsDuplicateHeaderException( const std::string& header ) :
+BmsDuplicateHeaderException::BmsDuplicateHeaderException( const std::wstring& header ) :
 header_( header )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsDuplicateHeaderException::GetHeader( void ) const
 {
   return header_;
 }
 
-std::string
+std::wstring
 BmsDuplicateHeaderException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "ヘッダが複数回指定されました。ヘッダ : " << header_;
   return os.str();
 }
@@ -242,10 +269,10 @@ BmsDuplicateBarChangeException::GetBar( void ) const
   return bar_;
 }
 
-std::string
+std::wstring
 BmsDuplicateBarChangeException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "小節長変更が複数回指定されました。小節番号 : " << bar_;
   return os.str();
 }
@@ -265,22 +292,22 @@ BmsParseException::GetLine( void ) const
 
 
 // -- BmsParseInvalidBarChangeValueException -----------------------------
-BmsParseInvalidBarChangeValueException::BmsParseInvalidBarChangeValueException( unsigned int line, const std::string& str ) :
+BmsParseInvalidBarChangeValueException::BmsParseInvalidBarChangeValueException( unsigned int line, const std::wstring& str ) :
 BmsParseException( line ),
 str_( str )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsParseInvalidBarChangeValueException::GetString( void ) const
 {
   return str_;
 }
 
-std::string
+std::wstring
 BmsParseInvalidBarChangeValueException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "小節長変更の値が不正です。不正な文字列 : " << str_;
   return os.str();
 }
@@ -292,10 +319,10 @@ BmsParseException( line )
 {
 }
 
-std::string
+std::wstring
 BmsParseInvalidEndAsObjectArrayException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "BMS Parse Failed (wrong object/note)";
   return os.str();
 }
@@ -306,10 +333,10 @@ BmsParseException( line )
 {
 }
 
-std::string
+std::wstring
 BmsParseNoObjectArrayException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "BMS Parse Failed (no object/note exists)";
   return os.str();
 }
@@ -320,31 +347,31 @@ BmsParseException( line )
 {
 }
 
-std::string
+std::wstring
 BmsParseTooManyObjectException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "Too many object/note exists.";
   return os.str();
 }
 
 // -- BmsParseDuplicateHeaderException -----------------------------------
-BmsParseDuplicateHeaderException::BmsParseDuplicateHeaderException( unsigned int line, const std::string& header ) :
+BmsParseDuplicateHeaderException::BmsParseDuplicateHeaderException( unsigned int line, const std::wstring& header ) :
 BmsParseException( line ),
 header_( header )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsParseDuplicateHeaderException::GetHeader( void ) const
 {
   return header_;
 }
 
-std::string
+std::wstring
 BmsParseDuplicateHeaderException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "ヘッダが複数回指定されました。ヘッダ : " << header_;
   return os.str();
 }
@@ -362,137 +389,137 @@ BmsParseDuplicateBarChangeException::GetBar( void ) const
   return bar_;
 }
 
-std::string
+std::wstring
 BmsParseDuplicateBarChangeException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "小節長変更が複数回指定されました。小節番号 : " << bar_;
   return os.str();
 }
 
 // -- BmsParseInvalidCharException ---------------------------------------
-BmsParseInvalidCharException::BmsParseInvalidCharException( unsigned int line, const std::string& str ) :
+BmsParseInvalidCharException::BmsParseInvalidCharException( unsigned int line, const std::wstring& str ) :
 BmsParseException( line ),
 str_( str )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsParseInvalidCharException::GetString( void ) const
 {
   return str_;
 }
 
 // -- BmsParseInvalidCharAsHeaderOrBarException --------------------------
-BmsParseInvalidCharAsHeaderOrBarException::BmsParseInvalidCharAsHeaderOrBarException( unsigned int line, const std::string& str ) :
+BmsParseInvalidCharAsHeaderOrBarException::BmsParseInvalidCharAsHeaderOrBarException( unsigned int line, const std::wstring& str ) :
 BmsParseInvalidCharException( line, str )
 {
 }
 
-std::string
+std::wstring
 BmsParseInvalidCharAsHeaderOrBarException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "ヘッダ名または小節番号として不正な文字が指定されました。文字列 : " << this->GetString();
   return os.str();
 }
 
 // -- BmsParseInvalidCharAsHeaderKeyException ----------------------------
-BmsParseInvalidCharAsHeaderKeyException::BmsParseInvalidCharAsHeaderKeyException( unsigned int line, const std::string& str ) :
+BmsParseInvalidCharAsHeaderKeyException::BmsParseInvalidCharAsHeaderKeyException( unsigned int line, const std::wstring& str ) :
 BmsParseInvalidCharException( line, str )
 {
 }
 
-std::string
+std::wstring
 BmsParseInvalidCharAsHeaderKeyException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "ヘッダ名として不正な文字が指定されました。文字列 : " << this->GetString();
   return os.str();
 }
 
 // -- BmsParseInvalidCharAsBarException ----------------------------------
-BmsParseInvalidCharAsBarException::BmsParseInvalidCharAsBarException( unsigned int line, const std::string& str ) :
+BmsParseInvalidCharAsBarException::BmsParseInvalidCharAsBarException( unsigned int line, const std::wstring& str ) :
 BmsParseInvalidCharException( line, str )
 {
 }
 
-std::string
+std::wstring
 BmsParseInvalidCharAsBarException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "小節番号として不正な文字が指定されました。文字列 : " << this->GetString();
   return os.str();
 }
 
 // -- BmsParseInvalidCharAsChannelException ------------------------------
-BmsParseInvalidCharAsChannelException::BmsParseInvalidCharAsChannelException( unsigned int line, const std::string& str ) :
+BmsParseInvalidCharAsChannelException::BmsParseInvalidCharAsChannelException( unsigned int line, const std::wstring& str ) :
 BmsParseInvalidCharException( line, str )
 {
 }
 
-std::string
+std::wstring
 BmsParseInvalidCharAsChannelException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "チャネル番号として不正な文字が指定されました。文字列 : " << this->GetString();
   return os.str();
 }
 
 // -- BmsParseInvalidCharAsColonException --------------------------------
-BmsParseInvalidCharAsColonException::BmsParseInvalidCharAsColonException( unsigned int line, const std::string& str ) :
+BmsParseInvalidCharAsColonException::BmsParseInvalidCharAsColonException( unsigned int line, const std::wstring& str ) :
 BmsParseInvalidCharException( line, str )
 {
 }
 
-std::string
+std::wstring
 BmsParseInvalidCharAsColonException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "チャネル番号とオブジェクト配列を区切るコロンとして不正な文字が指定されました。文字列 : " << this->GetString();
   return os.str();
 }
 
 // -- BmsParseInvalidCharAsObjectArrayException --------------------------
-BmsParseInvalidCharAsObjectArrayException::BmsParseInvalidCharAsObjectArrayException( unsigned int line, const std::string& str ) :
+BmsParseInvalidCharAsObjectArrayException::BmsParseInvalidCharAsObjectArrayException( unsigned int line, const std::wstring& str ) :
 BmsParseInvalidCharException( line, str )
 {
 }
 
-std::string
+std::wstring
 BmsParseInvalidCharAsObjectArrayException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "オブジェクト配列として不正な文字が指定されました。文字列 : " << this->GetString();
   return os.str();
 }
 
 // -- BmsParseInvalidRandomValueException --------------------------------
 BmsParseInvalidRandomValueException::BmsParseInvalidRandomValueException( unsigned int line,
-                                                                          const std::string& key,
-                                                                          const std::string& value ) :
+                                                                          const std::wstring& key,
+                                                                          const std::wstring& value ) :
 BmsParseException( line ),
 key_( key ),
 value_( value )
 {
 }
 
-const std::string&
+const std::wstring&
 BmsParseInvalidRandomValueException::GetKey( void ) const
 {
   return key_;
 }
 
-const std::string&
+const std::wstring&
 BmsParseInvalidRandomValueException::GetValue( void ) const
 {
   return value_;
 }
 
-std::string
+std::wstring
 BmsParseInvalidRandomValueException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "ランダム構文 #" << key_ << " で指定された値が不正です。値 : " << value_;
   return os.str();
 }
@@ -503,10 +530,10 @@ BmsParseException( line )
 {
 }
 
-std::string
+std::wstring
 BmsParseUnexceptedEndIfException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "Wrong #IF ~ #ENDIF clause.";
   return os.str();
 }
@@ -516,10 +543,10 @@ BmsParseNotFoundEndIfException::BmsParseNotFoundEndIfException( unsigned int lin
 {
 }
 
-std::string
+std::wstring
 BmsParseNotFoundEndIfException::Message( void ) const
 {
-  std::ostringstream os;
+  std::wstringstream os;
   os << "Cannot find #ENDIF";
   return os.str();
 }
@@ -533,13 +560,13 @@ bar_(bar)
 {
 }
 
-std::string
+std::wstring
 BmsLongNoteObjectInvalidEncloseException::Message(void) const
 {
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << "Longnote has been closed unexpectedly." << "\r\n" <<
-		"Start : " << start_ << "\r\n" <<
-		"End : " << end_ << "\r\n" <<
+		"Start : " << start_.ToWString() << "\r\n" <<
+		"End : " << end_.ToWString() << "\r\n" <<
 		"End Measure : " << bar_;
 	return ss.str();
 }
@@ -567,10 +594,10 @@ BmsLongNoteObjectNotEnclosedException::BmsLongNoteObjectNotEnclosedException(voi
 {
 }
 
-std::string
+std::wstring
 BmsLongNoteObjectNotEnclosedException::Message(void) const
 {
-	return "Longnote had not been enclosed properly.";
+	return L"Longnote had not been enclosed properly.";
 }
 
 // -- InvalidFormatAsBpmChangeValueException ---------------------------------
@@ -579,39 +606,39 @@ InvalidFormatAsBpmChangeValueException::InvalidFormatAsBpmChangeValueException(c
 {
 }
 
-std::string
+std::wstring
 InvalidFormatAsBpmChangeValueException::Message(void) const
 {
-	std::stringstream ss;
-	ss << "Wrong BPM Value found on channel #03: " << word.ToString();
+	std::wstringstream ss;
+	ss << "Wrong BPM Value found on channel #03: " << word.ToWString();
 	return ss.str();
 }
 
 // -- InvalidFormatAsExtendedBpmChangeValueException ---------------------------------
-InvalidFormatAsExtendedBpmChangeValueException::InvalidFormatAsExtendedBpmChangeValueException(const BmsWord& word, const std::string& value)
+InvalidFormatAsExtendedBpmChangeValueException::InvalidFormatAsExtendedBpmChangeValueException(const BmsWord& word, const std::wstring& value)
 	: word(word)
 {
 }
 
-std::string
+std::wstring
 InvalidFormatAsExtendedBpmChangeValueException::Message(void) const
 {
-	std::stringstream ss;
-	ss << "Wrong Extended BPM Value found: " << word.ToString() << " = " << value;
+	std::wstringstream ss;
+	ss << "Wrong Extended BPM Value found: " << word.ToWString() << " = " << value;
 	return ss.str();
 }
 
 // -- InvalidFormatAsBpmChangeValueException ---------------------------------
-InvalidFormatAsStopSequenceException::InvalidFormatAsStopSequenceException(const BmsWord& word, const std::string& value)
+InvalidFormatAsStopSequenceException::InvalidFormatAsStopSequenceException(const BmsWord& word, const std::wstring& value)
 	: word(word)
 {
 }
 
-std::string
+std::wstring
 InvalidFormatAsStopSequenceException::Message(void) const
 {
-	std::stringstream ss;
-	ss << "Wrong STOP Value found: " << word.ToString() << " = " << value;
+	std::wstringstream ss;
+	ss << "Wrong STOP Value found: " << word.ToWString() << " = " << value;
 	return ss.str();
 }
 
@@ -621,11 +648,11 @@ ExtendedBpmChangeEntryNotExistException::ExtendedBpmChangeEntryNotExistException
 {
 }
 
-std::string
+std::wstring
 ExtendedBpmChangeEntryNotExistException::Message(void) const
 {
-	std::stringstream ss;
-	ss << "Cannot find Extended BPM on channel #08: " << word.ToString();
+	std::wstringstream ss;
+	ss << "Cannot find Extended BPM on channel #08: " << word.ToWString();
 	return ss.str();
 }
 
@@ -635,11 +662,11 @@ StopSequenceEntryNotExistException::StopSequenceEntryNotExistException(const Bms
 {
 }
 
-std::string
+std::wstring
 StopSequenceEntryNotExistException::Message(void) const
 {
-	std::stringstream ss;
-	ss << "Cannot find STOP sequence on channel #09: " << word.ToString();
+	std::wstringstream ss;
+	ss << "Cannot find STOP sequence on channel #09: " << word.ToWString();
 	return ss.str();
 }
 
@@ -648,34 +675,34 @@ InvalidFormatAsBpmHeaderException::InvalidFormatAsBpmHeaderException()
 {
 }
 
-std::string
+std::wstring
 InvalidFormatAsBpmHeaderException::Message(void) const
 {
-	return "Base BPM is invalid value. cannot be converted to float.";
+	return L"Base BPM is invalid value. cannot be converted to float.";
 }
 
 // -- InvalidLongNoteType ---------------------------------
-InvalidLongNoteType::InvalidLongNoteType(const std::string& value)
+InvalidLongNoteType::InvalidLongNoteType(const std::wstring& value)
 	: value(value)
 {
 }
 
-std::string
+std::wstring
 InvalidLongNoteType::Message(void) const
 {
-	return "#LNTYPE is invalid: " + value;
+	return L"#LNTYPE is invalid: " + value;
 }
 
 // -- UnsupportedLongNoteType ---------------------------------
-UnsupportedLongNoteType::UnsupportedLongNoteType(const std::string& value)
+UnsupportedLongNoteType::UnsupportedLongNoteType(const std::wstring& value)
 	: value(value)
 {
 }
 
-std::string
+std::wstring
 UnsupportedLongNoteType::Message(void) const
 {
-	return "Unsupported #LNTYPE value: " + value;
+	return L"Unsupported #LNTYPE value: " + value;
 }
 
 // -- UnknownChannel ---------------------------------
@@ -684,10 +711,10 @@ UnknownChannelException::UnknownChannelException(const BmsWord& word)
 {
 }
 
-std::string
+std::wstring
 UnknownChannelException::Message(void) const
 {
-	return "Unknown channel: " + word.ToString();
+	return L"Unknown channel: " + word.ToWString();
 }
 
 // -- BmsTimeWrongException ---------------------------------
@@ -695,8 +722,8 @@ BmsTimeWrongException::BmsTimeWrongException()
 {
 }
 
-std::string
+std::wstring
 BmsTimeWrongException::Message(void) const
 {
-	return "Less time then previous one cannot be inserted into BmsTimeManager.";
+	return L"Less time then previous one cannot be inserted into BmsTimeManager.";
 }

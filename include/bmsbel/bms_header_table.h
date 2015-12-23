@@ -7,32 +7,32 @@
 // -- BmsHeaderTable -----------------------------------------------------
 class BmsHeaderTable {
 public:
-  explicit BmsHeaderTable( void );
+	explicit BmsHeaderTable(void);
 
-  ~BmsHeaderTable();
+	~BmsHeaderTable();
 
-  unsigned int GetCount( void ) const;
+	unsigned int GetCount(void) const;
 
-  bool IsExists( const std::string& key ) const;
-  bool IsNotExists( const std::string& key ) const;
+	bool IsExists(const std::wstring& key) const;
+	bool IsNotExists(const std::wstring& key) const;
 
-  const std::string& operator []( const std::string& key );
+	const std::wstring& operator [](const std::wstring& key);
 
-  void Set( const std::string& key, const std::string& value );
-  void DeleteByKey( const std::string& key );
+	void Set(const std::wstring& key, const std::wstring& value);
+	void DeleteByKey(const std::wstring& key);
 
-  void Clear( void );
+	void Clear(void);
 
-  std::string ToString( void ) const;
+	std::wstring ToString(void) const;
 
-  // -- Iterator ---------------------------------------------------------
-  typedef std::map<std::string, std::string>::const_iterator Iterator;
+	// -- Iterator ---------------------------------------------------------
+	typedef std::map<std::wstring, std::wstring>::const_iterator Iterator;
 
-  Iterator Begin( void ) const;
-  Iterator End( void ) const;
+	Iterator Begin(void) const;
+	Iterator End(void) const;
 
 private:
-  std::map<std::string, std::string> table_;
+	std::map<std::wstring, std::wstring> table_;
 };
 
 #endif // BMSBEL_HEADER_TABLE_H_

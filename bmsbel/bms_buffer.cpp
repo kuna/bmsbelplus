@@ -11,7 +11,7 @@ array_( length, BmsWord::MIN )
 {
 }
 
-BmsBuffer::BmsBuffer( unsigned int length, const std::string& input ) :
+BmsBuffer::BmsBuffer( unsigned int length, const std::wstring& input ) :
 array_( length, BmsWord::MIN )
 {
   if ( input.size() == 0 || input.size() % 2 == 1 ) {
@@ -21,7 +21,7 @@ array_( length, BmsWord::MIN )
     throw BmsTooLongStringConvertedAsBufferException( input );
   }
 
-  const char* p = input.c_str();
+  const wchar_t* p = input.c_str();
   for ( unsigned int i = 0; i < length; i += length / ( input.size() / 2 ) ) {
     array_[i] = BmsWord( p );
     p += 2;

@@ -28,6 +28,8 @@ namespace BmsConst {
   const int BAR_MAX_COUNT = 1000;
 
   const int BMS_MAX_KEY = 18;
+
+  const int BMS_MAX_LINE_BUFFER = 10240;
 }
 
 namespace BmsBelOption {

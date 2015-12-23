@@ -9,7 +9,7 @@
 class BmsBuffer {
 public:
   explicit BmsBuffer( unsigned int length );
-  explicit BmsBuffer( unsigned int length, const std::string& input );
+  explicit BmsBuffer( unsigned int length, const std::wstring& input );
 
   virtual ~BmsBuffer();
 

@@ -5,10 +5,8 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 #ifdef _DEBUG
 #pragma comment(lib, "Debug\\bmsbel.lib")
-#pragma comment(lib, "Debug\\libiconv.lib")
 #else
 #pragma comment(lib, "Release\\bmsbel.lib")
-#pragma comment(lib, "Release\\libiconv.lib")
 #endif
 
 namespace bmstest
@@ -16,18 +14,20 @@ namespace bmstest
 	TEST_CLASS(UnitTest1)
 	{
 	public:
-		TEST_METHOD(BMS_Load_Test)
+		TEST_METHOD(BMS_Unicode_Test) {
+			Assert::AreEqual(true, (BmsTextFileReader::IsFileUTF8(L"..\\test\\bms\\BBKKBKK(easy)_n_Unicode.bms") == 0));
+			Assert::AreEqual(false, (BmsTextFileReader::IsFileUTF8(L"..\\test\\bms\\47_LNM(TEN).bml") == 0));
+		}
+
+		TEST_METHOD(BMS_TAG_Length_Test)
 		{
 			// https://msdn.microsoft.com/en-us/library/hh598953.aspx
-			BmsBms bms;
+
+			/* Do you want to ignore BGA channel?
 			BmsRandom::RootStatement root_statement;					// for #RANDOM or some etc. commands
 			BmsParser::Reactor reactor;									// handler - but don't do anything this time
 			BmsParser::StartInfo info(bms, root_statement, reactor);	// contains information about parsing BMS
-			//char filename[] = "..\\test\\bms\\L99999999.bme";
-			char filename[] = "..\\test\\bms\\47_LNM(TEN).bml";
 			info.make_syntax_tree_ = false;
-
-			/* Do you want to ignore BGA channel?
 			info.ignore_channel_set_.insert(BmsWord(4));
 			info.ignore_channel_set_.insert(BmsWord(6));
 			info.ignore_channel_set_.insert(BmsWord(7));
@@ -36,51 +36,48 @@ namespace bmstest
 			*/
 
 			// BMS read
-			BmsParser::Parse(filename, info);
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\47_LNM(TEN).bml";
+			BmsParser::Parse(filename, bms, "Shift_JIS");
 			bms.CalculateTimeTable();
-			std::stringstream ss;	ss << bms.GetBMSLength();
+
+			std::wstringstream ss;	ss << bms.GetBMSLength() << "\n";
 			Logger::WriteMessage(ss.str().c_str());
 			Logger::WriteMessage(bms.GetHeaders().ToString().c_str());
-			Assert::AreEqual("Brain Analysis [7KEYS NORMAL]", bms.GetHeaders()["TITLE"].c_str());
+			Assert::AreEqual(L"TEN [LN MASTER]", bms.GetHeaders()[L"TITLE"].c_str());
+			Assert::AreEqual(L"2X / obj:ほげぇ", bms.GetHeaders()[L"ARTIST"].c_str());
+			Assert::AreEqual(204507, int(bms.GetBMSLength() * 1000));
 		}
 
-		TEST_METHOD(BMS_Unicode_Test) {
-			BmsTextFileReader reader("..\\test\\bms\\BBKKBKK(easy)_n_Unicode.bms");
-			Assert::AreEqual(true, (reader.IsFileUTF8() == 0));
-			BmsTextFileReader reader2("..\\test\\bms\\47_LNM(TEN).bml");
-			Assert::AreEqual(false, (reader2.IsFileUTF8() == 0));
-		}
 
 		TEST_METHOD(BIG_BMS_Test) {
 			BmsBms bms;
-			BmsRandom::RootStatement root_statement;					// for #RANDOM or some etc. commands
-			BmsParser::Reactor reactor;									// handler - but don't do anything this time
-			BmsParser::StartInfo info(bms, root_statement, reactor);	// contains information about parsing BMS
-			char filename[] = "..\\test\\bms\\allnightmokugyolonglong.bms";	// this BMS should be loaded about 1 min.
-			BmsParser::Parse(filename, info);
+			wchar_t filename[] = L"..\\test\\bms\\allnightmokugyolonglong.bms";	// this BMS should be loaded about 1 min.
+			BmsParser::Parse(filename, bms, "Shift_JIS");
 			bms.CalculateTimeTable();
-
-			/*
-			char filename2[] = "..\\test\\bms\\L99999999.bme";				// this BMS should be loaded about 10 secs.
-			bms.Clear();
-			BmsParser::Parse(filename2, info);
-			bms.CalculateTimeTable();*/
 		}
 
-		TEST_METHOD(BMS_Time_Test) {
+		// test various bar size
+		TEST_METHOD(BIG_BMS_Test2) {
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\L99999999.bme";				// this BMS should be loaded about 10 secs.
+			bms.Clear();
+			BmsParser::Parse(filename, bms, "Shift_JIS");
+			bms.CalculateTimeTable();
+			Assert::AreEqual(78230, int(bms.GetBMSLength() * 1000));
+		}
+
+		TEST_METHOD(BMS_STOP_Test) {
 		}
 
 		TEST_METHOD(BMS_Note_Test) {
 			BmsBms bms;
-			BmsRandom::RootStatement root_statement;
-			BmsParser::Reactor reactor;
-			BmsParser::StartInfo info(bms, root_statement, reactor);
-			char filename[] = "..\\test\\bms\\BBKKBKK(easy)_n.bms";
-			//char filename[] = "..\\test\\bms\\L99999999.bme";
-			//char filename[] = "..\\test\\bms\\allnightmokugyolonglong.bms";
+			wchar_t filename[] = L"..\\test\\bms\\BBKKBKK(easy)_n.bms";
+			//wchar_t filename[] = L"..\\test\\bms\\L99999999.bme";
+			//wchar_t filename[] = L"..\\test\\bms\\allnightmokugyolonglong.bms";
 
 			// load bms file
-			BmsParser::Parse(filename, info);
+			BmsParser::Parse(filename, bms, "Shift_JIS");
 
 			//
 			// get BPM, STOPs

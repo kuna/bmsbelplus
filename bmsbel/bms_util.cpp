@@ -172,3 +172,27 @@ BmsUtil::StringToUpper( std::string& str )
 {
   std::transform( str.begin(), str.end(), str.begin(), toupper ); 
 }
+
+bool
+BmsUtil::StringToInteger(const std::wstring& str, int* ret, unsigned int base)
+{
+	wchar_t* endptr;
+	errno = 0;
+	*ret = wcstol(str.c_str(), &endptr, base);
+	return *endptr == L'\0' && errno == 0;
+}
+
+bool
+BmsUtil::StringToFloat(const std::wstring& str, double* ret)
+{
+	wchar_t* endptr;
+	errno = 0;
+	*ret = wcstod(str.c_str(), &endptr);
+	return *endptr == L'\0' && errno == 0;
+}
+
+void
+BmsUtil::StringToUpper(std::wstring& str)
+{
+	std::transform(str.begin(), str.end(), str.begin(), toupper);
+}
