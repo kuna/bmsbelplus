@@ -4,51 +4,32 @@
 #include "targetver.h"
 #include "bmsbel\bms_bms.h"
 #include "bmsbel\bms_parser.h"
+#include "bmx2wav_common.h"
+#include "bms_resource.h"
+#include "exception.h"
 #include <tchar.h>
 #include <wchar.h>
 #include <string>
 
+#include "bmx2wav_wav_maker.h"
+using namespace Bmx2Wav;
+
 #define NOT(v) (!(v))
 #define CMP(a, b) (wcscmp((a), (b)) == 0)
-
-#ifdef _WIN32
-#define PATH_SEPARATOR		L"\\"
-#define PATH_SEPARATOR_CHAR	L'\\'
-#else
-#define PATH_SEPARATOR		L"/"
-#define PATH_SEPARATOR_CHAR	L'/'
-#endif
 
 namespace BMX2WAVParameter {
 	enum OUTPUT_TYPE { OUTPUT_OGG, OUTPUT_WAV } output_type;
 	std::wstring bms_path;
 	std::wstring output_path;
-
-	std::wstring substitute_extension(const std::wstring& filename, const std::wstring& newext) {
-		auto i = filename.find_last_of(L'.');
-		if (i == std::wstring::npos)
-			return filename + newext;
-		return filename.substr(0, i) + newext;
-	}
+	bool overwrite;
 
 	std::wstring substitute_output_extension(const std::wstring& filename) {
 		if (output_type == OUTPUT_OGG) {
-			return substitute_extension(filename, L".ogg");
+			return IO::substitute_extension(filename, L".ogg");
 		}
 		else {
-			return substitute_extension(filename, L".wav");
+			return IO::substitute_extension(filename, L".wav");
 		}
-	}
-
-	std::wstring get_filepath(const std::wstring& filename) {
-		return filename.substr(0, filename.find_last_of(PATH_SEPARATOR_CHAR));
-	}
-
-	std::wstring get_filename(const std::wstring& filename) {
-		auto i = filename.find_last_of(PATH_SEPARATOR_CHAR);
-		if (i == std::wstring::npos)
-			return L"";
-		return filename.substr(i+1);
 	}
 
 	int help() {
@@ -59,6 +40,7 @@ namespace BMX2WAVParameter {
 			"-o: output file to my custom path (you need to enter more argument)\n"
 			"-wav: output audio as wav\n"
 			"-ogg: output audio as ogg (default)\n"
+			"-ow: overwrite output file\n"
 			"\n"
 			"EASY USE:\n"
 			"JUST DRAG FILE to me and there will be *.ogg file!\n"
@@ -74,7 +56,9 @@ namespace BMX2WAVParameter {
 		// default
 		bms_path = argv[1];
 		output_type = OUTPUT_OGG;
-		output_path = substitute_output_extension(get_filepath(argv[0]) + PATH_SEPARATOR + get_filename(bms_path));
+		output_path = substitute_output_extension(IO::get_filedir(argv[0]) + PATH_SEPARATOR + IO::get_filename(bms_path));
+		overwrite = false;
+
 		// parse
 		for (int i = 2; i < argc; i++) {
 			if (CMP(argv[i], L"-oc")) {
@@ -90,8 +74,11 @@ namespace BMX2WAVParameter {
 				output_path = argv[i];
 				if (output_path.back() == PATH_SEPARATOR_CHAR) {
 					// if destination is folder, then automatically add filename
-					output_path = output_path + substitute_output_extension(get_filename(bms_path));
+					output_path = output_path + substitute_output_extension(IO::get_filename(bms_path));
 				}
+			}
+			else if (CMP(argv[i], L"-ow")) {
+				overwrite = true;
 			}
 			else if (CMP(argv[i], L"-wav")) {
 				output_type = OUTPUT_WAV;
@@ -124,6 +111,47 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	// load audio data
 	wprintf(L"Loading Audio Data ...\n");
+	WavMaker wav_maker(true);	// true: use low-pass filter
+	BmsWavResource<HQWav> wav_table;
+	std::vector<unsigned int> last_used_wav_pos(BmsConst::WORD_MAX_COUNT, 0);
+	for (unsigned int i = 0; i < BmsConst::WORD_MAX_COUNT; ++i) {
+		BmsWord word(i);
+		if (bms.GetRegistArraySet()[L"WAV"].IsExists(word)) {
+			std::wstring path(IO::get_filedir(BMX2WAVParameter::bms_path) + PATH_SEPARATOR + bms.GetRegistArraySet()[L"WAV"][word]);
+			std::wstring ogg_path = IO::substitute_extension(path, L".ogg");
+
+			if (path == BMX2WAVParameter::output_path) {
+				wprintf(L"Bmx resource file path(%ls) cannot same with output path!\n", path.c_str());
+				return -1;
+			}
+
+			bool path_exists = IO::is_file_exists(path);
+			bool ogg_path_exists = IO::is_file_exists(ogg_path);
+
+			if (NOT(path_exists) && NOT(ogg_path_exists)) {
+				wprintf(L"[Warning] Cannot find wav/ogg file(%ls). ignore.", path.c_str());
+				wav_table.SetWAV(word.ToInteger(), wav_maker.MakeNewWav());	// Set Null Sound
+			}
+			else {
+				try {
+					if (ogg_path_exists) {
+						HQWav* tmp = wav_maker.MakeNewWavFromOggFile(ogg_path);
+						wav_table.SetWAV(word.ToInteger(), tmp);
+					}
+					else if (path_exists) {
+						HQWav* tmp = wav_maker.MakeNewWavFromWavFile(path, true);	// default: overlook error
+						wav_table.SetWAV(word.ToInteger(), tmp);
+					}
+				}
+				catch (Bmx2WavInvalidWAVFile& e) {
+					wprintf(L"Cannot parse wav/ogg file(%ls) correctly. ignore.", path.c_str());
+					wav_table.SetWAV(word.ToInteger(), wav_maker.MakeNewWav());	// Set Null Sound
+				}
+			}
+
+			last_used_wav_pos[i] = -1 * static_cast<int>(wav_table.GetWAV(word.ToInteger())->GetLength());
+		}
+	}
 
 	// encode and save it
 	// TODO

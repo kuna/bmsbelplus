@@ -57,7 +57,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>..\Debug\bmsbel.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\Debug\libvorbis.lib;..\Debug\libogg.lib;..\Debug\bmsbel.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -87,10 +87,23 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bms_resource.h" />
+    <ClInclude Include="bmx2wav_buffer.h" />
+    <ClInclude Include="bmx2wav_common.h" />
+    <ClInclude Include="bmx2wav_wav.h" />
+    <ClInclude Include="bmx2wav_wav_maker.h" />
+    <ClInclude Include="exception.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bmx2wav_remake.cpp" />
+    <ClCompile Include="bms_resource.cpp" />
+    <ClCompile Include="bmx2wav_buffer.cpp" />
+    <ClCompile Include="bmx2wav_common.cpp" />
+    <ClCompile Include="bmx2wav_main.cpp" />
+    <ClCompile Include="bmx2wav_wav.cpp" />
+    <ClCompile Include="bmx2wav_wav_maker.cpp" />
+    <ClCompile Include="bmx2wav_wav_maker_ogg.cpp" />
+    <ClCompile Include="exception.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
