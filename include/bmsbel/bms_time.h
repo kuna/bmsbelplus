@@ -15,17 +15,25 @@ struct BmsTime {
 };
 
 // BmsTimeManager
-// retains information about time, position, beat (relative to BmsBar)
+// retains information about time, position, beat (relative to BmsBar/BmsBuffer)
 class BmsTimeManager {
 private:
 	std::deque<BmsTime> array_;
 public:
 	void Clear();
+	void Resize(int size);
 	void AddRow(const BmsTime& bmstime);
+	void SetRow(const BmsTime& bmstime, int idx);
 	const BmsTime& GetRow(int idx);
 	double GetBarIndexFromTime(double time, int start = 0);
 	double GetAbsBeatFromTime(double time);
 	double GetBeatFromTime(double time);
-	double GetBPMFromTime(double time);
 	double GetEndTime();
+
+	// bpm
+	double GetBPMFromTime(double time);
+	double GetCommonBPM();
+	double GetMaxBPM();
+	double GetMinBPM();
+	double GetBaseBPM();
 };

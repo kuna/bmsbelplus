@@ -40,18 +40,12 @@ public:
 	// get BPM/STOPs
 	void GetBPMtable(std::map<BmsWord, double> &extended_bpm_table);
 	void GetSTOPtable(std::map<BmsWord, int> &stop_sequence_table);
-
-	// bpm
-	double GetBPM(double time);
-	double GetCommonBPM();
-	double GetMaxBPM();
-	double GetMinBPM();
 	double GetBaseBPM();
 
 	// note
 	bool IsLongNoteExists();
 	bool IsMineNoteExists();
-	void GetNotes(std::deque<BmsNote> &bmsnote_table);
+	void GetNotes(BmsNoteContainer &note_manager_);
 	int GetKey();
 
 	// get other metedatas

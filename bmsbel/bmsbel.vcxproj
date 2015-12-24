@@ -89,7 +89,6 @@
     <ClCompile Include="bms_channel.cpp" />
     <ClCompile Include="bms_exception.cpp" />
     <ClCompile Include="bms_header_table.cpp" />
-    <ClCompile Include="bms_modifier.cpp" />
     <ClCompile Include="bms_note.cpp" />
     <ClCompile Include="bms_parser.cpp" />
     <ClCompile Include="bms_parser_frame.cpp" />
@@ -108,7 +107,6 @@
     <ClInclude Include="..\include\bmsbel\bms_define.h" />
     <ClInclude Include="..\include\bmsbel\bms_exception.h" />
     <ClInclude Include="..\include\bmsbel\bms_header_table.h" />
-    <ClInclude Include="..\include\bmsbel\bms_modifier.h" />
     <ClInclude Include="..\include\bmsbel\bms_note.h" />
     <ClInclude Include="..\include\bmsbel\bms_parser.h" />
     <ClInclude Include="..\include\bmsbel\bms_parser_frame.h" />

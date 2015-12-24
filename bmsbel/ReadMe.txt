@@ -2,11 +2,9 @@
 
 BMS library for C++
 
-code from http://childs.squares.net/program/bmsbel/index.html
-
 modifed by @lazykuna
 
-original by CHILD, all rights reserved.
+original code from http://childs.squares.net/program/bmsbel/index.html by CHILD, all rights reserved.
 
 ### additional modification:
 - compilable /w vc++ compiler
@@ -14,11 +12,12 @@ original by CHILD, all rights reserved.
 - support ```#LNTYPE 1```
 - UTF8/auto-encode support (additional bmsext suggestion from (http://cosmic.mearie.org/f/sonorous/bmsexts)[Kang Seonghoon])
 - utilities added: IsUTF8, Alternative File Searcher
-- (TODO) dropping specific Channel Available
 - (TODO) (R-/H-/S-)RANDOM, MIRROR, ALL-LN, NO_LN, ALL-SCR, MORENOTE, LESSNOTE, SPEED_MULTIPLY, MOREMINE, NOMINE, SP-TO-DP option available
 - (TODO) nested #RANDOM statement
+- (TODO) tidier code ...
 - (TODO) support ```#LNTYPE 2``` (we won't support it currently as it's depreciated)
-- (TODO) use gradle
+- (TODO) compile with MinGW
+- (TODO) save function implementation
 - (TODO) change comments into english
 - (TODO) code coverage
 
@@ -34,25 +33,30 @@ class BmsBms
   - class BmsRegistArraySet	// contains #WAV, #BMP data
   - class BmsChannelManager	// <channel, BmsChannel> data
     - class BmsChannel		// if there's duplicated channel, then it's stacked to here.
-  - class BmsBarManager		// ?
-    - class BmsBar			// ?
-  - class BmsTimeManager	// contains definite time, pos, beat, etc data for each row(relative to BmsBar)
+  - class BmsBarManager		// has information about each bar(measure) - such as length
+    - class BmsBar			// -
+// under these are extracted information from BmsBms
+class BmsTimeManager	// contains definite time, pos, beat, etc data for each row(relative to BmsBar). read-only.
+class BmsNoteManager	// contains about pure note data - Normal, Longnote, Mine, Invisible. read-only.
 ```
 - Loading bms file
 ```
 
 ```
 
-#### get sound, bitmap or etc tag datas
+- get sound, bitmap or etc tag datas
 ```
 ```
 
-#### get note data for game play
+- get data for game play
 ```
 // call this after bms file loaded
 ```
 
-### 
+- edit note & save for BMSE
+```
+// edit bms buffer
+``` 
 
 ### Additional standard suggestion
 - Supporting UTF8 file format

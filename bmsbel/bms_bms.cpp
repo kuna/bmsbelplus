@@ -260,26 +260,6 @@ BmsBms::GetSTOPtable(std::map<BmsWord, int> &stop_sequence_table)
 }
 
 double 
-BmsBms::GetBPM(double time) {
-	return 0;	// TODO
-}
-
-double 
-BmsBms::GetCommonBPM() {
-	return 0;	// TODO
-}
-
-double 
-BmsBms::GetMaxBPM() {
-	return 0;	// TODO
-}
-
-double 
-BmsBms::GetMinBPM() {
-	return 0;	// TODO
-}
-
-double 
 BmsBms::GetBaseBPM() {
 	double bpm = 120.0;
 	if (this->GetHeaders().IsExists(L"BPM")) {
@@ -319,7 +299,7 @@ bool
 BmsBms::IsMineNoteExists()
 {
 	for (auto it = this->channel_manager_.Begin(); it != this->channel_manager_.End(); ++it) {
-		if (it->second->IsMineChannel())
+		if (it->second->IsMineNoteChannel())
 		{
 			return true;
 		}
@@ -387,6 +367,7 @@ BmsBms::CalculateTimeTable()
 		GetBarManager().GetChannelPositionByBarNumber(0));
 	int end_channel_position =
 		GetChannelManager().GetObjectExistsMaxPosition(&BmsChannel::IsShouldPlayWavChannel);
+	time_manager_.Resize(end_channel_position+1); // check validity TODO
 
 	//
 	// scan for BPM/STOP channels
@@ -397,12 +378,17 @@ BmsBms::CalculateTimeTable()
 	for (BmsChannelManager::ConstIterator it = GetChannelManager().Begin(); it != GetChannelManager().End(); ++it) {
 		BmsChannel& current_channel = *it->second;
 		for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); ++it2) {
-			if (current_channel.IsBpmChangeChannel())
+			switch (current_channel.GetChannelType()) {
+			case BmsChannelType::BPM:
 				BpmChannelBuffer.push_back(*it2);
-			else if (current_channel.IsExtendedBpmChangeChannel())
+				break;
+			case BmsChannelType::EXTBPM:
 				ExtendedBpmChannelBuffer.push_back(*it2);
-			else if (current_channel.IsStopSequenceChannel())
+				break;
+			case BmsChannelType::STOP:
 				StopChannelBuffer.push_back(*it2);
+				break;
+			}
 		}
 	}
 
@@ -464,7 +450,7 @@ BmsBms::CalculateTimeTable()
 		}
 		// TODO: add BPM information
 		// TODO: add is measure grid? information
-		time_manager_.AddRow(BmsTime(time, stop_sequence_time, measure, absbeat, bpm, is_row_measure));
+		time_manager_.SetRow(BmsTime(time, stop_sequence_time, measure, absbeat, bpm, is_row_measure), i);
 
 		measure += measure_per_each_row;
 		absbeat += absbeat_per_each_row;
@@ -479,7 +465,7 @@ BmsBms::CalculateTimeTable()
 // must call after time is calculated (CalculateTimeTable())
 //
 void
-BmsBms::GetNotes(std::deque<BmsNote> &bmsnote_table)
+BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 {
 	int LNtype = 0;
 	if (GetHeaders().IsExists(L"LNTYPE") &&
@@ -498,58 +484,71 @@ BmsBms::GetNotes(std::deque<BmsNote> &bmsnote_table)
 		GetBarManager().GetChannelPositionByBarNumber(0));
 	int end_channel_position =
 		GetChannelManager().GetObjectExistsMaxPosition(&BmsChannel::IsShouldPlayWavChannel);
+	note_manager_.Resize(end_channel_position+1);
 
-	BmsNote* channelLastNote[BmsConst::WORD_MAX_COUNT];
+	BmsNote* channelLastNote[BmsConst::WORD_MAX_COUNT] = { 0, };
 	for (int i = 0; i <= end_channel_position; i++) {
 		for (BmsChannelManager::ConstIterator it = GetChannelManager().Begin(); it != GetChannelManager().End(); ++it) {
 			BmsChannel& current_channel = *it->second;
 			for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); ++it2) {
 				BmsChannelBuffer& current_buffer = **it2;
 				BmsWord current_word(current_buffer[i]);
-				// NOTE/LNNOTE
-				if (current_channel.IsFirstPlayerNoteChannel() || current_channel.IsSecondPlayerNoteChannel() &&
-					current_word != BmsWord::MIN) {
+				if (current_word == BmsWord::MIN) continue;
+				BmsNote current_note(BmsNote::NOTE_NONE, current_channel.GetChannelNumber().ToInteger(), current_word);
+
+				switch (current_channel.GetChannelType()) {
+				case BmsChannelType::FIRSTPLAYER:
+				case BmsChannelType::SECONDPLAYER:
+				case BmsChannelType::FIRSTPLAYERHIDDEN:
+				case BmsChannelType::SECONDPLAYERHIDDEN:
 					// check if it's LNOBJ registered note
 					if (current_word == lnobj_word) {
 						// set previous note as LongNote
-						if (NOT(channelLastNote[current_word.ToInteger()]) 
-							|| channelLastNote[current_word.ToInteger()]->type == BmsNote::NOTE_LN) {
+						if (NOT(channelLastNote[current_note.channel])
+							|| channelLastNote[current_note.channel]->type == BmsNote::NOTE_LNEND) {
 							// exception: longnote was double closed
 							// or there's no Longnote start position(previous note)
-							BmsWord start(0);
-							if (channelLastNote[current_word.ToInteger()])
-								start = channelLastNote[current_word.ToInteger()]->value;
-							throw BmsLongNoteObjectInvalidEncloseException(start, it->first, i);
+							throw BmsLongNoteObjectInvalidEncloseException(0, it->first, i);
 						}
-						channelLastNote[current_word.ToInteger()]->type = BmsNote::NOTE_LN;
-						channelLastNote[current_word.ToInteger()]->endbeat = beat;
-						channelLastNote[current_word.ToInteger()]->endtime = duration;
-						channelLastNote[current_word.ToInteger()]->endvalue = current_word;
+						// change previous note to LNSTART
+						channelLastNote[current_note.channel]->type = BmsNote::NOTE_LNSTART;
+						// add LNEND note
+						current_note.type = BmsNote::NOTE_LNEND;
 					}
 					else {
 						// add normal note
-						bmsnote_table.push_back(BmsNote(BmsNote::NOTE_NORMAL, it->first, current_word.ToInteger(), beat, duration, absbeat));
-						channelLastNote[current_word.ToInteger()] = &bmsnote_table.back();
+						current_note.type = BmsNote::NOTE_NORMAL;
 					}
-				}
-				if (current_channel.IsLongNoteChannel() && LNtype == 1 && current_word != BmsWord::MIN) {
+					break;
+				case BmsChannelType::FIRSTPLAYERLN:
+				case BmsChannelType::SECONDPLAYERLN:
 					// start longnote ONLY IF there's no previous note, or previous note is LN.
-					if (NOT(channelLastNote[current_word.ToInteger()]) 
-						|| channelLastNote[current_word.ToInteger()]->type == BmsNote::NOTE_LN) {
-						bmsnote_table.push_back(BmsNote(BmsNote::NOTE_NORMAL, it->first, current_word.ToInteger(), beat, duration, absbeat));
-						channelLastNote[current_word.ToInteger()] = &bmsnote_table.back();
+					if (NOT(channelLastNote[current_note.channel])
+						|| channelLastNote[current_note.channel]->type == BmsNote::NOTE_LNEND) {
+						current_note.type = BmsNote::NOTE_LNSTART;
 					}
 					else {
 						// make previous note complete
-						channelLastNote[current_word.ToInteger()]->type = BmsNote::NOTE_LN;
-						channelLastNote[current_word.ToInteger()]->endbeat = beat;
-						channelLastNote[current_word.ToInteger()]->endtime = duration;
-						channelLastNote[current_word.ToInteger()]->endvalue = current_word;
+						current_note.type = BmsNote::NOTE_LNEND;
 					}
+					break;
+				case BmsChannelType::FIRSTPLAYERMINE:
+				case BmsChannelType::SECONDPLAYERMINE:
+					current_note.type = BmsNote::NOTE_MINE;
+					break;
 				}
-				// BOMB
-				if (current_channel.IsMineChannel() && current_word != BmsWord::MIN) {
 
+				switch (current_channel.GetChannelType()) {
+				case BmsChannelType::FIRSTPLAYER:
+				case BmsChannelType::SECONDPLAYER:
+				case BmsChannelType::FIRSTPLAYERHIDDEN:
+				case BmsChannelType::SECONDPLAYERHIDDEN:
+				case BmsChannelType::FIRSTPLAYERLN:
+				case BmsChannelType::SECONDPLAYERLN:
+				case BmsChannelType::FIRSTPLAYERMINE:
+				case BmsChannelType::SECONDPLAYERMINE:
+					channelLastNote[current_note.channel] = note_manager_.SetNoteData(current_note.GetKey(), i, current_note);
+					break;
 				}
 			}
 		}

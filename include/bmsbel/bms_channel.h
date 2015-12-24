@@ -21,7 +21,6 @@ private:
   void ExtendArrayOver( unsigned int pos );
 
 public:
-  // これらの関数は範囲を超えてアクセスしたら自動拡張される
   virtual BmsWord& operator []( unsigned int pos );
 
   virtual void Merge( const BmsBuffer& buffer );
@@ -58,23 +57,20 @@ public:
 
   void MultiplyBarDivisionCount( unsigned int multiplier );
 
-  bool IsChannel( void ) const;
+  bool IsChannel() const;
   bool IsWavChannel( void ) const;
+  bool IsBmpChannel() const;
   bool IsShouldPlayWavChannel(void) const;
   bool IsFirstPlayerNoteChannel(void) const;
   bool IsSecondPlayerNoteChannel(void) const;
   bool IsFirstPlayerChannel(void) const;
   bool IsSecondPlayerChannel(void) const;	// includes invisible/mine note
-  bool IsBmpChannel( void ) const;
-  bool IsBpmChangeChannel( void ) const;
-  bool IsInvisibilityObjectChannel( void ) const;
-  bool IsExtendedBpmChangeChannel( void ) const;
-  bool IsLongNoteChannel( void ) const;
-  bool IsStopSequenceChannel( void ) const;
-  bool IsMineChannel(void) const;
-  bool Is5KeyChannel(void) const;
-  bool Is7KeyChannel(void) const;
-  bool Is9KeyChannel(void) const;
+  bool Is5KeyChannel(void) const;			// DEP
+  bool Is7KeyChannel(void) const;			// DEPRECIATED
+  bool Is9KeyChannel(void) const;			// DEP
+  bool IsLongNoteChannel(void) const;
+  bool IsMineNoteChannel(void) const;
+  int GetChannelType() const;
 
   // -- Iterator ---------------------------------------------------------
   typedef std::vector<BmsChannelBuffer*>::iterator Iterator;
@@ -131,3 +127,35 @@ private:
 };
 
 #endif // BMSBEL_CHANNEL_H_
+
+namespace BmsChannelType {
+	enum BMSCHANNEL {
+		BGM = 1,
+		MEASURELENGTH = 2,
+		BPM = 3,
+		BGA = 4,
+		EXTOBJ = 5,
+		BGAPOOR = 6,
+		BGALAYER = 7,
+		EXTBPM = 8,
+		STOP = 9,
+		BGALAYER2 = 10,
+		FIRSTPLAYER = 11,
+		SECONDPLAYER = 21,
+		FIRSTPLAYERHIDDEN = 31,
+		SECONDPLAYERHIDDEN = 41,
+		FIRSTPLAYERLN = 51,
+		SECONDPLAYERLN = 61,
+		FIRSTPLAYERMINE = 131,
+		SECONDPLAYERMINE = 141,
+		BGAKEYBOUND = 1001,		// 365
+		BGAOPAC = 1002,			// 11
+		BGALAYEROPAC = 1003,	// 12
+		BGALAYER2OPAC = 1004,	// 13
+		BGAPOOROPAC = 1005,		// 14
+		BGAARGB = 1006,			// 361
+		BGALAYERARGB = 1007,	// 362
+		BGALAYER2ARGB = 1008,	// 363
+		BGAPOORARGB = 1009,		// 364
+	};
+}

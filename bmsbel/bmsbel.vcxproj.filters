@@ -63,9 +63,6 @@
     <ClCompile Include="bms_note.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bms_modifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\bmsbel\bms_buffer.h">
@@ -114,9 +111,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\bmsbel\bms_note.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\bmsbel\bms_modifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

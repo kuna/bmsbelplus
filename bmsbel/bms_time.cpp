@@ -5,11 +5,19 @@ void BmsTimeManager::Clear() {
 	array_.clear();
 }
 
+void BmsTimeManager::Resize(int size) {
+	array_.resize(size);
+}
+
 void BmsTimeManager::AddRow(const BmsTime& bmstime) {
 	if (array_.size() > 0 && array_.back().time >= bmstime.time) {
 		throw BmsTimeWrongException();
 	}
 	array_.push_back(bmstime);
+}
+
+void BmsTimeManager::SetRow(const BmsTime& bmstime, int idx) {
+	array_[idx] = bmstime;
 }
 
 const BmsTime& BmsTimeManager::GetRow(int idx) {
