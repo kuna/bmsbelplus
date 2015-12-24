@@ -64,6 +64,10 @@ namespace IO {
 		// then get parent directory
 		// and check it recursively
 		// after that, create own.
+		if (is_directory_exists(filepath))
+			return true;
+		if (is_file_exists(filepath))
+			return false;
 		if (!create_directory(filepath.c_str())) {
 			std::wstring parent = get_parentdir(filepath);
 			if (NOT(make_parent_directory_recursive(parent))) {

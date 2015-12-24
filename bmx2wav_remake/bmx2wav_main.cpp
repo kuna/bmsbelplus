@@ -55,7 +55,7 @@ namespace BMX2WAVParameter {
 
 		// default
 		bms_path = argv[1];
-		output_type = OUTPUT_OGG;
+		output_type = OUTPUT_WAV;
 		output_path = substitute_output_extension(IO::get_filedir(argv[0]) + PATH_SEPARATOR + IO::get_filename(bms_path));
 		overwrite = false;
 
@@ -153,8 +153,46 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 	}
 
-	// encode and save it
-	// TODO
+	// start mixing
+	wprintf(L"Start Mixing ...\n");
+	HQWav result;
+	double mixing_pos;
+	for (int i = 0; i <= bms.GetObjectExistsMaxBarPosition(); i++) {
+		mixing_pos = bms_time.GetRow(i).time * (HQWav::FREQUENCY * 60);
+		for (BmsChannelManager::ConstIterator it = bms.GetChannelManager().Begin(); it != bms.GetChannelManager().End(); ++it) {
+			BmsChannel& current_channel = *it->second;
+			for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); it2++) {
+				BmsChannelBuffer& current_buffer = **it2;
+				BmsWord current_word = current_buffer[i];
+				if (current_channel.IsShouldPlayWavChannel() && current_word != BmsWord::MIN) {
+					if (wav_table.IsLoaded(current_word.ToInteger())) {
+						// ignore not loaded wav file
+						continue;
+					}
+					// turn off previous WAV if same one is playing
+					if (static_cast<unsigned int>(mixing_pos)-last_used_wav_pos[current_word.ToInteger()]
+						< wav_table.GetWAV(current_word.ToInteger())->GetLength()) {
+						result.DeductAt(static_cast<int>(mixing_pos), *wav_table.GetWAV(current_word.ToInteger()),
+							static_cast<int>(mixing_pos)-last_used_wav_pos[current_word.ToInteger()]);
+					}
+					result.MixinAt(static_cast<int>(mixing_pos), *wav_table.GetWAV(current_word.ToInteger()));
+					last_used_wav_pos[current_word.ToInteger()] = static_cast<int>(mixing_pos);
+				}
+			}
+		}
+	}
+
+	// normalize
+	wprintf(L"Normalize ...\n");
+	double change_ratio;
+	result.AverageNormalize(&change_ratio);
+
+	// write
+	wprintf(L"Writing file ...\n");
+	result.WriteToFile(BMX2WAVParameter::output_path);
+
+	// finished!
+	wprintf(L"Finished!\n");
 
 	return 0;
 }

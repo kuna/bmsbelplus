@@ -60,7 +60,7 @@ WavFileReader::ReadInteger(void)
 }
 
 void
-WavFileReader::Read(Buffer<unsigned char>& buffer)
+WavFileReader::Read(DynamicBuffer<unsigned char>& buffer)
 {
 	if (fread(buffer.GetPtr(), sizeof(char), buffer.GetSize(), file_) != buffer.GetSize()) {
 		throw WavFileReader::ReadException();
@@ -181,7 +181,7 @@ WavMaker::MakeNewWavFromWavFile(const std::wstring& filename, bool overlook_erro
 			static_cast<double>(data_size / channel_count / (bit_rate / 8)) *
 			(static_cast<double>(HQWav::FREQUENCY) / static_cast<double>(frequency))));
 
-		Buffer<unsigned char> buffer(data_size);
+		DynamicBuffer<unsigned char> buffer(data_size);
 		reader.Read(buffer);
 
 		{
@@ -361,7 +361,7 @@ DataReader::TwoChannel::ReadTick(void)
 
 
 // -- DataReader::EightBitWav --------------------------------------------
-DataReader::EightBitWav::EightBitWav(Buffer<unsigned char>& buffer, int frequency) :
+DataReader::EightBitWav::EightBitWav(DynamicBuffer<unsigned char>& buffer, int frequency) :
 DataReader::Base(frequency),
 buffer_(buffer),
 current_(0)
@@ -386,7 +386,7 @@ DataReader::EightBitWav::DataRemains(void)
 }
 
 // -- DataReader::SixteenBitWav ------------------------------------------
-DataReader::SixteenBitWav::SixteenBitWav(Buffer<unsigned char>& buffer, int frequency) :
+DataReader::SixteenBitWav::SixteenBitWav(DynamicBuffer<unsigned char>& buffer, int frequency) :
 DataReader::Base(frequency),
 buffer_(buffer),
 current_(0)
@@ -413,7 +413,7 @@ DataReader::SixteenBitWav::DataRemains(void)
 }
 
 // -- DataReader::TwentyFourBitWav ---------------------------------------
-DataReader::TwentyFourBitWav::TwentyFourBitWav(Buffer<unsigned char>& buffer, int frequency) :
+DataReader::TwentyFourBitWav::TwentyFourBitWav(DynamicBuffer<unsigned char>& buffer, int frequency) :
 DataReader::Base(frequency),
 buffer_(buffer),
 current_(0)

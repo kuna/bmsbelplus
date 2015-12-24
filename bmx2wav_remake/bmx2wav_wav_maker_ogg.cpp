@@ -87,7 +87,7 @@ namespace Bmx2Wav {
 
 		private:
 			OggVorbisFileHolder&	ogg_vorbis_file_holder_;
-			Buffer<char>			buffer_;
+			DynamicBuffer<char>			buffer_;
 			unsigned int			current_;
 			unsigned int			last_read_size_;
 		};

@@ -17,7 +17,7 @@ namespace Bmx2Wav {
 		int ReadByte(void);
 		int Read2Byte(void);
 		int ReadInteger(void);
-		void Read(Buffer<unsigned char>& buffer);
+		void Read(DynamicBuffer<unsigned char>& buffer);
 
 		void Skip(unsigned int offset);
 
@@ -90,42 +90,42 @@ namespace Bmx2Wav {
 		// -- DataReader::EightBitWav ----------------------------------------
 		class EightBitWav : virtual public Base {
 		public:
-			explicit EightBitWav(Buffer<unsigned char>& buffer, int frequency);
+			explicit EightBitWav(DynamicBuffer<unsigned char>& buffer, int frequency);
 
 			virtual int ReadOneData(void);
 
 			virtual bool DataRemains(void);
 
 		private:
-			Buffer<unsigned char>& buffer_;
+			DynamicBuffer<unsigned char>& buffer_;
 			unsigned int current_;
 		};
 
 		// -- DataReader::SixteenBitWav --------------------------------------
 		class SixteenBitWav : virtual public Base {
 		public:
-			explicit SixteenBitWav(Buffer<unsigned char>& buffer, int frequency);
+			explicit SixteenBitWav(DynamicBuffer<unsigned char>& buffer, int frequency);
 
 			virtual int ReadOneData(void);
 
 			virtual bool DataRemains(void);
 
 		private:
-			Buffer<unsigned char>& buffer_;
+			DynamicBuffer<unsigned char>& buffer_;
 			unsigned int current_;
 		};
 
 		// -- DataReader::TwentyFourBitWav -----------------------------------
 		class TwentyFourBitWav : virtual public Base {
 		public:
-			explicit TwentyFourBitWav(Buffer<unsigned char>& buffer, int frequency);
+			explicit TwentyFourBitWav(DynamicBuffer<unsigned char>& buffer, int frequency);
 
 			virtual int ReadOneData(void);
 
 			virtual bool DataRemains(void);
 
 		private:
-			Buffer<unsigned char>& buffer_;
+			DynamicBuffer<unsigned char>& buffer_;
 			unsigned int current_;
 		};
 
@@ -133,7 +133,7 @@ namespace Bmx2Wav {
 		template <class CHANNEL_READER, class BIT_READER>
 		class WavDataReader : public CHANNEL_READER, public BIT_READER {
 		public:
-			explicit WavDataReader(Buffer<unsigned char>& buffer, int frequency) :
+			explicit WavDataReader(DynamicBuffer<unsigned char>& buffer, int frequency) :
 				DataReader::Base(frequency),
 				CHANNEL_READER(frequency),
 				BIT_READER(buffer, frequency) {}
