@@ -5,11 +5,6 @@
 
 #include "bmsbel\bms_text_file_reader.h"
 
-//
-// global buffer for class
-//
-char utf8BOM[3] = { 0xEF, 0xBB, 0xBF };
-
 BmsTextFileReader::BmsTextFileReader(const std::wstring& filename, const char *encoding) :
 filename_(filename),
 file_(_wfopen(filename.c_str(), L"r")),
@@ -29,45 +24,6 @@ BmsTextFileReader::~BmsTextFileReader()
 {
 	fclose(file_);
 	iconv_close(cd_);
-}
-
-int BmsTextFileReader::IsFileUTF8(const std::wstring& filename) {
-	FILE *file = _wfopen(filename.c_str(), L"r");
-	if (NOT(file)) {
-		throw BmsFileOpenException(filename, errno);
-	}
-
-	// buffers
-	char buf_char[BmsConst::BMS_MAX_LINE_BUFFER];
-	wchar_t buf_wchar[BmsConst::BMS_MAX_LINE_BUFFER];
-	size_t len_char, len_wchar;
-
-	// check 4 byte to see is it UTF8 BOM
-	fseek(file, 0, SEEK_SET);
-	if (fread(buf_char, 1, 3, file) == 3 && memcmp(buf_char, utf8BOM, 3) == 0) {
-		return true;
-	}
-	// attempt to convert few lines
-	fseek(file, 0, SEEK_SET);
-	iconv_t cd = iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, "UTF-8");
-	if ((int)cd == -1) {
-		// conversion is not supported
-		return -1;
-	}
-	for (int i = 0; i < BmsBelOption::CONVERT_ATTEMPT_LINES && NOT(feof(file)); i++) {
-		fgets(buf_char, BmsConst::BMS_MAX_LINE_BUFFER, file);
-		len_char = strlen(buf_char);
-		const char *buf_iconv = buf_char;
-		char *but_out_iconv = (char*)buf_wchar;
-		len_wchar = BmsConst::BMS_MAX_LINE_BUFFER;		// available characters for converting
-		iconv(cd, 0, 0, &but_out_iconv, &len_wchar);
-		iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_wchar);
-		if (errno) {
-			return errno;	// failed to convert UTF8->wchar. maybe, SHIFT_JIS?
-		}
-	}
-	iconv_close(cd);
-	return 0;
 }
 
 //

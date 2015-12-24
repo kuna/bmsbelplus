@@ -26,13 +26,16 @@ public:
 	int GetObjectExistsMaxBarPosition(void) const;
 
 	void MultiplyBarDivisionCount(unsigned int multiplier);
-	void CalculateTimeTable();
 
 	void Merge(const BmsBms& other);
 
 	std::wstring ToString(void) const;
 
 	void Clear(void);
+
+	// time
+	void CalculateTimeTable();
+	double GetBMSLength();
 
 	// get BPM/STOPs
 	void GetBPMtable(std::map<BmsWord, double> &extended_bpm_table);
@@ -48,13 +51,11 @@ public:
 	// note
 	bool IsLongNoteExists();
 	bool IsMineNoteExists();
-	void GetNotes(std::vector<BmsNote> &bmsnote_table);
-	int GetNoteCount();
+	void GetNotes(std::deque<BmsNote> &bmsnote_table);
 	int GetKey();
 
 	// get other metedatas
 	// must call after CalculateTimeTable()
-	double GetBMSLength();
 	//std::wstring& GetTitle();
 	//int GetRank();
 private:
@@ -62,8 +63,9 @@ private:
 	BmsRegistArraySet	array_set_;
 	BmsChannelManager	channel_manager_;
 	BmsBarManager		bar_manager_;
-	BmsTimeManager		time_manager_;
 
+	// TODO: depart this from BmsBms class
+	BmsTimeManager		time_manager_;
 };
 
 #endif // BMSBEL_BMS_H_

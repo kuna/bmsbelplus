@@ -17,6 +17,8 @@ const BmsTime& BmsTimeManager::GetRow(int idx) {
 }
 
 double BmsTimeManager::GetEndTime() {
+	if (array_.size() <= 0)
+		return 0;
 	return array_.back().time;
 }
 

@@ -8,3 +8,6 @@ ipch
 *.opensdf
 Debug
 Release
+
+# temporary project
+rhythmusbmsparser

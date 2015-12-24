@@ -16,7 +16,6 @@ public:
   ~BmsTextFileReader();
 
   bool ReadLine( std::wstring& buffer, bool chomp );
-  static int IsFileUTF8(const std::wstring& filename);	// TODO: move to BMSUtil?
 
 private:
   const std::wstring filename_;

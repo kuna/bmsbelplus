@@ -15,8 +15,8 @@ namespace bmstest
 	{
 	public:
 		TEST_METHOD(BMS_Unicode_Test) {
-			Assert::AreEqual(true, (BmsTextFileReader::IsFileUTF8(L"..\\test\\bms\\BBKKBKK(easy)_n_Unicode.bms") == 0));
-			Assert::AreEqual(false, (BmsTextFileReader::IsFileUTF8(L"..\\test\\bms\\47_LNM(TEN).bml") == 0));
+			Assert::AreEqual(true, (BmsUtil::IsFileUTF8(L"..\\test\\bms\\BBKKBKK(easy)_n_Unicode.bms") == 0));
+			Assert::AreEqual(false, (BmsUtil::IsFileUTF8(L"..\\test\\bms\\47_LNM(TEN).bml") == 0));
 		}
 
 		TEST_METHOD(BMS_TAG_Length_Test)
@@ -72,13 +72,15 @@ namespace bmstest
 
 		TEST_METHOD(BMS_Note_Test) {
 			BmsBms bms;
-			wchar_t filename[] = L"..\\test\\bms\\BBKKBKK(easy)_n.bms";
-			//wchar_t filename[] = L"..\\test\\bms\\L99999999.bme";
-			//wchar_t filename[] = L"..\\test\\bms\\allnightmokugyolonglong.bms";
-
-			// load bms file
+			wchar_t filename[] = L"..\\test\\bms\\47_LNM(TEN).bms";
 			BmsParser::Parse(filename, bms, "Shift_JIS");
 
+			std::deque<BmsNote> notes;
+			bms.GetNotes(notes);
+
+			std::wstringstream ss;	ss << notes.size() << "\n";
+			Logger::WriteMessage(ss.str().c_str());
+			/*
 			//
 			// get BPM, STOPs
 			//
@@ -92,7 +94,6 @@ namespace bmstest
 			//
 			// process notes
 			//
-			/*
 			double duration = 0.0;
 
 			int start_channel_position = static_cast<int>(

@@ -170,7 +170,7 @@ BmsWord::CheckConstruction(const std::string& str)
 }
 
 bool BmsWord::CheckConstruction(const wchar_t* str) {
-	return BmsUtil::IsHex36(str[0]) && BmsUtil::IsHex36(str[1]);
+	return str[0] < 0xff && str[1] < 0xff && BmsUtil::IsHex36(str[0]) && BmsUtil::IsHex36(str[1]);
 }
 
 bool BmsWord::CheckConstruction(const std::wstring& str) {

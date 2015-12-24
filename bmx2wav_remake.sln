@@ -33,6 +33,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmsbel", "bmsbel\bmsbel.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiconv", "libiconv\libiconv.vcxproj", "{754C626F-CD15-4A66-943A-A0299721E5F6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RhythusBMSParser", "RhythusBMSParser\RhythusBMSParser.vcxproj", "{E7BE744A-BD0C-42BF-A8FE-F12D50FC602F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{754C626F-CD15-4A66-943A-A0299721E5F6} = {754C626F-CD15-4A66-943A-A0299721E5F6}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -67,6 +72,10 @@ Global
 		{754C626F-CD15-4A66-943A-A0299721E5F6}.Debug|Win32.Build.0 = Debug|Win32
 		{754C626F-CD15-4A66-943A-A0299721E5F6}.Release|Win32.ActiveCfg = Release|Win32
 		{754C626F-CD15-4A66-943A-A0299721E5F6}.Release|Win32.Build.0 = Release|Win32
+		{E7BE744A-BD0C-42BF-A8FE-F12D50FC602F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E7BE744A-BD0C-42BF-A8FE-F12D50FC602F}.Debug|Win32.Build.0 = Debug|Win32
+		{E7BE744A-BD0C-42BF-A8FE-F12D50FC602F}.Release|Win32.ActiveCfg = Release|Win32
+		{E7BE744A-BD0C-42BF-A8FE-F12D50FC602F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

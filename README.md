@@ -1,6 +1,6 @@
-# BmsBel Library & related simple utilities
+# BmsBel+ Library & related simple utilities
 
-### BmsBel
+### BmsBel+
 - C++ Library for *.bmx(*.bms, *.bme, *.bml) file read
 - have dependency with ```libiconv```
 - original code by CHILD
@@ -19,3 +19,5 @@
 ##### You can visit each folder for more detailed information.
 
 ##### Project is compiled with VC++ 2013.
+- since I don't have Mac, I hadn't tested with that.
+- I'll test this module in linux soon.

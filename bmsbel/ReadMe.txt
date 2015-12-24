@@ -13,8 +13,10 @@ original by CHILD, all rights reserved.
 - documentation (processing)
 - support ```#LNTYPE 1```
 - UTF8/auto-encode support (additional bmsext suggestion from (http://cosmic.mearie.org/f/sonorous/bmsexts)[Kang Seonghoon])
+- utilities added: IsUTF8, Alternative File Searcher
 - (TODO) dropping specific Channel Available
-- (TODO) (R-/H-/S-)RANDOM, MIRROR, ALL-LN, NO_LN, ALL-SCR, MORENOTE, LESSNOTE, SPEED_MULTIPLY, MOREMINE, NOMINE, SP-TO-DP, DOUBLE-BATTLE option available
+- (TODO) (R-/H-/S-)RANDOM, MIRROR, ALL-LN, NO_LN, ALL-SCR, MORENOTE, LESSNOTE, SPEED_MULTIPLY, MOREMINE, NOMINE, SP-TO-DP option available
+- (TODO) nested #RANDOM statement
 - (TODO) support ```#LNTYPE 2``` (we won't support it currently as it's depreciated)
 - (TODO) use gradle
 - (TODO) change comments into english
