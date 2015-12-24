@@ -38,7 +38,8 @@ namespace bmstest
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\47_LNM(TEN).bml";
 			BmsParser::Parse(filename, bms, "Shift_JIS");
-			bms.CalculateTimeTable();
+			BmsTimeManager timetable;
+			bms.CalculateTime(timetable);
 
 			/*
 			// wanna to ignore channel set?
@@ -54,7 +55,7 @@ namespace bmstest
 			Logger::WriteMessage(bms.GetHeaders().ToString().c_str());
 			Assert::AreEqual(L"TEN [LN MASTER]", bms.GetHeaders()[L"TITLE"].c_str());
 			Assert::AreEqual(L"2X / obj:ほげぇ", bms.GetHeaders()[L"ARTIST"].c_str());
-			Assert::AreEqual(204507, int(bms.GetBMSLength() * 1000));
+			Assert::AreEqual(204507, int(timetable.GetEndTime() * 1000));
 		}
 
 
@@ -62,7 +63,6 @@ namespace bmstest
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\allnightmokugyolonglong.bms";	// this BMS should be loaded about 700ms (release mode)
 			BmsParser::Parse(filename, bms, "Shift_JIS");
-			bms.CalculateTimeTable();
 		}
 
 		// test various bar size
@@ -70,8 +70,10 @@ namespace bmstest
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\L99999999.bme";				// this BMS should be loaded about 700ms 
 			BmsParser::Parse(filename, bms, "Shift_JIS");
-			bms.CalculateTimeTable();
-			Assert::AreEqual(78230, int(bms.GetBMSLength() * 1000));
+
+			BmsTimeManager timetable;
+			bms.CalculateTime(timetable);
+			Assert::AreEqual(78230, int(timetable.GetEndTime() * 1000));
 		}
 
 		TEST_METHOD(BMS_STOP_Test) {
@@ -86,7 +88,7 @@ namespace bmstest
 			bms.GetNotes(bmsnote);
 
 			// previous method: 2159 notes
-			// TODO new method(2combo per LN) ... we don't know yet.
+			// TODO new method(2combo per LN) ... we don't prepared about this.
 			Assert::AreEqual(2159, bmsnote.GetNoteCount());
 		}
 	};

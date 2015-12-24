@@ -49,13 +49,6 @@ BmsBms::GetBarManager(void)
 	return bar_manager_;
 }
 
-BmsTimeManager&
-BmsBms::GetTimeManager()
-{
-	return time_manager_;
-}
-
-
 int
 BmsBms::GetObjectExistsMaxBarPosition(void) const
 {
@@ -345,7 +338,7 @@ BmsBms::GetKey()
 // - should called when BmsBarManager is created/modified.
 //
 void
-BmsBms::CalculateTimeTable()
+BmsBms::CalculateTime(BmsTimeManager& time_manager_)
 {
 	// flush previous time table
 	time_manager_.Clear();
@@ -375,6 +368,7 @@ BmsBms::CalculateTimeTable()
 	std::vector<BmsChannelBuffer*> BpmChannelBuffer;
 	std::vector<BmsChannelBuffer*> ExtendedBpmChannelBuffer;
 	std::vector<BmsChannelBuffer*> StopChannelBuffer;
+	std::vector<BmsChannelBuffer*> MissBgaBuffer;
 	for (BmsChannelManager::ConstIterator it = GetChannelManager().Begin(); it != GetChannelManager().End(); ++it) {
 		BmsChannel& current_channel = *it->second;
 		for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); ++it2) {
@@ -387,6 +381,9 @@ BmsBms::CalculateTimeTable()
 				break;
 			case BmsChannelType::STOP:
 				StopChannelBuffer.push_back(*it2);
+				break;
+			case BmsChannelType::BGAPOOR:
+				MissBgaBuffer.push_back(*it2);
 				break;
 			}
 		}
@@ -405,6 +402,7 @@ BmsBms::CalculateTimeTable()
 	double absbeat = 0;
 	double measure = 0;
 	double measure_per_each_row = 1.0 / barlength;
+	BmsWord missBga(0);
 	for (int i = 0; i <= end_channel_position; i++) {
 		double stop_sequence_time = 0.0;
 		if (barleft == 0) {
@@ -448,9 +446,13 @@ BmsBms::CalculateTimeTable()
 				}
 			}
 		}
-		// TODO: add BPM information
-		// TODO: add is measure grid? information
-		time_manager_.SetRow(BmsTime(time, stop_sequence_time, measure, absbeat, bpm, is_row_measure), i);
+		for (auto it = MissBgaBuffer.begin(); it != MissBgaBuffer.end(); ++it) {
+			BmsWord current_word((**it)[i]);
+			if (current_word == BmsWord::MIN) continue;
+			missBga = current_word;
+		}
+
+		time_manager_.SetRow(BmsTime(time, stop_sequence_time, measure, absbeat, bpm, is_row_measure, missBga), i);
 
 		measure += measure_per_each_row;
 		absbeat += absbeat_per_each_row;
@@ -555,11 +557,6 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 	}
 }
 
-double
-BmsBms::GetBMSLength() {
-	return time_manager_.GetEndTime();
-}
-
 void
 BmsBms::Clear(void)
 {
@@ -567,5 +564,4 @@ BmsBms::Clear(void)
 	array_set_.Clear();
 	channel_manager_.Clear();
 	bar_manager_.Clear();
-	time_manager_.Clear();
 }

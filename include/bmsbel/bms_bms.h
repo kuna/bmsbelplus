@@ -20,7 +20,6 @@ public:
 	BmsRegistArraySet&	GetRegistArraySet(void);
 	BmsChannelManager&	GetChannelManager(void);
 	BmsBarManager&		GetBarManager(void);
-	BmsTimeManager&		GetTimeManager();
 
 	// オブジェが存在する最大の小節数を取得
 	int GetObjectExistsMaxBarPosition(void) const;
@@ -34,7 +33,7 @@ public:
 	void Clear(void);
 
 	// time
-	void CalculateTimeTable();
+	void CalculateTime(BmsTimeManager& time_manager_);
 	double GetBMSLength();
 
 	// get BPM/STOPs
@@ -57,9 +56,6 @@ private:
 	BmsRegistArraySet	array_set_;
 	BmsChannelManager	channel_manager_;
 	BmsBarManager		bar_manager_;
-
-	// TODO: depart this from BmsBms class
-	BmsTimeManager		time_manager_;
 };
 
 #endif // BMSBEL_BMS_H_

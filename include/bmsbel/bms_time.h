@@ -1,17 +1,20 @@
 #include "bms_define.h"
+#include "bms_word.h"
 #include <deque>
 using namespace std;
 
 struct BmsTime {
 	BmsTime() {}
-	BmsTime(double time, double stop, double beat, double absbeat, double bpm, bool measure) :
-		time(time), stop(stop), beat(beat), absbeat(absbeat), bpm(bpm), measure(measure) {}
+	BmsTime(double time, double stop, double beat, double absbeat, double bpm, bool measure, const BmsWord& miss) :
+		time(time), stop(stop), beat(beat), absbeat(absbeat), bpm(bpm), measure(measure), miss(miss) {}
 	double time;
 	double stop;
 	double beat;
 	double absbeat;
 	double bpm;
-	bool measure;
+
+	bool measure;	// should we display measure bar here?
+	BmsWord miss;	// stores current miss BGA value
 };
 
 // BmsTimeManager
@@ -35,5 +38,7 @@ public:
 	double GetCommonBPM();
 	double GetMaxBPM();
 	double GetMinBPM();
-	double GetBaseBPM();
+
+	// bga
+	BmsWord GetMissBGAFromTime(double time);
 };
