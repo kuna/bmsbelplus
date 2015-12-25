@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmx2wav_remake", "bmx2wav_remake\bmx2wav_remake.vcxproj", "{0BE66AA8-E0F0-4E92-A254-E5BDE1B6B041}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmx2ogg", "bmx2ogg\bmx2ogg.vcxproj", "{0BE66AA8-E0F0-4E92-A254-E5BDE1B6B041}"
 	ProjectSection(ProjectDependencies) = postProject
 		{29707C0A-73E2-43DE-8F6D-F2DB06808D14} = {29707C0A-73E2-43DE-8F6D-F2DB06808D14}
 		{AB82F94B-0C26-498C-B109-86E93F1895CE} = {AB82F94B-0C26-498C-B109-86E93F1895CE}
