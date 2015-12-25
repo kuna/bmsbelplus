@@ -80,9 +80,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="bms_bar.cpp" />
     <ClCompile Include="bms_bms.cpp" />
     <ClCompile Include="bms_buffer.cpp" />
@@ -116,6 +113,9 @@
     <ClInclude Include="..\include\bmsbel\bms_time.h" />
     <ClInclude Include="..\include\bmsbel\bms_util.h" />
     <ClInclude Include="..\include\bmsbel\bms_word.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

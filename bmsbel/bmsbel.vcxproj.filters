@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="bms_channel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -113,5 +110,8 @@
     <ClInclude Include="..\include\bmsbel\bms_note.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>
