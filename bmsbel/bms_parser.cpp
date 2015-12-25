@@ -128,7 +128,7 @@ void
 BmsParser::Parse(const std::wstring& filename, BmsBms& bms)
 {
 	if (BmsUtil::IsFileUTF8(filename))
-		BmsParser::Parse(filename, bms, "UTF8");
+		BmsParser::Parse(filename, bms, "UTF-8");
 	else
 		BmsParser::Parse(filename, bms, BmsBelOption::DEFAULT_FALLBACK_ENCODING);
 }

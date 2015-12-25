@@ -33,7 +33,7 @@ namespace BMX2WAVParameter {
 		}
 	}
 
-	int help() {
+	void help() {
 		printf("input args: (bmx path) -(option) (output path)\n"
 			"available option:\n"
 			"-oc: output file to current directory (default)\n"
@@ -46,12 +46,11 @@ namespace BMX2WAVParameter {
 			"EASY USE:\n"
 			"JUST DRAG FILE to me and there will be *.ogg file!\n"
 			);
-		return -1;
 	}
 
 	int parse(int argc, _TCHAR* argv[]) {
 		if (argc <= 1 || CMP(argv[1], L"-?") || CMP(argv[1], L"-h")) {
-			return help();
+			return -1;
 		}
 
 		// default
@@ -71,7 +70,7 @@ namespace BMX2WAVParameter {
 			}
 			else if (CMP(argv[i], L"-o")) {
 				if (++i == argc)
-					return help();
+					return -1;
 				output_path = argv[i];
 				if (output_path.back() == PATH_SEPARATOR_CHAR) {
 					// if destination is folder, then automatically add filename
@@ -97,12 +96,20 @@ namespace BMX2WAVParameter {
 int _tmain(int argc, _TCHAR* argv[])
 {
 	// parse argument
-	if (BMX2WAVParameter::parse(argc, argv) == -1)
+	if (BMX2WAVParameter::parse(argc, argv) == -1) {
+		BMX2WAVParameter::help();
 		return -1;
+	}
 
 	// load bms file
 	BmsBms bms;
-	BmsParser::Parse(BMX2WAVParameter::bms_path, bms);
+	try {
+		BmsParser::Parse(BMX2WAVParameter::bms_path, bms);
+	}
+	catch (BmsFileNotSupportedEncoding &e) {
+		wprintf(L"Failed to make proper iconv encoding\n");
+		return -1;
+	}
 	BmsTimeManager bms_time;
 	BmsNoteContainer bms_note;
 	bms.CalculateTime(bms_time);
