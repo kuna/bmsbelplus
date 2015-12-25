@@ -32,7 +32,6 @@ public:
 class BmsNoteContainer {
 private:
 	std::vector<BmsNote> notes[20];		// 20 key data will be enough
-	int notecount;
 public:
 	void Resize(int size);				// this will make data initalized
 
@@ -57,6 +56,7 @@ public:
 
 	// notedata value
 	std::vector<BmsNote>& GetNoteArray(int channel);
+	std::vector<BmsNote>& GetNoteArray(const BmsWord& word);
 	BmsNote& GetNoteData(int channel, int idx);
 	BmsNote* SetNoteData(int channel, int idx, const BmsNote& note);
 	std::vector<BmsNote>::iterator Begin(int channel);

@@ -26,4 +26,3 @@
 
 ### known problems / TODO / etc
 - current ogg quality is 0.5 (-1 ~ 1). maybe CBR 192kbps?
-- LongNote may sound bad. going to fix it...

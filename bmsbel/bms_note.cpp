@@ -57,13 +57,39 @@ int BmsNoteContainer::GetNoteCount() {
 }
 
 int BmsNoteContainer::GetKeys() {
-	// TODO
+	int keycnt[20] = { 0, };
+	for (int i = 0; i < 20; i++) {
+		for (auto it = notes[i].begin(); it != notes[i].end(); ++it) {
+			keycnt[it->GetKey()] ++;
+		}
+	}
+	
+	// check DP first
+	if (keycnt[17])
+		return 18;
+	else if (keycnt[19] || keycnt[18])
+		return 14;
+	else if (keycnt[15] || keycnt[14] || keycnt[13] || keycnt[12] || keycnt[11])
+		return 10;
+	else if (keycnt[7])
+		return 9;
+	else if (keycnt[9] || keycnt[8])
+		return 7;
+	else if (keycnt[5] || keycnt[4] || keycnt[3] || keycnt[2] || keycnt[1])
+		return 5;
+
+	// unknown ..?
 	return 0;
 }
 
 
 std::vector<BmsNote>& BmsNoteContainer::GetNoteArray(int channel) {
 	return notes[channel];
+}
+std::vector<BmsNote>& BmsNoteContainer::GetNoteArray(const BmsWord& word) {
+	int b = (word.ToInteger() - 36) / 36;
+	int s = word.ToInteger() % 36 % 10;
+	return GetNoteArray((b % 2) * 10 + s);
 }
 BmsNote& BmsNoteContainer::GetNoteData(int channel, int idx) {
 	return notes[channel][idx];

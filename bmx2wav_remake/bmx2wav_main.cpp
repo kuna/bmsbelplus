@@ -104,7 +104,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	BmsBms bms;
 	BmsParser::Parse(BMX2WAVParameter::bms_path, bms);
 	BmsTimeManager bms_time;
+	BmsNoteContainer bms_note;
 	bms.CalculateTime(bms_time);
+	bms.GetNotes(bms_note);
 	wprintf(L"BMS Path: %ls\n", BMX2WAVParameter::bms_path.c_str());
 	wprintf(L"BMS Title: %ls\n", bms.GetHeaders()[L"TITLE"].c_str());
 	wprintf(L"BMS Length: %.03lf (sec)\n", bms_time.GetEndTime());
@@ -168,6 +170,12 @@ int _tmain(int argc, _TCHAR* argv[])
 				int wav_channel = current_word.ToInteger();
 
 				if (current_channel.IsShouldPlayWavChannel() && current_word != BmsWord::MIN) {
+					// check is Longnote channel & Longnote ending sound
+					// if it does, ignore it
+					if (current_channel.IsLongNoteChannel()
+						&& bms_note.GetNoteArray(current_channel.GetChannelNumber())[i].type == BmsNote::NOTE_LNEND) {
+						continue;
+					}
 					if (!wav_table.IsLoaded(wav_channel)) {
 						// ignore not loaded wav file
 						continue;
@@ -196,13 +204,21 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::wstring tag_artist;
 	if (bms.GetHeaders().IsExists(L"TITLE"))	tag_title = bms.GetHeaders()[L"TITLE"];
 	if (bms.GetHeaders().IsExists(L"ARTIST"))	tag_artist = bms.GetHeaders()[L"ARTIST"];
-	if (BMX2WAVParameter::output_type == BMX2WAVParameter::OUTPUT_WAV) {
-		result.WriteToFile(BMX2WAVParameter::output_path);
+	try {
+		if (BMX2WAVParameter::output_type == BMX2WAVParameter::OUTPUT_WAV) {
+			result.WriteToFile(BMX2WAVParameter::output_path);
+		}
+		else if (BMX2WAVParameter::output_type == BMX2WAVParameter::OUTPUT_OGG) {
+			HQOgg ogg(&result);
+			ogg.SetMetadata(tag_title, tag_artist);
+			ogg.WriteToFile(BMX2WAVParameter::output_path);
+		}
 	}
-	else if (BMX2WAVParameter::output_type == BMX2WAVParameter::OUTPUT_OGG) {
-		HQOgg ogg(&result);
-		ogg.SetMetadata(tag_title, tag_artist);
-		ogg.WriteToFile(BMX2WAVParameter::output_path);
+	catch (Bmx2WavInvalidFile& e) {
+		wprintf(L"[ERROR] Cannot write file to %ls. Check other program is using the output file.\n", BMX2WAVParameter::output_path);
+		wprintf(e.Message().c_str());
+		wprintf(L"\n");
+		return -1;
 	}
 
 	// finished!

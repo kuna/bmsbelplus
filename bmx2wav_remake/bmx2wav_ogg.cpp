@@ -3,6 +3,7 @@ using namespace Bmx2Wav;
 
 #include "vorbis\vorbisenc.h"
 #include "bmx2wav_common.h"
+#include "exception.h"
 #include <time.h>
 
 // how much we'll going to read/process for chunk/
@@ -49,7 +50,8 @@ void HQOgg::WriteToFile(const std::wstring& path) {
 	// open fp...
 	FILE *f;
 	if (_wfopen_s(&f, path.c_str(), L"wb+") != 0)
-		return;
+		throw Bmx2WavInvalidFile(path, errno);
+
 
 	// from: https://svn.xiph.org/trunk/vorbis/examples/encoder_example.c
 
