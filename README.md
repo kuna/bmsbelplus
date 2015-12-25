@@ -20,4 +20,4 @@
 
 ##### Project is compiled with VC++ 2013.
 - since I don't have Mac, I hadn't tested with that.
-- I'll test this module in linux soon.
+- I'll test this module in minGW soon.
