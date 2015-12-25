@@ -85,7 +85,7 @@ namespace Bmx2Wav {
 		void Clear(void);
 
 		void WriteToFile(const std::wstring& filename);
-
+		void WriteToBuffer(std::vector<char>& buffer);
 	private:
 		// -- SimpleIterator -------------------------------------------------
 		class SimpleIterator {

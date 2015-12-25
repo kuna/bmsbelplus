@@ -1,5 +1,6 @@
 #include "bmx2wav_common.h"
 
+#include "iconv\iconv.h"
 #include <sstream>
 #include <sys/stat.h>
 #include <wchar.h>
@@ -75,5 +76,27 @@ namespace IO {
 			}
 			return create_directory(filepath.c_str());
 		}
+	}
+}
+
+namespace ENCODING {
+	bool wchar_to_utf8(const wchar_t *org, char *out, int maxlen)
+	{
+		iconv_t cd = iconv_open("UTF-8", "UTF-16LE");
+		if ((int)cd == -1)
+			return false;
+
+		out[0] = 0;
+		const char *buf_iconv = (const char*)org;
+		char *but_out_iconv = (char*)out;
+		size_t len_in = wcslen(org) * 2;
+		size_t len_out = maxlen;
+
+		int r = iconv(cd, &buf_iconv, &len_in, &but_out_iconv, &len_out);
+		if ((int)r == -1)
+			return false;
+		*but_out_iconv = 0;
+
+		return true;
 	}
 }

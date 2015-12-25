@@ -90,6 +90,7 @@
     <ClInclude Include="bms_resource.h" />
     <ClInclude Include="bmx2wav_buffer.h" />
     <ClInclude Include="bmx2wav_common.h" />
+    <ClInclude Include="bmx2wav_ogg.h" />
     <ClInclude Include="bmx2wav_wav.h" />
     <ClInclude Include="bmx2wav_wav_maker.h" />
     <ClInclude Include="exception.h" />
@@ -100,6 +101,7 @@
     <ClCompile Include="bmx2wav_buffer.cpp" />
     <ClCompile Include="bmx2wav_common.cpp" />
     <ClCompile Include="bmx2wav_main.cpp" />
+    <ClCompile Include="bmx2wav_ogg.cpp" />
     <ClCompile Include="bmx2wav_wav.cpp" />
     <ClCompile Include="bmx2wav_wav_maker.cpp" />
     <ClCompile Include="bmx2wav_wav_maker_ogg.cpp" />

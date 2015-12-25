@@ -12,6 +12,7 @@
 #include <string>
 
 #include "bmx2wav_wav_maker.h"
+#include "bmx2wav_ogg.h"
 using namespace Bmx2Wav;
 
 #define NOT(v) (!(v))
@@ -55,7 +56,7 @@ namespace BMX2WAVParameter {
 
 		// default
 		bms_path = argv[1];
-		output_type = OUTPUT_WAV;
+		output_type = OUTPUT_OGG;
 		output_path = substitute_output_extension(IO::get_filedir(argv[0]) + PATH_SEPARATOR + IO::get_filename(bms_path));
 		overwrite = false;
 
@@ -129,7 +130,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			bool ogg_path_exists = IO::is_file_exists(ogg_path);
 
 			if (NOT(path_exists) && NOT(ogg_path_exists)) {
-				wprintf(L"[Warning] Cannot find wav/ogg file(%ls). ignore.", path.c_str());
+				wprintf(L"[Warning] Cannot find wav/ogg file(%ls). ignore.\n", path.c_str());
 				wav_table.SetWAV(word.ToInteger(), wav_maker.MakeNewWav());	// Set Null Sound
 			}
 			else {
@@ -144,7 +145,7 @@ int _tmain(int argc, _TCHAR* argv[])
 					}
 				}
 				catch (Bmx2WavInvalidWAVFile& e) {
-					wprintf(L"Cannot parse wav/ogg file(%ls) correctly. ignore.", path.c_str());
+					wprintf(L"Cannot parse wav/ogg file(%ls) correctly. ignore.\n", path.c_str());
 					wav_table.SetWAV(word.ToInteger(), wav_maker.MakeNewWav());	// Set Null Sound
 				}
 			}
@@ -189,9 +190,20 @@ int _tmain(int argc, _TCHAR* argv[])
 	double change_ratio;
 	result.AverageNormalize(&change_ratio);
 
-	// write
+	// write (setting tag)
 	wprintf(L"Writing file ...\n");
-	result.WriteToFile(BMX2WAVParameter::output_path);
+	std::wstring tag_title;
+	std::wstring tag_artist;
+	if (bms.GetHeaders().IsExists(L"TITLE"))	tag_title = bms.GetHeaders()[L"TITLE"];
+	if (bms.GetHeaders().IsExists(L"ARTIST"))	tag_artist = bms.GetHeaders()[L"ARTIST"];
+	if (BMX2WAVParameter::output_type == BMX2WAVParameter::OUTPUT_WAV) {
+		result.WriteToFile(BMX2WAVParameter::output_path);
+	}
+	else if (BMX2WAVParameter::output_type == BMX2WAVParameter::OUTPUT_OGG) {
+		HQOgg ogg(&result);
+		ogg.SetMetadata(tag_title, tag_artist);
+		ogg.WriteToFile(BMX2WAVParameter::output_path);
+	}
 
 	// finished!
 	wprintf(L"Finished!\n");

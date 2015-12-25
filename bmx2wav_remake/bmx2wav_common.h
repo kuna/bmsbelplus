@@ -23,3 +23,7 @@ namespace IO {
 	bool create_directory(const std::wstring& filepath);
 	bool make_parent_directory_recursive(const std::wstring& filepath);
 }
+
+namespace ENCODING {
+	bool wchar_to_utf8(const wchar_t *org, char *out, int maxlen);
+}

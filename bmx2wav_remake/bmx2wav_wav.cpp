@@ -518,6 +518,17 @@ WavFileWriter::WriteInteger(int data)
 	}
 }
 
+void HQWav::WriteToBuffer(std::vector<char>& buffer)
+{
+	for (SimpleIterator it = this->MakeSimpleIterator(); it.DataRemain(); it.MoveNext()) {
+		short buf_left = (std::max(std::min(it.GetTick().left_, Tick::MaxValue), Tick::MinValue));
+		short buf_right = (std::max(std::min(it.GetTick().right_, Tick::MaxValue), Tick::MinValue));
+		char *p;
+		p = (char*)&buf_left;	buffer.push_back(p[0]);	buffer.push_back(p[1]);
+		p = (char*)&buf_right;	buffer.push_back(p[0]);	buffer.push_back(p[1]);
+	}
+}
+
 void
 HQWav::WriteToFile(const std::wstring& filename)
 {
