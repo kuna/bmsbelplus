@@ -5,7 +5,7 @@
 - have dependency with ```libiconv```
 - original code by CHILD
 
-### Bmx2wav_remake
+### Bmx2Ogg
 - Simple utility which converts *.bmx file to audio file. (but has less function)
 
 ### SimpleBMXPlayer

@@ -1,4 +1,4 @@
-# Bmx2Wav remake ver.
+# Bmx2Ogg
 
 ### abstract
 - convert *.bmx(bms, bml, bme, etc ...) to audio files(*.wav / ogg)
