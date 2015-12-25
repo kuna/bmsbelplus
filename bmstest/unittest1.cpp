@@ -79,6 +79,9 @@ namespace bmstest
 		TEST_METHOD(BMS_STOP_Test) {
 		}
 
+		TEST_METHOD(BMS_Nested_Random_Test) {
+		}
+
 		TEST_METHOD(BMS_Note_Test) {
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\47_LNM(TEN).bml";

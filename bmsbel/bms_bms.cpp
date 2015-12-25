@@ -74,6 +74,18 @@ BmsBms::GetObjectExistsMaxBarPosition(void) const
 	return bar - 1;
 }
 
+int 
+BmsBms::GetObjectExistsMaxPosition() const
+{
+	return channel_manager_.GetObjectExistsMaxPosition(&BmsChannel::IsChannel);
+}
+
+int 
+BmsBms::GetPlayableMaxPosition() const
+{
+	return channel_manager_.GetObjectExistsMaxPosition(&BmsChannel::IsShouldPlayWavChannel);
+}
+
 
 void
 BmsBms::MultiplyBarDivisionCount(unsigned int multiplier)

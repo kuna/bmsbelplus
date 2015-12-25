@@ -21,8 +21,10 @@ public:
 	BmsChannelManager&	GetChannelManager(void);
 	BmsBarManager&		GetBarManager(void);
 
-	// オブジェが存在する最大の小節数を取得
+	// get number of measure of last object
 	int GetObjectExistsMaxBarPosition(void) const;
+	int GetObjectExistsMaxPosition() const;
+	int GetPlayableMaxPosition() const;
 
 	void MultiplyBarDivisionCount(unsigned int multiplier);
 

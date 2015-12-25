@@ -157,26 +157,28 @@ int _tmain(int argc, _TCHAR* argv[])
 	wprintf(L"Start Mixing ...\n");
 	HQWav result;
 	double mixing_pos;
-	for (int i = 0; i <= bms.GetObjectExistsMaxBarPosition(); i++) {
-		mixing_pos = bms_time.GetRow(i).time * (HQWav::FREQUENCY * 60);
+	for (int i = 0; i <= bms.GetPlayableMaxPosition(); i++) {
+		mixing_pos = bms_time.GetRow(i).time * HQWav::FREQUENCY;
 		for (BmsChannelManager::ConstIterator it = bms.GetChannelManager().Begin(); it != bms.GetChannelManager().End(); ++it) {
 			BmsChannel& current_channel = *it->second;
 			for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); it2++) {
 				BmsChannelBuffer& current_buffer = **it2;
 				BmsWord current_word = current_buffer[i];
+				int wav_channel = current_word.ToInteger();
+
 				if (current_channel.IsShouldPlayWavChannel() && current_word != BmsWord::MIN) {
-					if (wav_table.IsLoaded(current_word.ToInteger())) {
+					if (!wav_table.IsLoaded(wav_channel)) {
 						// ignore not loaded wav file
 						continue;
 					}
 					// turn off previous WAV if same one is playing
-					if (static_cast<unsigned int>(mixing_pos)-last_used_wav_pos[current_word.ToInteger()]
-						< wav_table.GetWAV(current_word.ToInteger())->GetLength()) {
-						result.DeductAt(static_cast<int>(mixing_pos), *wav_table.GetWAV(current_word.ToInteger()),
-							static_cast<int>(mixing_pos)-last_used_wav_pos[current_word.ToInteger()]);
+					if (static_cast<unsigned int>(mixing_pos)-last_used_wav_pos[wav_channel]
+						< wav_table.GetWAV(wav_channel)->GetLength()) {
+						result.DeductAt(static_cast<int>(mixing_pos), *wav_table.GetWAV(wav_channel),
+							static_cast<int>(mixing_pos)-last_used_wav_pos[wav_channel]);
 					}
-					result.MixinAt(static_cast<int>(mixing_pos), *wav_table.GetWAV(current_word.ToInteger()));
-					last_used_wav_pos[current_word.ToInteger()] = static_cast<int>(mixing_pos);
+					result.MixinAt(static_cast<int>(mixing_pos), *wav_table.GetWAV(wav_channel));
+					last_used_wav_pos[wav_channel] = static_cast<int>(mixing_pos);
 				}
 			}
 		}

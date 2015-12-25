@@ -490,7 +490,7 @@ namespace Bmx2Wav {
 // -- WavFileWriter ------------------------------------------------------
 WavFileWriter::WavFileWriter(const std::wstring& filename) :
 filename_(filename),
-file_(_wfopen(filename.c_str(), L"wb"))
+file_(_wfopen(filename.c_str(), L"wb+"))	// overwrites file
 {
 	if (file_ == NULL) {
 		throw Bmx2WavInvalidFile(filename, errno);
