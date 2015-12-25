@@ -5,11 +5,10 @@
 
 #include <algorithm>
 
+#include "bmsbel\bms_define.h"
 #include "bmsbel\bms_util.h"
 #include "bmsbel\bms_exception.h"
 #include "iconv\iconv.h"
-
-#include "bmsbel\bms_define.h"
 
 namespace {
 	const char HEX36_TABLE[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";

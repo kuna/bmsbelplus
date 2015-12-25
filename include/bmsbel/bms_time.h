@@ -25,10 +25,11 @@ private:
 public:
 	void Clear();
 	void Resize(int size);
+	int GetSize();
 	void AddRow(const BmsTime& bmstime);
 	void SetRow(const BmsTime& bmstime, int idx);
 	const BmsTime& GetRow(int idx);
-	double GetBarIndexFromTime(double time, int start = 0);
+	int GetBarIndexFromTime(double time, int start = 0);
 	double GetAbsBeatFromTime(double time);
 	double GetBeatFromTime(double time);
 	double GetEndTime();

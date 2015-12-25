@@ -28,6 +28,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiconv", "libiconv\libico
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rhythmusbmsparser", "rhythmusbmsparser\rhythmusbmsparser.vcxproj", "{EFE7BB99-8761-48A1-9790-1DC5A0387923}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simplebmxplayer", "simplebmxplayer\simplebmxplayer.vcxproj", "{31AFC055-6B30-4ED3-8E41-4778437435A3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29707C0A-73E2-43DE-8F6D-F2DB06808D14} = {29707C0A-73E2-43DE-8F6D-F2DB06808D14}
+		{754C626F-CD15-4A66-943A-A0299721E5F6} = {754C626F-CD15-4A66-943A-A0299721E5F6}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -62,6 +68,10 @@ Global
 		{EFE7BB99-8761-48A1-9790-1DC5A0387923}.Debug|Win32.Build.0 = Debug|Win32
 		{EFE7BB99-8761-48A1-9790-1DC5A0387923}.Release|Win32.ActiveCfg = Release|Win32
 		{EFE7BB99-8761-48A1-9790-1DC5A0387923}.Release|Win32.Build.0 = Release|Win32
+		{31AFC055-6B30-4ED3-8E41-4778437435A3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{31AFC055-6B30-4ED3-8E41-4778437435A3}.Debug|Win32.Build.0 = Debug|Win32
+		{31AFC055-6B30-4ED3-8E41-4778437435A3}.Release|Win32.ActiveCfg = Release|Win32
+		{31AFC055-6B30-4ED3-8E41-4778437435A3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

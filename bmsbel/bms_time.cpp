@@ -9,6 +9,10 @@ void BmsTimeManager::Resize(int size) {
 	array_.resize(size);
 }
 
+int BmsTimeManager::GetSize() {
+	return array_.size();
+}
+
 void BmsTimeManager::AddRow(const BmsTime& bmstime) {
 	if (array_.size() > 0 && array_.back().time >= bmstime.time) {
 		throw BmsTimeWrongException();
@@ -83,4 +87,23 @@ double BmsTimeManager::GetAbsBeatFromTime(double time) {
 	if (t < 0)
 		t = 0;
 	return (array_.end() - 1)->absbeat + db_dt * t;
+}
+
+int BmsTimeManager::GetBarIndexFromTime(double time, int start) {
+	if (array_.size() < 2) {
+		// exception BmsTooLittleRowData
+		// but, it shouldn't be happened
+		throw BmsParseNoObjectArrayException(0x7fffffff);
+	}
+	// if less then first data
+	// then no scroll
+	if (time < array_[0].time)
+		return 0;
+
+	for (int i = 1; i < array_.size(); i++) {
+		if (array_[i - 1].time <= time && time < array_[i].time) {
+			return i;
+		}
+	}
+	return GetSize() - 1;
 }

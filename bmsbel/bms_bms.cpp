@@ -513,8 +513,6 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 				switch (current_channel.GetChannelType()) {
 				case BmsChannelType::FIRSTPLAYER:
 				case BmsChannelType::SECONDPLAYER:
-				case BmsChannelType::FIRSTPLAYERHIDDEN:
-				case BmsChannelType::SECONDPLAYERHIDDEN:
 					// check if it's LNOBJ registered note
 					if (current_word == lnobj_word) {
 						// set previous note as LongNote
@@ -534,6 +532,10 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 						current_note.type = BmsNote::NOTE_NORMAL;
 					}
 					break;
+				case BmsChannelType::FIRSTPLAYERHIDDEN:
+				case BmsChannelType::SECONDPLAYERHIDDEN:
+					// add hidden note
+					current_note.type = BmsNote::NOTE_HIDDEN;
 				case BmsChannelType::FIRSTPLAYERLN:
 				case BmsChannelType::SECONDPLAYERLN:
 					// start longnote ONLY IF there's no previous note, or previous note is LN.

@@ -4,9 +4,6 @@
 #include <stdio.h>
 
 #include <string>
-
-// must define it to use lib file
-#define USING_STATIC_LIBICONV	1
 #include "iconv\iconv.h"
 
 class BmsTextFileReader {
