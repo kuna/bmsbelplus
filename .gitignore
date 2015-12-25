@@ -9,5 +9,8 @@ ipch
 Debug
 Release
 
+# dev libs
+lib
+
 # temporary project
 rhythmusbmsparser

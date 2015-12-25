@@ -21,3 +21,6 @@
 ##### Project is compiled with VC++ 2013.
 - since I don't have Mac, I hadn't tested with that.
 - I'll test this module in minGW soon.
+
+##### This Project doesn't include ```libSDL 2.0```
+- download ```Dev Lib / Runtime Binaries``` directly from [SDL](https://www.libsdl.org/download-2.0.php), and extract file to ```include/SDL(include), lib(lib), Release, Debug(runtime)```.
