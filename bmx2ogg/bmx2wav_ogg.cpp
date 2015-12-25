@@ -99,7 +99,7 @@ void HQOgg::WriteToFile(const std::wstring& path) {
 
 	*********************************************************************/
 
-	int ret = vorbis_encode_init_vbr(&vi, 2, 44100, 0.5);
+	int ret = vorbis_encode_init_vbr(&vi, 2, 44100, 0.95);
 	int eos = 0;	// end of stream
 
 	/* do not continue if setup failed; this can happen if we ask for a

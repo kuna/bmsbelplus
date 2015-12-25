@@ -25,4 +25,4 @@
 - just drag & drop any ```*.bmx``` files to program and there'll be converted ogg file!
 
 ### known problems / TODO / etc
-- current ogg quality is 0.5 (-1 ~ 1). maybe CBR 192kbps?
+- current ogg quality is 0.95 (-1 ~ 1). maybe CBR 375kbps?
