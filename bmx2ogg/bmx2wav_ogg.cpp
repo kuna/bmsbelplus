@@ -111,7 +111,7 @@ void HQOgg::WriteToFile(const std::wstring& path) {
 	/* add a comment */
 	vorbis_comment_init(&vc);
 	char utf8_buf[256];
-	vorbis_comment_add_tag(&vc, "ENCODER", "Bmx2Wav_remake");
+	vorbis_comment_add_tag(&vc, "ENCODER", "Bmx2Ogg");
 	if (ENCODING::wchar_to_utf8(artist.c_str(), utf8_buf, 256))
 		vorbis_comment_add_tag(&vc, "ARTIST", utf8_buf);
 	if (ENCODING::wchar_to_utf8(title.c_str(), utf8_buf, 256))
