@@ -204,3 +204,7 @@ Image::~Image() {
 bool Image::IsLoaded() {
 	return ISLOADED(sdltex);
 }
+
+SDL_Texture* Image::GetPtr() {
+	return sdltex;
+}

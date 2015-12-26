@@ -174,7 +174,11 @@ int _tmain(int argc, _TCHAR **argv) {
 		}
 
 		SDL_RenderClear(renderer);
-		//SDL_RenderCopy(renderer, bitmapTex, 0, 0);
+		for (int i = 0; i < BmsConst::WORD_MAX_VALUE; i++) {
+			if (Game::bmsresource.IsBMPLoaded(i)) {
+				SDL_RenderCopy(renderer, Game::bmsresource.GetBMP(i)->GetPtr(), 0, 0);
+			}
+		}
 		SDL_RenderPresent(renderer);
 	}
 

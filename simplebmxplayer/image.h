@@ -46,4 +46,5 @@ public:
 	bool IsLoaded();
 	void Reset();				// reset pos to first one
 	void Refresh(double t);		// refreshes texture in case of movie (loop forever if it's longer then movie)
+	SDL_Texture* GetPtr();
 };
