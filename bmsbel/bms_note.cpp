@@ -28,7 +28,9 @@ int BmsNote::GetKey() {
 	// minefield
 	// D1 -- D9
 	// E1 -- E9
-	return (channel - 36) % 72;
+	int b = (value.ToInteger() - 36) / 36;
+	int s = value.ToInteger() % 36 % 10;
+	return ((b % 2) * 10 + s);
 }
 
 bool BmsNote::IsVisible() {
