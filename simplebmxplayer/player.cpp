@@ -315,7 +315,7 @@ double Player::GetEclipsedTime() {
 BmsWord Player::GetCurrentMissBga() {
 	return bmstime.GetRow(currentbar).miss;
 }
-double Player::GetSpeed() { return speed; }
+double Player::GetSpeed() { return setting.speed; }
 
 // handler
 void Player::SetOnSound(void (*func)(BmsWord)) {

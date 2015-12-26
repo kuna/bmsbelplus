@@ -8,7 +8,7 @@
 - ```SDL```
 - ```SDL_image```
 - ```SDL_mixer```
-- ```smpeg```
+- ```Zeranoe FFmpeg```
 - ```Soundtouch```
 - ```bmsbel (libiconv)```
 

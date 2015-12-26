@@ -44,21 +44,28 @@ public:
 	void LoadPlayRecord(std::wstring& playerid);
 };
 
+// DP/SP setting is different!
+// so, each player has 2 PlayerSetting.
 class PlayerSetting {
-private:
+public:
+	// note/guage/keysetting
 	int keysetting[20][4];
 	int guageoption;
 	int noteoption;
-public:
-	void LoadPlaySetting(std::wstring& playerid);
-};
 
-class Player {
-private:
 	// speed information
 	double speed;
 	double lane;
 	double lift;
+public:
+	// type0: SP, type1: DP, type3: 5Key, type4: 10key, type5: PMS
+	void LoadPlaySetting(std::wstring& playerid, int type);
+};
+
+class Player {
+private:
+	// stored/storing settings
+	PlayerSetting setting;
 
 	// grade information
 	Grade grade;
@@ -72,7 +79,7 @@ private:
 	double health;						// player's health
 
 	// note/time information
-	BmsBms* bms;
+	BmsBms *bms;
 	BmsTimeManager bmstime;
 	BmsNoteContainer bmsnote;
 	double starttime;

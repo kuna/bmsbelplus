@@ -4,7 +4,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>D:\LR2\BMS\CHMR\[CRYSTAL TECHNOLOGY]CHMR[SP HYPER].bme</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"D:\LR2\BMS\CHMR\[CRYSTAL TECHNOLOGY]CHMR[SP HYPER].bme"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

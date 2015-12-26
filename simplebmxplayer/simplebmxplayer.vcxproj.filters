@@ -21,6 +21,15 @@
     <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="audio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
@@ -41,5 +50,33 @@
     <ClInclude Include="playrecord.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="bmsplayer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="playerinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="audio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\lib\ffmpeg\avutil.lib" />
+    <Library Include="..\lib\ffmpeg\postproc.lib" />
+    <Library Include="..\lib\ffmpeg\swresample.lib" />
+    <Library Include="..\lib\ffmpeg\swscale.lib" />
+    <Library Include="..\lib\ffmpeg\avcodec.lib" />
+    <Library Include="..\lib\ffmpeg\avdevice.lib" />
+    <Library Include="..\lib\ffmpeg\avfilter.lib" />
+    <Library Include="..\lib\ffmpeg\avformat.lib" />
+    <Library Include="..\lib\x86\SDL2_image.lib" />
+    <Library Include="..\lib\x86\SDL2_mixer.lib" />
+    <Library Include="..\lib\x86\SDL2.lib" />
   </ItemGroup>
 </Project>

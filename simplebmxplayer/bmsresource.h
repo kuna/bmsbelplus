@@ -1,9 +1,10 @@
 #pragma once
 
+#include "bmsbel\bms_define.h"
 #include <vector>
 
 template <typename WAV, typename BMP>
-class BmsWavResource {
+class BmsResource {
 public:
 	class BmsWav {
 	private:
@@ -28,69 +29,107 @@ public:
 	};
 
 public:
-	BmsWavResource();
+	BmsResource();
 	bool IsWAVLoaded(int channel);
 	WAV* GetWAV(int channel);
 	void SetWAV(int channel, WAV* wav);
 	bool IsBMPLoaded(int channel);
-	WAV* GetBMP(int channel);
+	BMP* GetBMP(int channel);
 	void SetBMP(int channel, BMP* wav);
+	void Clear();
 private:
-	BmsWav wav_table[1296];
-	BmsBmp bmp_table[1296];
+	BmsWav wav_table[BmsConst::WORD_MAX_COUNT];
+	BmsBmp bmp_table[BmsConst::WORD_MAX_COUNT];
 };
 
 template <typename WAV, typename BMP>
-BmsWavResource<WAV, BMP>::BmsWav::BmsWav() { wav = 0; }
+BmsResource<WAV, BMP>::BmsWav::BmsWav() { wav = 0; }
 
 template <typename WAV, typename BMP>
-BmsWavResource<WAV, BMP>::BmsWav::~BmsWav() { delete wav; }
+BmsResource<WAV, BMP>::BmsWav::~BmsWav() { if (wav) delete wav; }
 
 template <typename WAV, typename BMP>
-bool BmsWavResource<WAV, BMP>::BmsWav::IsLoaded() { return wav; }
+bool BmsResource<WAV, BMP>::BmsWav::IsLoaded() { return wav; }
 
 template <typename WAV, typename BMP>
-WAV* BmsWavResource<WAV, BMP>::BmsWav::GetWAV() { return wav; }
+WAV* BmsResource<WAV, BMP>::BmsWav::GetWAV() { return wav; }
 
 template <typename WAV, typename BMP>
-void BmsWavResource<WAV, BMP>::BmsWav::SetWAV(WAV *wav) { this->wav = wav; }
+void BmsResource<WAV, BMP>::BmsWav::SetWAV(WAV *wav) { this->wav = wav; }
 
 // -------------------------------------------------
 
 template <typename WAV, typename BMP>
-BmsWavResource<WAV, BMP>::BmsBmp::BmsBmp() { wav = 0; }
+BmsResource<WAV, BMP>::BmsBmp::BmsBmp() { bmp = 0; }
 
 template <typename WAV, typename BMP>
-BmsWavResource<WAV, BMP>::BmsBmp::~BmsBmp() { delete bmp; }
+BmsResource<WAV, BMP>::BmsBmp::~BmsBmp() { if (bmp) delete bmp; }
 
 template <typename WAV, typename BMP>
-bool BmsWavResource<WAV, BMP>::BmsBmp::IsLoaded() { return bmp; }
+bool BmsResource<WAV, BMP>::BmsBmp::IsLoaded() { return bmp; }
 
 template <typename WAV, typename BMP>
-WAV* BmsWavResource<WAV, BMP>::BmsBmp::GetBMP() { return bmp; }
+BMP* BmsResource<WAV, BMP>::BmsBmp::GetBMP() { return bmp; }
 
 template <typename WAV, typename BMP>
-void BmsWavResource<WAV, BMP>::BmsBmp::GetBMP(BMP *bmp) { this->bmp = bmp; }
+void BmsResource<WAV, BMP>::BmsBmp::SetBMP(BMP *bmp) { this->bmp = bmp; }
 
 // -------------------------------------------------
 
 template <typename WAV, typename BMP>
-BmsWavResource<WAV, BMP>::BmsWavResource() {  }
+BmsResource<WAV, BMP>::BmsResource() {  }
+
+// --------- WAV ---------
 
 template <typename WAV, typename BMP>
-BMP* BmsWavResource<WAV, BMP>::GetWAV(int channel) {
-	if (bmp_table[channel].IsLoaded())
-		return bmp_table[channel].GetWAV();
+WAV* BmsResource<WAV, BMP>::GetWAV(int channel) {
+	if (wav_table[channel].IsLoaded())
+		return wav_table[channel].GetWAV();
 	else
 		return 0;
 }
 
 template <typename WAV, typename BMP>
-void BmsWavResource<WAV, BMP>::SetWAV(int channel, BMP* wav) {
-	bmp_table[channel].SetWAV(wav);
+void BmsResource<WAV, BMP>::SetWAV(int channel, WAV* wav) {
+	wav_table[channel].SetWAV(wav);
 }
 
 template <typename WAV, typename BMP>
-bool BmsWavResource<WAV, BMP>::IsLoaded(int channel) {
+bool BmsResource<WAV, BMP>::IsWAVLoaded(int channel) {
+	return wav_table[channel].IsLoaded();
+}
+
+// -------- BMP ---------
+
+template <typename WAV, typename BMP>
+BMP* BmsResource<WAV, BMP>::GetBMP(int channel) {
+	if (bmp_table[channel].IsLoaded())
+		return bmp_table[channel].GetBMP();
+	else
+		return 0;
+}
+
+template <typename WAV, typename BMP>
+void BmsResource<WAV, BMP>::SetBMP(int channel, BMP* bmp) {
+	bmp_table[channel].SetBMP(bmp);
+}
+
+template <typename WAV, typename BMP>
+bool BmsResource<WAV, BMP>::IsBMPLoaded(int channel) {
 	return bmp_table[channel].IsLoaded();
+}
+
+// -------- Common ---------
+template <typename WAV, typename BMP>
+void BmsResource<WAV, BMP>::Clear() {
+	for (int i = 0; i < BmsConst::WORD_MAX_COUNT; i++) {
+		if (wav_table[i].IsLoaded()) {
+			delete wav_table[i].GetWAV();
+			wav_table[i].SetWAV(0);
+		}
+		if (bmp_table[i].IsLoaded()) {
+			delete bmp_table[i].GetBMP();
+			bmp_table[i].SetBMP(0);
+		}
+	}
 }
