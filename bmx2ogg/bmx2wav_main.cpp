@@ -126,6 +126,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::wstring newname = L"[" + bms.GetHeaders()[L"ARTIST"] + L"] " + bms.GetHeaders()[L"TITLE"];
 		BMX2WAVParameter::output_path = IO::substitute_filename(BMX2WAVParameter::output_path, newname);
 	}
+	// replace invalid char
+	BMX2WAVParameter::output_path = IO::make_filename_safe(BMX2WAVParameter::output_path);
 	// check overwrite file exists
 	if (!BMX2WAVParameter::overwrite && IO::is_file_exists(BMX2WAVParameter::output_path)) {
 		wprintf(L"output file already exists!");

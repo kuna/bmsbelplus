@@ -23,6 +23,7 @@ namespace IO {
 	std::wstring get_parentdir(const std::wstring& dirpath);
 	bool create_directory(const std::wstring& filepath);
 	bool make_parent_directory_recursive(const std::wstring& filepath);
+	std::wstring make_filename_safe(const std::wstring& filepath);
 }
 
 namespace ENCODING {

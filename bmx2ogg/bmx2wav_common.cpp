@@ -4,6 +4,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <wchar.h>
+#include <array>
 
 std::wstring to_wstring (int i) { std::wostringstream wss; wss << i; return wss.str(); }
 
@@ -86,6 +87,21 @@ namespace IO {
 			}
 			return create_directory(filepath.c_str());
 		}
+	}
+
+	std::wstring make_filename_safe(const std::wstring& filepath) {
+		std::wstring fn = get_filename(filepath);
+#define REPLACESTR(s, o, r) (std::replace((s).begin(), (s).end(), (o), (r)))
+		REPLACESTR(fn, L'/', L'_');
+		if (_WIN32) {
+			REPLACESTR(fn, L'|', L'_');
+			REPLACESTR(fn, L'\\', L'_');
+			REPLACESTR(fn, L':', L'_');
+			REPLACESTR(fn, L'*', L'_');
+			REPLACESTR(fn, L'<', L'_');
+			REPLACESTR(fn, L'>', L'_');
+		}
+		return get_filedir(filepath) + PATH_SEPARATOR + fn;
 	}
 }
 
