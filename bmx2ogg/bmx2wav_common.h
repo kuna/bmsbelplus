@@ -14,7 +14,8 @@
 std::wstring to_wstring(int i);
 
 namespace IO {
-	std::wstring substitute_extension(const std::wstring& filename, const std::wstring& newext);
+	std::wstring substitute_extension(const std::wstring& filepath, const std::wstring& newext);
+	std::wstring substitute_filename(const std::wstring& filepath, const std::wstring& newname);	// excludes extension
 	std::wstring get_filedir(const std::wstring& filename);
 	std::wstring get_filename(const std::wstring& filename);
 	bool is_file_exists(const std::wstring& filename);

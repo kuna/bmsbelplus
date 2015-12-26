@@ -19,7 +19,9 @@
 - ```-ogg```
   output audio as ogg *(default)*
 - ```-ow```
-  overwrite output file
+  overwrite output file *(default)*
+- ```-autofn, -noautofn```
+  automatically reset file name (ex: ```[artist] title.ogg```) *(default)*
 
 #### easy use
 - just drag & drop any ```*.bmx``` files to program and there'll be converted ogg file!

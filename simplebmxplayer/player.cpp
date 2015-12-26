@@ -83,9 +83,9 @@ bool Player::IsNoteAvailable(int notechannel) {
 
 int Player::GetAvailableNoteIndex(int notechannel, int start) {
 	// we also ignore invisible note!
-	for (int i = start; i < bmsnote.GetNoteArray(notechannel).size(); i++)
-		if (bmsnote.GetNoteArray(notechannel)[i].type != BmsNote::NOTE_NONE 
-			&& bmsnote.GetNoteArray(notechannel)[i].type != BmsNote::NOTE_HIDDEN)
+	for (int i = start; i < bmsnote[notechannel].size(); i++)
+		if (bmsnote[notechannel][i].type != BmsNote::NOTE_NONE 
+			&& bmsnote[notechannel][i].type != BmsNote::NOTE_HIDDEN)
 			return i;
 	return -1;	// cannot find next available note
 }
@@ -99,7 +99,7 @@ int Player::GetNextAvailableNoteIndex(int notechannel) {
 BmsNote* Player::GetCurrentNote(int notechannel) {
 	if (!IsNoteAvailable(notechannel))
 		return 0;
-	return &bmsnote.GetNoteArray(notechannel)[noteindex[notechannel]];
+	return &bmsnote[notechannel][noteindex[notechannel]];
 }
 
 bool Player::IsLongNote(int notechannel) {
@@ -118,11 +118,11 @@ void Player::Prepare(BmsBms* bms, int startpos, bool autoplay) {
 		keysound[i].resize(bmstime.GetSize());
 		BmsWord lastkeysound(0);
 		for (int j = 0; j < bmstime.GetSize(); j++) {
-			if (bmsnote.GetNoteArray(i)[j].type == BmsNote::NOTE_HIDDEN
-				|| bmsnote.GetNoteArray(i)[j].type == BmsNote::NOTE_LNSTART
-				|| bmsnote.GetNoteArray(i)[j].type == BmsNote::NOTE_NORMAL) {
+			if (bmsnote[i][j].type == BmsNote::NOTE_HIDDEN
+				|| bmsnote[i][j].type == BmsNote::NOTE_LNSTART
+				|| bmsnote[i][j].type == BmsNote::NOTE_NORMAL) {
 				// fill whole previous notes with current keysound
-				lastkeysound = bmsnote.GetNoteArray(i)[j].value;
+				lastkeysound = bmsnote[i][j].value;
 				for (int k = j; k >= 0; k--) {
 					if (keysound[i][k] != BmsWord::MIN) break;
 					keysound[i][k] = lastkeysound;
@@ -207,7 +207,7 @@ void Player::Now() {
 
 		// if autoplay, then it'll automatically played
 		if (autoplay && GetCurrentNote(i)->type != BmsNote::NOTE_MINE && bmstime.GetRow(noteindex[i]).time < t) {
-			BmsNote& note = bmsnote.GetNoteArray(i)[noteindex[i]];
+			BmsNote& note = bmsnote[i][noteindex[i]];
 			if (GetCurrentNote(i)->type == BmsNote::NOTE_LNSTART) {
 				if (soundfunc) soundfunc(note.value);
 				grade.AddGrade(Grade::JUDGE_PGREAT);
@@ -232,7 +232,7 @@ void Player::Now() {
 		}
 		// if not, check timing for poor
 		else if (CheckJudgeByTiming(bmstime.GetRow(noteindex[i]).time - t) == Grade::JUDGE_LATE) {
-			BmsNote& note = bmsnote.GetNoteArray(i)[noteindex[i]];
+			BmsNote& note = bmsnote[i][noteindex[i]];
 			// if LNSTART, also kill LNEND & 2 miss
 			if (note.type == BmsNote::NOTE_LNSTART) {
 				note.type = BmsNote::NOTE_NONE;
@@ -241,7 +241,7 @@ void Player::Now() {
 			}
 			// if LNEND, reset longnotestartpos & remove LNSTART note
 			else if (note.type == BmsNote::NOTE_LNEND) {
-				bmsnote.GetNoteArray(i)[longnotestartpos[i]].type = BmsNote::NOTE_NONE;
+				bmsnote[i][longnotestartpos[i]].type = BmsNote::NOTE_NONE;
 				longnotestartpos[i] = -1;
 			}
 			note.type = BmsNote::NOTE_NONE;
@@ -269,8 +269,8 @@ void Player::UpKey(int keychannel) {
 			int judge = CheckJudgeByTiming(t - bmstime.GetRow(noteindex[keychannel]).time);
 			if (judgefunc) judgefunc(judge, keychannel);
 			// get next note and remove current longnote
-			bmsnote.GetNoteArray(keychannel)[longnotestartpos[keychannel]].type = BmsNote::NOTE_NONE;
-			bmsnote.GetNoteArray(keychannel)[noteindex[keychannel]].type = BmsNote::NOTE_NONE;
+			bmsnote[keychannel][longnotestartpos[keychannel]].type = BmsNote::NOTE_NONE;
+			bmsnote[keychannel][noteindex[keychannel]].type = BmsNote::NOTE_NONE;
 			noteindex[keychannel] = GetNextAvailableNoteIndex(keychannel);
 		}
 		longnotestartpos[keychannel] = -1;

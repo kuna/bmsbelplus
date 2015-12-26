@@ -8,11 +8,21 @@
 std::wstring to_wstring (int i) { std::wostringstream wss; wss << i; return wss.str(); }
 
 namespace IO {
-	std::wstring substitute_extension(const std::wstring& filename, const std::wstring& newext) {
-		auto i = filename.find_last_of(L'.');
+	std::wstring substitute_extension(const std::wstring& filepath, const std::wstring& newext) {
+		auto i = filepath.find_last_of(L'.');
 		if (i == std::wstring::npos)
-			return filename + newext;
-		return filename.substr(0, i) + newext;
+			return filepath + newext;
+		return filepath.substr(0, i) + newext;
+	}
+
+	std::wstring substitute_filename(const std::wstring& filepath, const std::wstring& newname) {
+		auto i_start = filepath.find_last_of(PATH_SEPARATOR_CHAR);
+		if (i_start == std::wstring::npos)
+			i_start = 0;
+		auto i_end = filepath.find_last_of(L'.');
+		if (i_end == std::wstring::npos)
+			i_end = filepath.size() - 1;
+		return filepath.substr(0, i_start) + PATH_SEPARATOR + newname + filepath.substr(i_end);
 	}
 
 	std::wstring get_filedir(const std::wstring& filename) {

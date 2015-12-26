@@ -15,7 +15,7 @@ type(type),
 channel(channel),
 value(value) {}
 
-int BmsNote::GetKey() {
+int BmsNote::GetKey() const {
 	// normal note
 	// 11 -- 17
 	// 21 -- 27
@@ -28,12 +28,12 @@ int BmsNote::GetKey() {
 	// minefield
 	// D1 -- D9
 	// E1 -- E9
-	int b = (value.ToInteger() - 36) / 36;
-	int s = value.ToInteger() % 36 % 10;
+	int b = (channel - 36) / 36;
+	int s = channel % 36 % 10;
 	return ((b % 2) * 10 + s);
 }
 
-bool BmsNote::IsVisible() {
+bool BmsNote::IsVisible() const {
 	return !(channel > 108 && channel < 180);
 }
 
@@ -86,20 +86,17 @@ int BmsNoteContainer::GetKeys() {
 }
 
 
-std::vector<BmsNote>& BmsNoteContainer::GetNoteArray(int channel) {
+std::vector<BmsNote>& BmsNoteContainer::operator [](int channel) {
 	return notes[channel];
 }
-std::vector<BmsNote>& BmsNoteContainer::GetNoteArray(const BmsWord& word) {
+std::vector<BmsNote>& BmsNoteContainer::operator [](const BmsWord& word) {
 	int b = (word.ToInteger() - 36) / 36;
 	int s = word.ToInteger() % 36 % 10;
-	return GetNoteArray((b % 2) * 10 + s);
+	return (*this)[(b % 2) * 10 + s];
 }
-BmsNote& BmsNoteContainer::GetNoteData(int channel, int idx) {
-	return notes[channel][idx];
-}
-BmsNote* BmsNoteContainer::SetNoteData(int channel, int idx, const BmsNote& note) {
-	notes[channel][idx] = note;
-	return &notes[channel][idx];
+BmsNote* BmsNoteContainer::SetNoteData(const BmsNote& note, int idx) {
+	notes[note.GetKey()][idx] = note;
+	return &notes[note.GetKey()][idx];
 }
 std::vector<BmsNote>::iterator BmsNoteContainer::Begin(int channel) {
 	return notes[channel].begin();

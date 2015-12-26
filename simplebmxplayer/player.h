@@ -1,6 +1,8 @@
 #pragma once
 
 #include "bmsbel/bms_bms.h"
+#include "bmsinfo.h"
+#include "playrecord.h"
 
 class Grade {
 private:
@@ -33,6 +35,22 @@ public:
 	double CalculateRate();
 	int CalculateGrade();
 	void AddGrade(const int type);
+};
+
+class PlayerRecord {
+private:
+	std::map<BmsInfo, PlayRecord> playrecord;
+public:
+	void LoadPlayRecord(std::wstring& playerid);
+};
+
+class PlayerSetting {
+private:
+	int keysetting[20][4];
+	int guageoption;
+	int noteoption;
+public:
+	void LoadPlaySetting(std::wstring& playerid);
 };
 
 class Player {

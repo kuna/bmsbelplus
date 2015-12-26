@@ -23,6 +23,7 @@ namespace BMX2WAVParameter {
 	std::wstring bms_path;
 	std::wstring output_path;
 	bool overwrite;
+	bool autofilename;
 
 	std::wstring substitute_output_extension(const std::wstring& filename) {
 		if (output_type == OUTPUT_OGG) {
@@ -41,7 +42,8 @@ namespace BMX2WAVParameter {
 			"-o: output file to my custom path (you need to enter more argument)\n"
 			"-wav: output audio as wav\n"
 			"-ogg: output audio as ogg (default)\n"
-			"-ow: overwrite output file\n"
+			"-ow: overwrite output file (default)\n"
+			"-autofn, -noautofn: automatically reset file name (ex: [artist] title.ogg) (default)\n"
 			"\n"
 			"EASY USE:\n"
 			"JUST DRAG FILE to me and there will be *.ogg file!\n"
@@ -57,7 +59,8 @@ namespace BMX2WAVParameter {
 		bms_path = argv[1];
 		output_type = OUTPUT_OGG;
 		output_path = substitute_output_extension(IO::get_filedir(argv[0]) + PATH_SEPARATOR + IO::get_filename(bms_path));
-		overwrite = false;
+		overwrite = true;
+		autofilename = true;
 
 		// parse
 		for (int i = 2; i < argc; i++) {
@@ -87,6 +90,9 @@ namespace BMX2WAVParameter {
 			else if (CMP(argv[i], L"-ogg")) {
 				// it's default, so do nothing
 			}
+			else if (CMP(argv[i], L"-noautofn")) {
+				autofilename = false;
+			}
 		}
 
 		return 0;
@@ -114,8 +120,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	BmsNoteContainer bms_note;
 	bms.CalculateTime(bms_time);
 	bms.GetNotes(bms_note);
+
+	// should we have to change filename?
+	if (BMX2WAVParameter::autofilename && bms.GetHeaders().IsExists(L"TITLE") && bms.GetHeaders().IsExists(L"ARTIST")) {
+		std::wstring newname = L"[" + bms.GetHeaders()[L"ARTIST"] + L"] " + bms.GetHeaders()[L"TITLE"];
+		BMX2WAVParameter::output_path = IO::substitute_filename(BMX2WAVParameter::output_path, newname);
+	}
+	// check overwrite file exists
+	if (!BMX2WAVParameter::overwrite && IO::is_file_exists(BMX2WAVParameter::output_path)) {
+		wprintf(L"output file already exists!");
+		return -1;
+	}
+
+	// print brief information
 	wprintf(L"BMS Path: %ls\n", BMX2WAVParameter::bms_path.c_str());
-	wprintf(L"BMS Title: %ls\n", bms.GetHeaders()[L"TITLE"].c_str());
+	if (bms.GetHeaders().IsExists(L"TITLE"))
+		wprintf(L"BMS Title: %ls\n", bms.GetHeaders()[L"TITLE"].c_str());
 	wprintf(L"BMS Length: %.03lf (sec)\n", bms_time.GetEndTime());
 	wprintf(L"Output Path: %ls\n", BMX2WAVParameter::output_path.c_str());
 
@@ -180,7 +200,7 @@ int _tmain(int argc, _TCHAR* argv[])
 					// check is Longnote channel & Longnote ending sound
 					// if it does, ignore it
 					if (current_channel.IsLongNoteChannel()
-						&& bms_note.GetNoteArray(current_channel.GetChannelNumber())[i].type == BmsNote::NOTE_LNEND) {
+						&& bms_note[current_channel.GetChannelNumber()][i].type == BmsNote::NOTE_LNEND) {
 						continue;
 					}
 					if (!wav_table.IsLoaded(wav_channel)) {

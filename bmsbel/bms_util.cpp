@@ -231,12 +231,13 @@ int BmsUtil::IsFileUTF8(const std::wstring& filename) {
 		const char *buf_iconv = buf_char;
 		char *but_out_iconv = (char*)buf_wchar;
 		len_wchar = BmsConst::BMS_MAX_LINE_BUFFER;		// available characters for converting
-		iconv(cd, 0, 0, &but_out_iconv, &len_wchar);
-		iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_wchar);
-		if (errno) {
-			return errno;	// failed to convert UTF8->wchar. maybe, SHIFT_JIS?
+		int iconv_ret = iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_wchar);
+		*but_out_iconv = *(but_out_iconv + 1) = 0;		// NULL terminal character
+		if (errno || iconv_ret < 0) {
+			iconv_close(cd);
+			return 0;	// failed to convert UTF8->wchar. maybe, SHIFT_JIS?
 		}
 	}
 	iconv_close(cd);
-	return 0;
+	return 1;
 }

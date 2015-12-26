@@ -536,6 +536,7 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 				case BmsChannelType::SECONDPLAYERHIDDEN:
 					// add hidden note
 					current_note.type = BmsNote::NOTE_HIDDEN;
+					break;
 				case BmsChannelType::FIRSTPLAYERLN:
 				case BmsChannelType::SECONDPLAYERLN:
 					// start longnote ONLY IF there's no previous note, or previous note is LN.
@@ -544,7 +545,7 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 						current_note.type = BmsNote::NOTE_LNSTART;
 					}
 					else {
-						// make previous note complete
+						// end of the longnote
 						current_note.type = BmsNote::NOTE_LNEND;
 					}
 					break;
@@ -563,7 +564,7 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 				case BmsChannelType::SECONDPLAYERLN:
 				case BmsChannelType::FIRSTPLAYERMINE:
 				case BmsChannelType::SECONDPLAYERMINE:
-					channelLastNote[current_note.channel] = note_manager_.SetNoteData(current_note.GetKey(), i, current_note);
+					channelLastNote[current_note.channel] = note_manager_.SetNoteData(current_note, i);
 					break;
 				}
 			}

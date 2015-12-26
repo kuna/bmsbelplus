@@ -26,8 +26,8 @@ public:
 	BmsWord value;
 
 	// get key index from channel data
-	int GetKey();
-	bool IsVisible();
+	int GetKey() const;
+	bool IsVisible() const;
 };
 
 class BmsNoteContainer {
@@ -56,10 +56,10 @@ public:
 	void SP_TO_DP(double ratio);
 
 	// notedata value
-	std::vector<BmsNote>& GetNoteArray(int channel);
-	std::vector<BmsNote>& GetNoteArray(const BmsWord& word);
-	BmsNote& GetNoteData(int channel, int idx);
-	BmsNote* SetNoteData(int channel, int idx, const BmsNote& note);
+	std::vector<BmsNote>& operator [](int channel);
+	std::vector<BmsNote>& operator [](const BmsWord& word);
+	BmsNote* SetNoteData(const BmsNote& note, int idx);
 	std::vector<BmsNote>::iterator Begin(int channel);
 	std::vector<BmsNote>::iterator End(int channel);
+
 };
