@@ -69,6 +69,7 @@ namespace Game {
 	SDL_Renderer* renderer = NULL;
 
 	// drawing texture/fonts
+	SDL_Texture* note_texture;
 	FC_Font* font = NULL;
 
 	// timers
@@ -83,11 +84,10 @@ namespace Game {
 		if (c == BmsChannelType::BGA)
 			bgavalue = v;
 	}
-	void OnBmsSound(BmsWord v) {
+	void OnBmsSound(BmsWord v, int on) {
 		if (bmsresource.IsWAVLoaded(v.ToInteger())) {
 			bmsresource.GetWAV(v.ToInteger())->Stop();
-			bmsresource.GetWAV(v.ToInteger())->Play();
-			printf("%s (%d)\n", v.ToString().c_str(), v.ToInteger());
+			if (on) bmsresource.GetWAV(v.ToInteger())->Play();
 		}
 	}
 	/*
@@ -152,7 +152,28 @@ namespace Game {
 		font = FC_CreateFont();
 		if (!font)
 			return false;
-		FC_LoadFont(font, renderer, "lazy.ttf", 28, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
+		char basepath[256];	
+		strcpy(basepath, SDL_GetBasePath());	strcat(basepath, "lazy.ttf");
+		FC_LoadFont(font, renderer, basepath, 28, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
+		strcpy(basepath, SDL_GetBasePath());	strcat(basepath, "simple.png");
+		SDL_Surface *surf_temp = IMG_Load(basepath);
+		if (!surf_temp) {
+			printf(SDL_GetError());
+			printf("\n");
+		}
+		if (surf_temp) {
+			note_texture = SDL_CreateTextureFromSurface(renderer, surf_temp);
+		}
+		else {
+			int pitch;
+			Uint32 *p;
+			note_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 20, 10);
+			SDL_LockTexture(note_texture, 0, (void**)&p, &pitch);
+			for (int i = 0; i < 20 * 10; i++)
+				p[i] = (255<<24 | 255<<16 | 120<<8 | 120);
+			SDL_UnlockTexture(note_texture);
+		}
+		SDL_FreeSurface(surf_temp);
 		return true;
 	}
 
@@ -182,12 +203,55 @@ namespace Game {
 		// render BGA
 		if (bmsresource.IsBMPLoaded(bgavalue.ToInteger()))
 			SDL_RenderCopy(renderer, bmsresource.GetBMP(bgavalue.ToInteger())->GetPtr(), 0, 0);
+		// render notes
+
+		SDL_Rect src, dest;
+		int lnstart[20] = { 900, };
+		bool lndraw[20] = { false, };
+		BmsTimeManager& bmstime = player.GetBmsTimeManager();
+		BmsNoteContainer& bmsnote = player.GetBmsNotes();
+		//double speed = 3 * bms.GetBaseBPM();		// not speed - but speed multiply value
+		double speed = 1.0 / 300 * 900 * 1000;		// if you use constant `green` speed ... (= 1 measure per 300ms)
+		for (int i = 0; i < 20; i++) {
+			for (int nidx = player.GetCurrentNoteBar(i);
+				player.IsNoteAvailable(i) && nidx < bmstime.GetSize() && (bmstime[nidx].absbeat - notepos) * speed < 900;
+				nidx++) {
+				switch (bmsnote[i][nidx].type){
+				case BmsNote::NOTE_NORMAL:
+					dest.x = i * 50;	dest.y = 900 - (bmstime[nidx].absbeat - notepos) * speed;
+					dest.w = 50;		dest.h = 10;
+					SDL_RenderCopy(renderer, note_texture, 0, &dest);
+					break;
+				case BmsNote::NOTE_LNSTART:
+					lnstart[i] = 900 - (bmstime[nidx].absbeat - notepos) * speed;
+					lndraw[i] = true;
+					break;
+				case BmsNote::NOTE_LNEND:
+					dest.x = i * 50;	dest.y = 900 - (bmstime[nidx].absbeat - notepos) * speed;
+					dest.w = 50;		dest.h = lnstart[i] - dest.y;
+					SDL_RenderCopy(renderer, note_texture, 0, &dest);
+					lndraw[i] = false;
+					break;
+				}
+			}
+			// if LN_end hasn't found
+			// then draw it to end of the screen
+			if (lndraw[i]) {
+				dest.x = i * 50;	dest.y = 0;
+				dest.w = 50;		dest.h = lnstart[i];
+				SDL_RenderCopy(renderer, note_texture, 0, &dest);
+			}
+		}
+		dest.x = 50;	dest.y = 40;
+		dest.w = 50;	dest.h = 10;
+		SDL_RenderCopy(renderer, note_texture, 0, &dest);
 	}
 	/*
 	 * Rendering End
 	 */
 
 	void Release() {
+		if (note_texture) SDL_DestroyTexture(note_texture);
 		FC_FreeFont(font);
 		Game::bmsresource.Clear();
 		bms.Clear();
@@ -213,6 +277,7 @@ int _tmain(int argc, _TCHAR **argv) {
 		wprintf(L"Failed to Open Audio ...\n");
 		return -1;
 	}
+	Mix_AllocateChannels(1296);	// maybe it'll be enough for our mixing ...
 	Game::gWindow = SDL_CreateWindow("SimpleBMXPlayer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		Settings::width, Settings::height, SDL_WINDOW_SHOWN);
 	if (!Game::gWindow) {
@@ -260,12 +325,6 @@ int _tmain(int argc, _TCHAR **argv) {
 				break;
 			}
 			if (e.type == SDL_KEYUP) {
-				if (Game::bmsresource.IsWAVLoaded(18)) {
-					printf("%s\n", BmsWord(18).ToString().c_str());
-					//Game::bmsresource.GetWAV(18)->Stop();
-					Game::bmsresource.GetWAV(18)->Play();
-					printf("%s\n", Mix_GetError());
-				}
 			}
 		}
 

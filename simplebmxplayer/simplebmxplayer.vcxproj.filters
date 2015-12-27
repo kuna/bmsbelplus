@@ -77,6 +77,9 @@
     <ClInclude Include="font.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\lib\ffmpeg\avutil.lib" />
@@ -92,5 +95,11 @@
     <Library Include="..\lib\x86\SDL2.lib" />
     <Library Include="..\lib\x86\SDL2_ttf.lib" />
     <Library Include="..\lib\x86\SDL_FontCache.lib" />
+    <Library Include="..\lib\x86\SDL2main.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="simplebmxplayer.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

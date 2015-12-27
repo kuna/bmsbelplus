@@ -10,12 +10,12 @@
  */
 class BmsNote {
 public:
-	const static int NOTE_NONE;
-	const static int NOTE_NORMAL;
-	const static int NOTE_LNSTART;
-	const static int NOTE_LNEND;
-	const static int NOTE_MINE;
-	const static int NOTE_HIDDEN;
+	const static int NOTE_NONE = 0;
+	const static int NOTE_NORMAL = 1;
+	const static int NOTE_LNSTART = 2;
+	const static int NOTE_LNEND = 3;
+	const static int NOTE_MINE = 4;
+	const static int NOTE_HIDDEN = 5;
 
 public:
 	BmsNote();		// NONEtype note

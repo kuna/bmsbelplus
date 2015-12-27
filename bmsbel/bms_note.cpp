@@ -1,11 +1,11 @@
 #include "bmsbel\bms_note.h"
 
-const int BmsNote::NOTE_NONE = 0;
-const int BmsNote::NOTE_NORMAL = 1;
-const int BmsNote::NOTE_LNSTART = 2;
-const int BmsNote::NOTE_LNEND = 3;
-const int BmsNote::NOTE_MINE = 4;
-const int BmsNote::NOTE_HIDDEN = 5;
+const int BmsNote::NOTE_NONE ;
+const int BmsNote::NOTE_NORMAL;
+const int BmsNote::NOTE_LNSTART;
+const int BmsNote::NOTE_LNEND;
+const int BmsNote::NOTE_MINE;
+const int BmsNote::NOTE_HIDDEN;
 
 BmsNote::BmsNote() :
 type(NOTE_NONE) {}

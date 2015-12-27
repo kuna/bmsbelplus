@@ -92,14 +92,13 @@ private:
 	bool autoplay;
 
 	// handler
-	void(*soundfunc)(BmsWord);
+	void(*soundfunc)(BmsWord, int);	// (soundkey, on/off)
 	void(*bgafunc)(BmsWord, BmsChannelType::BMSCHANNEL);
-	void(*judgefunc)(int, int);	// (judgetype, channel)
+	void(*judgefunc)(int, int);		// (judgetype, channel)
 	
 	// judge
 	int CheckJudgeByTiming(double delta);
 	// active note searcher
-	bool IsNoteAvailable(int notechannel);
 	int GetAvailableNoteIndex(int notechannel, int start=0);
 	int GetNextAvailableNoteIndex(int notechannel);
 	BmsNote* GetCurrentNote(int notechannel);
@@ -115,12 +114,17 @@ public:
 
 	// get/set status
 	BmsWord GetCurrentMissBga();
+	BmsTimeManager& GetBmsTimeManager();
+	BmsNoteContainer& GetBmsNotes();
 	double GetSpeed();
 	Grade GetGrade();
 	double GetCurrentPos();
+	int GetCurrentBar();
+	int GetCurrentNoteBar(int channel);
+	bool IsNoteAvailable(int notechannel);
 
 	// handler
-	void SetOnSound(void(*func)(BmsWord));
+	void SetOnSound(void(*func)(BmsWord, int));
 	void SetOnBga(void(*func)(BmsWord, BmsChannelType::BMSCHANNEL));
 	void SetOnJudge(void(*func)(int ,int));
 };

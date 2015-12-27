@@ -29,6 +29,7 @@ public:
 	void AddRow(const BmsTime& bmstime);
 	void SetRow(const BmsTime& bmstime, int idx);
 	const BmsTime& GetRow(int idx);
+	const BmsTime& operator [](int idx);
 	int GetBarIndexFromTime(double time, int start = 0);
 	double GetAbsBeatFromTime(double time);
 	double GetBeatFromTime(double time);

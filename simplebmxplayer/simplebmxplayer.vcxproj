@@ -105,6 +105,7 @@
     <ClInclude Include="player.h" />
     <ClInclude Include="playerinfo.h" />
     <ClInclude Include="playrecord.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="skin.h" />
     <ClInclude Include="timer.h" />
   </ItemGroup>
@@ -118,10 +119,14 @@
     <Library Include="..\lib\ffmpeg\swresample.lib" />
     <Library Include="..\lib\ffmpeg\swscale.lib" />
     <Library Include="..\lib\x86\SDL2.lib" />
+    <Library Include="..\lib\x86\SDL2main.lib" />
     <Library Include="..\lib\x86\SDL2_image.lib" />
     <Library Include="..\lib\x86\SDL2_mixer.lib" />
     <Library Include="..\lib\x86\SDL2_ttf.lib" />
     <Library Include="..\lib\x86\SDL_FontCache.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="simplebmxplayer.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

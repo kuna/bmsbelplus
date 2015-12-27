@@ -28,6 +28,10 @@ const BmsTime& BmsTimeManager::GetRow(int idx) {
 	return array_[idx];
 }
 
+const BmsTime& BmsTimeManager::operator[](int idx) {
+	return array_[idx];
+}
+
 double BmsTimeManager::GetEndTime() {
 	if (array_.size() <= 0)
 		return 0;
