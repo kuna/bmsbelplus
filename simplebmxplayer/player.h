@@ -3,6 +3,9 @@
 #include "bmsbel/bms_bms.h"
 #include "bmsinfo.h"
 #include "playrecord.h"
+#include <stdint.h>		// for Uint32 definition
+
+typedef uint32_t Uint32;
 
 class Grade {
 private:
@@ -82,12 +85,8 @@ private:
 	BmsBms *bms;
 	BmsTimeManager bmstime;
 	BmsNoteContainer bmsnote;
-	double starttime;
-	double currenttime;
-
-	// display
+	Uint32 currenttime;
 	int keys;
-	double pos;
 
 	// autoplay?
 	bool autoplay;
@@ -107,18 +106,18 @@ private:
 public:
 	// game flow
 	void Prepare(BmsBms *bms, int startpos, bool autoplay);
-	void Start();
-	void Now();
+	void SetTime(Uint32 tick);
+	void ResetTime(Uint32 tick);
 
 	// key input
 	void UpKey(int keychannel);
 	void PressKey(int keychannel);
 
 	// get/set status
-	double GetEclipsedTime();
 	BmsWord GetCurrentMissBga();
 	double GetSpeed();
 	Grade GetGrade();
+	double GetCurrentPos();
 
 	// handler
 	void SetOnSound(void(*func)(BmsWord));

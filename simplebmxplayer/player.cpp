@@ -93,7 +93,7 @@ int Player::GetAvailableNoteIndex(int notechannel, int start) {
 int Player::GetNextAvailableNoteIndex(int notechannel) {
 	if (!IsNoteAvailable(notechannel))
 		return -1;
-	return GetAvailableNoteIndex(noteindex[notechannel] + 1);
+	return GetAvailableNoteIndex(notechannel, noteindex[notechannel] + 1);
 }
 
 BmsNote* Player::GetCurrentNote(int notechannel) {
@@ -151,48 +151,58 @@ void Player::Prepare(BmsBms* bms, int startpos, bool autoplay) {
 //
 // game flow
 //
-void Player::Start() {
-	starttime = currenttime = time(0);
+void Player::ResetTime(Uint32 tick) {
+	// TODO
 }
-void Player::Now() {
+
+void Player::SetTime(Uint32 tick) {
 	// get time
-	currenttime = time(0);
+	currenttime = tick;
+	double t = currenttime / 1000.0;
 
 	// and recalculate note index/bgm index/position
-	double t = GetEclipsedTime();
 	int newbar = bmstime.GetBarIndexFromTime(t);
-	pos = bmstime.GetAbsBeatFromTime(t);
 
 	// if there's bar change ...
 	for (; currentbar < newbar; ++currentbar)
 	{
 		// call event handler for BGA/BGM
-		auto bgmchannel = bms->GetChannelManager()[BmsWord(1)];
-		auto bgachannel = bms->GetChannelManager()[BmsWord(4)];
-		auto bgachannel2 = bms->GetChannelManager()[BmsWord(7)];
-		auto bgachannel3 = bms->GetChannelManager()[BmsWord(10)];
+		BmsChannel& bgmchannel = bms->GetChannelManager()[BmsWord(1)];
+		BmsChannel& bgachannel = bms->GetChannelManager()[BmsWord(4)];
+		BmsChannel& bgachannel2 = bms->GetChannelManager()[BmsWord(7)];
+		BmsChannel& bgachannel3 = bms->GetChannelManager()[BmsWord(10)];
 		for (auto it = bgmchannel.Begin(); it != bgmchannel.End(); ++it) {
+			int l = (**it).GetLength();
+			if (currentbar > (**it).GetLength())	// TODO: fix bmsbuffer structure
+				continue;
 			BmsWord current_word((**it)[currentbar]);
 			if (current_word == BmsWord::MIN)
 				continue;
-			if (soundfunc)
+			if (soundfunc) {
 				soundfunc(current_word);
+			}
 		}
-		for (auto it = bgachannel.Begin(); it != bgachannel.End(); ++it) {
+		for (auto it = bgachannel.Begin(); it != bgachannel.End(); it++) {
+			if (currentbar > (**it).GetLength())
+				continue;
 			BmsWord current_word((**it)[currentbar]);
 			if (current_word == BmsWord::MIN)
 				continue;
 			if (bgafunc)
 				bgafunc(current_word, BmsChannelType::BGA);
 		}
-		for (auto it = bgachannel2.Begin(); it != bgachannel2.End(); ++it) {
+		for (auto it = bgachannel2.Begin(); it != bgachannel2.End(); it++) {
+			if (currentbar > (**it).GetLength())
+				continue;
 			BmsWord current_word((**it)[currentbar]);
 			if (current_word == BmsWord::MIN)
 				continue;
 			if (bgafunc)
 				bgafunc(current_word, BmsChannelType::BGALAYER);
 		}
-		for (auto it = bgachannel3.Begin(); it != bgachannel3.End(); ++it) {
+		for (auto it = bgachannel3.Begin(); it != bgachannel3.End(); it++) {
+			if (currentbar > (**it).GetLength())
+				continue;
 			BmsWord current_word((**it)[currentbar]);
 			if (current_word == BmsWord::MIN)
 				continue;
@@ -203,54 +213,54 @@ void Player::Now() {
 
 	// check for note judgement
 	for (int i = 0; i < 20; i++) {
-		if (!IsNoteAvailable(i)) continue;
-
-		// if autoplay, then it'll automatically played
-		if (autoplay && GetCurrentNote(i)->type != BmsNote::NOTE_MINE && bmstime.GetRow(noteindex[i]).time < t) {
-			BmsNote& note = bmsnote[i][noteindex[i]];
-			if (GetCurrentNote(i)->type == BmsNote::NOTE_LNSTART) {
-				if (soundfunc) soundfunc(note.value);
-				grade.AddGrade(Grade::JUDGE_PGREAT);
-				longnotestartpos[i] = noteindex[i];
+		while (IsNoteAvailable(i) && bmstime.GetRow(noteindex[i]).time < t) {
+			// if note is mine, then lets ignore as fast as we can
+			if (GetCurrentNote(i)->type == BmsNote::NOTE_MINE) {
+				noteindex[i] = GetNextAvailableNoteIndex(i);
 			}
-			else if (GetCurrentNote(i)->type == BmsNote::NOTE_LNEND) {
-				grade.AddGrade(Grade::JUDGE_PGREAT);
-				if (judgefunc) judgefunc(Grade::JUDGE_GREAT, i);
-				longnotestartpos[i] = -1;
-			}
-			else if (GetCurrentNote(i)->type == BmsNote::NOTE_NORMAL) {
-				if (soundfunc) soundfunc(note.value);
-				grade.AddGrade(Grade::JUDGE_PGREAT);
-				if (judgefunc) judgefunc(Grade::JUDGE_GREAT, i);
-			}
-			note.type = BmsNote::NOTE_NONE;
-			noteindex[i] = GetNextAvailableNoteIndex(i);
-		}
-		// if note is mine, then lets ignore as fast as we can
-		else if (GetCurrentNote(i)->type == BmsNote::NOTE_MINE && bmstime.GetRow(noteindex[i]).time < t) {
-			noteindex[i] = GetNextAvailableNoteIndex(i);
-		}
-		// if not, check timing for poor
-		else if (CheckJudgeByTiming(bmstime.GetRow(noteindex[i]).time - t) == Grade::JUDGE_LATE) {
-			BmsNote& note = bmsnote[i][noteindex[i]];
-			// if LNSTART, also kill LNEND & 2 miss
-			if (note.type == BmsNote::NOTE_LNSTART) {
+			// if autoplay, then it'll automatically played
+			else if (autoplay) {
+				BmsNote& note = bmsnote[i][noteindex[i]];
+				if (GetCurrentNote(i)->type == BmsNote::NOTE_LNSTART) {
+					if (soundfunc) soundfunc(note.value);
+					grade.AddGrade(Grade::JUDGE_PGREAT);
+					longnotestartpos[i] = noteindex[i];
+				}
+				else if (GetCurrentNote(i)->type == BmsNote::NOTE_LNEND) {
+					grade.AddGrade(Grade::JUDGE_PGREAT);
+					if (judgefunc) judgefunc(Grade::JUDGE_GREAT, i);
+					longnotestartpos[i] = -1;
+				}
+				else if (GetCurrentNote(i)->type == BmsNote::NOTE_NORMAL) {
+					if (soundfunc) soundfunc(note.value);
+					grade.AddGrade(Grade::JUDGE_PGREAT);
+					if (judgefunc) judgefunc(Grade::JUDGE_GREAT, i);
+				}
 				note.type = BmsNote::NOTE_NONE;
 				noteindex[i] = GetNextAvailableNoteIndex(i);
+			}
+			// if not autoplay, check timing for poor
+			else if (CheckJudgeByTiming(bmstime.GetRow(noteindex[i]).time - t) == Grade::JUDGE_LATE) {
+				BmsNote& note = bmsnote[i][noteindex[i]];
+				// if LNSTART, also kill LNEND & 2 miss
+				if (note.type == BmsNote::NOTE_LNSTART) {
+					note.type = BmsNote::NOTE_NONE;
+					noteindex[i] = GetNextAvailableNoteIndex(i);
+					grade.AddGrade(Grade::JUDGE_POOR);
+				}
+				// if LNEND, reset longnotestartpos & remove LNSTART note
+				else if (note.type == BmsNote::NOTE_LNEND) {
+					bmsnote[i][longnotestartpos[i]].type = BmsNote::NOTE_NONE;
+					longnotestartpos[i] = -1;
+				}
+				note.type = BmsNote::NOTE_NONE;
+				// make judge
+				// (CLAIM) if hidden note isn't ignored by GetNextAvailableNoteIndex(), 
+				// you have to hit it or you'll get miss.
 				grade.AddGrade(Grade::JUDGE_POOR);
+				if (judgefunc) judgefunc(Grade::JUDGE_POOR, i);
+				noteindex[i] = GetNextAvailableNoteIndex(i);
 			}
-			// if LNEND, reset longnotestartpos & remove LNSTART note
-			else if (note.type == BmsNote::NOTE_LNEND) {
-				bmsnote[i][longnotestartpos[i]].type = BmsNote::NOTE_NONE;
-				longnotestartpos[i] = -1;
-			}
-			note.type = BmsNote::NOTE_NONE;
-			// make judge
-			// (CLAIM) if hidden note isn't ignored by GetNextAvailableNoteIndex(), 
-			// you have to hit it or you'll get miss.
-			grade.AddGrade(Grade::JUDGE_POOR);
-			if (judgefunc) judgefunc(Grade::JUDGE_POOR, i);
-			noteindex[i] = GetNextAvailableNoteIndex(i);
 		}
 	}
 }
@@ -264,7 +274,7 @@ void Player::UpKey(int keychannel) {
 	// make judge (if you're pressing longnote)
 	if (IsLongNote(keychannel)) {
 		if (IsNoteAvailable(keychannel) && GetCurrentNote(keychannel)->type == BmsNote::NOTE_LNEND) {
-			double t = GetEclipsedTime();
+			double t = currenttime / 1000.0;
 			// make judge
 			int judge = CheckJudgeByTiming(t - bmstime.GetRow(noteindex[keychannel]).time);
 			if (judgefunc) judgefunc(judge, keychannel);
@@ -283,7 +293,7 @@ void Player::PressKey(int keychannel) {
 
 	// make judge
 	if (IsNoteAvailable(keychannel)) {
-		double t = GetEclipsedTime();
+		double t = currenttime / 1000.0;
 		int judge = CheckJudgeByTiming(t - bmstime.GetRow(noteindex[keychannel]).time);
 		if (GetCurrentNote(keychannel)->type == BmsNote::NOTE_LNSTART) {
 			// store longnote start pos & set longnote status
@@ -309,13 +319,14 @@ void Player::PressKey(int keychannel) {
 }
 
 // get status
-double Player::GetEclipsedTime() {
-	return currenttime - starttime;
-}
 BmsWord Player::GetCurrentMissBga() {
 	return bmstime.GetRow(currentbar).miss;
 }
 double Player::GetSpeed() { return setting.speed; }
+double Player::GetCurrentPos() {
+	// calculate abspos
+	return bmstime.GetAbsBeatFromTime(currenttime / 1000.0);
+}
 
 // handler
 void Player::SetOnSound(void (*func)(BmsWord)) {

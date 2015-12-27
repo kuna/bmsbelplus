@@ -30,6 +30,9 @@
     <ClCompile Include="audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
@@ -65,6 +68,15 @@
     <ClInclude Include="audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="skin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\lib\ffmpeg\avutil.lib" />
@@ -78,5 +90,7 @@
     <Library Include="..\lib\x86\SDL2_image.lib" />
     <Library Include="..\lib\x86\SDL2_mixer.lib" />
     <Library Include="..\lib\x86\SDL2.lib" />
+    <Library Include="..\lib\x86\SDL2_ttf.lib" />
+    <Library Include="..\lib\x86\SDL_FontCache.lib" />
   </ItemGroup>
 </Project>

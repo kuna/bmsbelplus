@@ -244,7 +244,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 	}
 	catch (Bmx2WavInvalidFile& e) {
-		wprintf(L"[ERROR] Cannot write file to %ls. Check other program is using the output file.\n", BMX2WAVParameter::output_path);
+		wprintf(L"[ERROR] Cannot write file to %ls. Check other program is using the output file.\n", BMX2WAVParameter::output_path.c_str());
 		wprintf(e.Message().c_str());
 		wprintf(L"\n");
 		return -1;

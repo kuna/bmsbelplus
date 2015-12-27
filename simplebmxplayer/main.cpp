@@ -5,8 +5,11 @@
 #include "bmsbel/bms_bms.h"
 #include "bmsbel/bms_parser.h"
 #include "SDL/SDL.h"
+#include "SDL/SDL_FontCache.h"	// extract it to a class
+#include "SDL/SDL_timer.h"
 #include "image.h"
 #include "audio.h"
+#include "timer.h"
 #include "bmsresource.h"
 #include "player.h"
 
@@ -55,11 +58,41 @@ namespace Settings {
 }
 
 namespace Game {
+	// bms info
 	std::wstring bmspath;
 	BmsBms bms;
 	BmsResource<Audio, Image> bmsresource;
 	Player player;
-	std::wstring status_message;
+
+	// SDL
+	SDL_Window* gWindow = NULL;
+	SDL_Renderer* renderer = NULL;
+
+	// drawing texture/fonts
+	FC_Font* font = NULL;
+
+	// timers
+	Timer fpstimer;	int fps = 0;
+	Timer gametimer;
+
+	/*
+	 * BMS Player part
+	 */
+	BmsWord bgavalue(0);
+	void OnBmsBga(BmsWord v, BmsChannelType::BMSCHANNEL c) {
+		if (c == BmsChannelType::BGA)
+			bgavalue = v;
+	}
+	void OnBmsSound(BmsWord v) {
+		if (bmsresource.IsWAVLoaded(v.ToInteger())) {
+			bmsresource.GetWAV(v.ToInteger())->Stop();
+			bmsresource.GetWAV(v.ToInteger())->Play();
+			printf("%s (%d)\n", v.ToString().c_str(), v.ToInteger());
+		}
+	}
+	/*
+	 * BMS Player part
+	 */
 
 	bool LoadBMSFile(std::wstring& bmspath) {
 		// load bms file
@@ -71,6 +104,10 @@ namespace Game {
 			wprintf(L"%ls\n", e.Message());
 			return false;
 		}
+		// set player
+		player.Prepare(&bms, 0, true);
+		player.SetOnBga(&OnBmsBga);
+		player.SetOnSound(&OnBmsSound);
 		return true;
 	}
 
@@ -81,13 +118,19 @@ namespace Game {
 			BmsWord word(i);
 			if (bms.GetRegistArraySet()[L"WAV"].IsExists(word)) {
 				std::wstring wav_path = bms_dir + bms.GetRegistArraySet()[L"WAV"][word];
-				Audio *audio = new Audio(wav_path);
-				if (audio->IsLoaded()) {
+				std::wstring alter_ogg_path = bms_dir + IO::substitute_extension(bms.GetRegistArraySet()[L"WAV"][word], L".ogg");
+				Audio *audio = NULL;
+				if (IO::is_file_exists(alter_ogg_path))
+					audio = new Audio(alter_ogg_path, word.ToInteger());
+				else if (IO::is_file_exists(wav_path))
+					audio = new Audio(wav_path, word.ToInteger());
+
+				if (audio && audio->IsLoaded()) {
 					bmsresource.SetWAV(word.ToInteger(), audio);
 				}
 				else {
-					wprintf(L"[Warning] %ls - cannot load WAV file\n", wav_path);
-					delete audio;
+					wprintf(L"[Warning] %ls - cannot load WAV file\n", wav_path.c_str());
+					if (audio) delete audio;
 				}
 			}
 			if (bms.GetRegistArraySet()[L"BMP"].IsExists(word)) {
@@ -97,7 +140,7 @@ namespace Game {
 					bmsresource.SetBMP(word.ToInteger(), image);
 				}
 				else {
-					wprintf(L"[Warning] %ls - cannot load BMP file\n", bmp_path);
+					wprintf(L"[Warning] %ls - cannot load BMP file\n", bmp_path.c_str());
 					delete image;
 				}
 			}
@@ -105,15 +148,51 @@ namespace Game {
 		return true;
 	}
 
-	void Release() {
+	bool PrepareGameResource() {
+		font = FC_CreateFont();
+		if (!font)
+			return false;
+		FC_LoadFont(font, renderer, "lazy.ttf", 28, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
+		return true;
+	}
 
+	void Start() {
+		fpstimer.Start();
+		gametimer.Start();
+		fps = 0;
+	}
+
+	/*
+	 * Rendering part
+	 */
+	void Render_FPS() {
+		float avgfps = fps / (fpstimer.GetTick() / 1000.0f);
+		fps++;
+		// make FPS texture
+		//FC_Draw(font, renderer, 0, 0, "%d Frame", fps);
+		if (fps % 1000 == 0)
+			wprintf(L"%.2f\n", avgfps);
+	}
+
+	void Render() {
+		// set player time and ...
+		player.SetTime(gametimer.GetTick());
+		// get note pos
+		double notepos = player.GetCurrentPos();
+		// render BGA
+		if (bmsresource.IsBMPLoaded(bgavalue.ToInteger()))
+			SDL_RenderCopy(renderer, bmsresource.GetBMP(bgavalue.ToInteger())->GetPtr(), 0, 0);
+	}
+	/*
+	 * Rendering End
+	 */
+
+	void Release() {
+		FC_FreeFont(font);
+		Game::bmsresource.Clear();
 		bms.Clear();
 	}
 }
-
-// globals
-SDL_Window* gWindow = NULL;
-SDL_Renderer* renderer = NULL;
 
 int _tmain(int argc, _TCHAR **argv) {
 	if (!Parameter::parse(argc, argv)) {
@@ -134,19 +213,27 @@ int _tmain(int argc, _TCHAR **argv) {
 		wprintf(L"Failed to Open Audio ...\n");
 		return -1;
 	}
-	gWindow = SDL_CreateWindow("SimpleBMXPlayer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	Game::gWindow = SDL_CreateWindow("SimpleBMXPlayer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		Settings::width, Settings::height, SDL_WINDOW_SHOWN);
-	if (!gWindow) {
-		wprintf(L"Failed to create window");
+	if (!Game::gWindow) {
+		wprintf(L"Failed to create window\n");
 		return -1;
 	}
-	renderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
-	if (!renderer) {
-		wprintf(L"Failed to create Renderer");
+	Game::renderer = SDL_CreateRenderer(Game::gWindow, -1, SDL_RENDERER_ACCELERATED);
+	if (!Game::renderer) {
+		wprintf(L"Failed to create Renderer\n");
 		return -1;
 	}
-	Image::SetRenderer(renderer);
+	Image::SetRenderer(Game::renderer);
 
+	// prepare Game Resource
+	if (Game::PrepareGameResource()) {
+		wprintf(L"Game resource prepared\n");
+	}
+	else {
+		wprintf(L"Game resource prepare failed ...\n");
+		return -1;
+	}
 	// start to load BMS file
 	if (Game::LoadBMSFile(Parameter::bms_path)) {
 		wprintf(L"Loaded BMS file successfully\n");
@@ -165,27 +252,34 @@ int _tmain(int argc, _TCHAR **argv) {
 	}
 	
 	// Let's render something ...
+	Game::Start();
 	while (1) {
 		SDL_Event e;
 		if (SDL_PollEvent(&e)) {
 			if (e.type == SDL_QUIT) {
 				break;
 			}
-		}
-
-		SDL_RenderClear(renderer);
-		for (int i = 0; i < BmsConst::WORD_MAX_VALUE; i++) {
-			if (Game::bmsresource.IsBMPLoaded(i)) {
-				SDL_RenderCopy(renderer, Game::bmsresource.GetBMP(i)->GetPtr(), 0, 0);
+			if (e.type == SDL_KEYUP) {
+				if (Game::bmsresource.IsWAVLoaded(18)) {
+					printf("%s\n", BmsWord(18).ToString().c_str());
+					//Game::bmsresource.GetWAV(18)->Stop();
+					Game::bmsresource.GetWAV(18)->Play();
+					printf("%s\n", Mix_GetError());
+				}
 			}
 		}
-		SDL_RenderPresent(renderer);
+
+		SDL_RenderClear(Game::renderer);
+		Game::Render();
+		Game::Render_FPS();
+		SDL_RenderPresent(Game::renderer);
 	}
 
 	// release everything
-	Game::bmsresource.Clear();
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(gWindow);
+	Game::Release();
+	Mix_CloseAudio();
+	SDL_DestroyRenderer(Game::renderer);
+	SDL_DestroyWindow(Game::gWindow);
 	SDL_Quit();
 
 	// end
