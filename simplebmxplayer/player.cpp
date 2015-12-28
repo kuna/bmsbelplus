@@ -339,6 +339,16 @@ int Player::GetCurrentBar() {
 int Player::GetCurrentNoteBar(int channel) {
 	return noteindex[channel];
 }
+bool Player::IsFinished() {
+	// TODO
+	//
+	// condition:
+	// 1. guage is > HARD && health <= 0 (dead)
+	// 2. time is over (LastBar.time + POORJUDGETIME) (timeover)
+	// 3. by some reason (like user cancel; same as dead)
+	//
+	return true;
+}
 
 // handler
 void Player::SetOnSound(void (*func)(BmsWord, int)) {

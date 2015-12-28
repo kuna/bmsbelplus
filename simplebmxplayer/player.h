@@ -99,7 +99,6 @@ private:
 	// judge
 	int CheckJudgeByTiming(double delta);
 	// active note searcher
-	int GetAvailableNoteIndex(int notechannel, int start=0);
 	int GetNextAvailableNoteIndex(int notechannel);
 	BmsNote* GetCurrentNote(int notechannel);
 public:
@@ -122,6 +121,8 @@ public:
 	int GetCurrentBar();
 	int GetCurrentNoteBar(int channel);
 	bool IsNoteAvailable(int notechannel);
+	int GetAvailableNoteIndex(int notechannel, int start = 0);
+	bool IsFinished();	// TODO
 
 	// handler
 	void SetOnSound(void(*func)(BmsWord, int));

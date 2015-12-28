@@ -206,39 +206,46 @@ namespace Game {
 		// render notes
 
 		SDL_Rect src, dest;
-		int lnstart[20] = { 900, };
-		bool lndraw[20] = { false, };
+		int lnstartpos[20];
+		bool lnstart[20];
 		BmsTimeManager& bmstime = player.GetBmsTimeManager();
 		BmsNoteContainer& bmsnote = player.GetBmsNotes();
-		//double speed = 3 * bms.GetBaseBPM();		// not speed - but speed multiply value
-		double speed = 1.0 / 300 * 900 * 1000;		// if you use constant `green` speed ... (= 1 measure per 300ms)
+		//double speed = 900.0 / 4 * 1.0;									// normal multiply (1x: show 4 beat in a screen)
+		double speed = 900.0 / 310 * 1000 * (120 / bms.GetBaseBPM());	// if you use constant `green` speed ... (= 1 measure per 310ms)
 		for (int i = 0; i < 20; i++) {
+			// init lnstart
+			lnstartpos[i] = 900;
+			lnstart[i] = false;
 			for (int nidx = player.GetCurrentNoteBar(i);
-				player.IsNoteAvailable(i) && nidx < bmstime.GetSize() && (bmstime[nidx].absbeat - notepos) * speed < 900;
-				nidx++) {
+				nidx >= 0 && nidx < bmstime.GetSize();
+				nidx = player.GetAvailableNoteIndex(i, nidx+1)) {
+				double ypos = 900 - (bmstime[nidx].absbeat - notepos) * speed;
 				switch (bmsnote[i][nidx].type){
 				case BmsNote::NOTE_NORMAL:
-					dest.x = i * 50;	dest.y = 900 - (bmstime[nidx].absbeat - notepos) * speed;
+					dest.x = i * 50;	dest.y = ypos;
 					dest.w = 50;		dest.h = 10;
 					SDL_RenderCopy(renderer, note_texture, 0, &dest);
 					break;
 				case BmsNote::NOTE_LNSTART:
-					lnstart[i] = 900 - (bmstime[nidx].absbeat - notepos) * speed;
-					lndraw[i] = true;
+					lnstartpos[i] = ypos;
+					lnstart[i] = true;
 					break;
 				case BmsNote::NOTE_LNEND:
-					dest.x = i * 50;	dest.y = 900 - (bmstime[nidx].absbeat - notepos) * speed;
-					dest.w = 50;		dest.h = lnstart[i] - dest.y;
+					dest.x = i * 50;	dest.y = ypos;
+					dest.w = 50;		dest.h = lnstartpos[i] - ypos;
 					SDL_RenderCopy(renderer, note_texture, 0, &dest);
-					lndraw[i] = false;
+					lnstart[i] = false;
 					break;
 				}
+				// off the screen -> exit loop
+				if (ypos < 0)
+					break;
 			}
 			// if LN_end hasn't found
 			// then draw it to end of the screen
-			if (lndraw[i]) {
+			if (lnstart[i]) {
 				dest.x = i * 50;	dest.y = 0;
-				dest.w = 50;		dest.h = lnstart[i];
+				dest.w = 50;		dest.h = lnstartpos[i];
 				SDL_RenderCopy(renderer, note_texture, 0, &dest);
 			}
 		}
@@ -273,7 +280,7 @@ int _tmain(int argc, _TCHAR **argv) {
 		wprintf(L"Failed to SDL_Init() ...\n");
 		return -1;
 	}
-	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 768) == -1) {	// no lag, no sound latency
 		wprintf(L"Failed to Open Audio ...\n");
 		return -1;
 	}
