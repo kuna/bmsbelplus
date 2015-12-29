@@ -1,5 +1,0 @@
-// for game
-
-class Skin {
-
-};

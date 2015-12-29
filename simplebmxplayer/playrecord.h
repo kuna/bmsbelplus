@@ -1,7 +1,0 @@
-struct PlayRecord {
-
-};
-
-class PlayRecordMaster {
-
-};
