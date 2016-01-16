@@ -30,7 +30,7 @@ public:
 
 	void Merge(const BmsBms& other);
 
-	std::wstring ToString(void) const;
+	std::string ToString(void) const;
 
 	void Clear(void);
 
@@ -51,7 +51,7 @@ public:
 
 	// get other metedatas
 	// must call after CalculateTimeTable()
-	//std::wstring& GetTitle();
+	//std::string& GetTitle();
 	//int GetRank();
 private:
 	BmsHeaderTable		headers_;

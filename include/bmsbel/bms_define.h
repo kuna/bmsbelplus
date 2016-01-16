@@ -14,6 +14,10 @@
 #define NOT( v ) (!(v))
 #endif
 
+#ifdef _WIN32
+#define USE_MBCS
+#endif
+
 namespace BmsConst {
   // 分解能
   const int DEFAULT_BAR_DIVISION_COUNT = 1;
@@ -41,7 +45,7 @@ namespace BmsBelOption {
 	const int ERROR_ON_UNKNOWN_CHANNEL		= 0;
 	const int CONVERT_ATTEMPT_LINES			= 10;
 	const char DEFAULT_FALLBACK_ENCODING[]	= "Shift_JIS";
-	const char DEFAULT_UNICODE_ENCODING[]	= "UTF-16LE";	// WCHAR_T may be correct in other OS.
+	const char DEFAULT_UNICODE_ENCODING[]	= "UTF-8";
 }
 
 #ifdef _DEBUG

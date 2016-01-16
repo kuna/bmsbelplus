@@ -12,6 +12,7 @@
 #include "bms_exception.h"
 #include "bms_parser_frame.h"
 #include "bms_text_file_reader.h"
+#include "bms_define.h"
 
 namespace BmsParser {
 	class Parser;
@@ -45,15 +46,15 @@ namespace BmsParser {
 		Reactor&                  reactor_;
 		bool                      make_syntax_tree_;
 		std::set<BmsWord>         ignore_channel_set_;
-		std::vector<std::wstring> line_data_;
+		std::vector<std::string> line_data_;
 		FrameStack&               frame_stack_;
 		std::queue<unsigned int>  random_value_queue_;
 		bool                      is_first_parse_;
 		unsigned int              line_number_;
 		unsigned int              bar_;
 		BmsWord                   channel_number_;
-		std::wstring              key_;
-		std::wstring              value_;
+		std::string              key_;
+		std::string              value_;
 		double                    bar_change_ratio_;
 		std::vector<BmsWord>      word_array_;
 	};
@@ -68,15 +69,15 @@ namespace BmsParser {
 		explicit Reactor(void);
 		virtual ~Reactor();
 
-		virtual std::wstring AtDuplicateHeader(Parser& parser,
-			const std::wstring header,
-			const std::wstring before,
-			const std::wstring present);
+		virtual std::string AtDuplicateHeader(Parser& parser,
+			const std::string header,
+			const std::string before,
+			const std::string present);
 		virtual double AtDuplicateBarChange(Parser& parser,
 			unsigned int bar,
 			double       before,
 			double       present);
-		virtual bool AtParseError(Parser& parser, BmsParseException& e, const std::wstring& line);
+		virtual bool AtParseError(Parser& parser, BmsParseException& e, const std::string& line);
 		virtual unsigned int AtGenerateRandom(Parser& parser, unsigned int max);
 
 		virtual void AtLineDataRead(Parser& parser);
@@ -89,9 +90,16 @@ namespace BmsParser {
 	};
 
 	// -- Parser -----------------------------------------------------------
+#ifdef USE_MBCS
 	void Parse(const std::wstring& filename, BmsBms& bms);
 	void Parse(const std::wstring& filename, BmsBms& bms, const char *encoding);
-	void Parse(const std::wstring& filename, const char *encoding, StartInfo& start_info);
+#endif
+
+	/** UTF-8 filename OK (Also in Windows) */
+	void Parse(const std::string& filename, BmsBms& bms);
+	void Parse(const std::string& filename, BmsBms& bms, const char *encoding);
+	void Parse(const std::string& filename, const char *encoding, StartInfo& start_info);
+
 	void Parse(BmsTextFileReader& reader, StartInfo& start_info);
 
 	class Parser {
@@ -104,20 +112,20 @@ namespace BmsParser {
 		explicit Parser(StartInfo& start_info, FrameStack& frame_stack);
 		void Start(void);
 
-		void ParseDefault(const wchar_t* str);
-		void ParseComment(const wchar_t* str);
-		void ParseHeaderOrBar(const wchar_t* str);
-		void ParseHeaderKey(const wchar_t* str);
-		void ParseHeaderSeparator(const wchar_t* str);
-		void ParseHeaderValue(const wchar_t* str);
+		void ParseDefault(const char* str);
+		void ParseComment(const char* str);
+		void ParseHeaderOrBar(const char* str);
+		void ParseHeaderKey(const char* str);
+		void ParseHeaderSeparator(const char* str);
+		void ParseHeaderValue(const char* str);
 		void WriteDownHeader(const FrameData& data);
 		void WriteDownRegistArray(const FrameData& data);
-		void ParseBar(const wchar_t* str);
-		void ParseChannel(const wchar_t* str);
-		void ParseColon(const wchar_t* str);
-		void ParseBarChangeValue(const wchar_t* str);
+		void ParseBar(const char* str);
+		void ParseChannel(const char* str);
+		void ParseColon(const char* str);
+		void ParseBarChangeValue(const char* str);
 		void WriteDownBarChangeValue(const FrameData& data);
-		void ParseObjectArray(const wchar_t* str);
+		void ParseObjectArray(const char* str);
 		void WriteDownObjectArray(const FrameData& data);
 		void ParseRandomStatement(void);
 

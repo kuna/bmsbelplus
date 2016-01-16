@@ -31,7 +31,10 @@ namespace BmsUtil {
 	void StringToUpper(std::string& str);
 	void StringToUpper(std::wstring& str);
 	
-	int IsFileUTF8(const std::wstring& filename);
+	bool wchar_to_utf8(const wchar_t *org, char *out, int maxlen);
+	bool utf8_to_wchar(const char *org, wchar_t *out, int maxlen);
+	int IsFileUTF8(const std::string& filename);
+	bool OpenFile(FILE **f, const char* filename, const char* mode);
 };
 
 #endif // BMSBEL_UTIL_H_

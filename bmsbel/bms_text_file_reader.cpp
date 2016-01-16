@@ -4,15 +4,15 @@
 #include "bmsbel\bms_exception.h"
 
 #include "bmsbel\bms_text_file_reader.h"
+#include "bmsbel\bms_util.h"
 
-BmsTextFileReader::BmsTextFileReader(const std::wstring& filename, const char *encoding) :
+BmsTextFileReader::BmsTextFileReader(const std::string& filename, const char *encoding) :
 filename_(filename),
-file_(_wfopen(filename.c_str(), L"r")),
 cd_(iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, encoding)),
 buf_iconv_in((const char*)buf_char),
-buf_iconv_out((char*)buf_wchar)
+buf_iconv_out((char*)buf_char_utf8)
 {
-	if (file_ == NULL) {
+	if (!BmsUtil::OpenFile(&file_, filename.c_str(), "r")) {
 		throw BmsFileOpenException(filename, errno);
 	}
 	if ((int)cd_ == -1) {
@@ -34,7 +34,7 @@ BmsTextFileReader::~BmsTextFileReader()
 // - BmsUtil -> float, int converter
 //
 bool
-BmsTextFileReader::ReadLine(std::wstring& buffer, bool chomp)
+BmsTextFileReader::ReadLine(std::string& buffer, bool chomp)
 {
 	buffer.clear();
 
@@ -60,16 +60,16 @@ BmsTextFileReader::ReadLine(std::wstring& buffer, bool chomp)
 
 	// convert encoding
 	len_char = i;
-	len_wchar = BmsConst::BMS_MAX_LINE_BUFFER*2;
+	len_char_utf8 = BmsConst::BMS_MAX_LINE_BUFFER;
 	buf_iconv_in = (const char*)buf_char;
-	buf_iconv_out = (char*)buf_wchar;
-	int l = iconv(cd_, &buf_iconv_in, &len_char, &buf_iconv_out, &len_wchar);
+	buf_iconv_out = (char*)buf_char_utf8;
+	int l = iconv(cd_, &buf_iconv_in, &len_char, &buf_iconv_out, &len_char_utf8);
 	if (l < 0) {
 		// decoding error might be occured
 	}
 	*buf_iconv_out = *(buf_iconv_out + 1) = 0;	// end character: L'\0'
-	buf_wchar[(BmsConst::BMS_MAX_LINE_BUFFER*2 - len_wchar)/2] = 0;
-	buffer = buf_wchar;
+	buf_char_utf8[BmsConst::BMS_MAX_LINE_BUFFER - len_char_utf8] = 0;
+	buffer = buf_char_utf8;
 
 	return true;
 }

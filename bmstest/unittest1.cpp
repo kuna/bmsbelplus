@@ -16,8 +16,8 @@ namespace bmstest
 	{
 	public:
 		TEST_METHOD(BMS_Unicode_Test) {
-			Assert::AreEqual(1, BmsUtil::IsFileUTF8(L"..\\test\\bms\\BBKKBKK(easy)_n_Unicode.bms"));
-			Assert::AreEqual(0, BmsUtil::IsFileUTF8(L"..\\test\\bms\\47_LNM(TEN).bml"));
+			Assert::AreEqual(1, BmsUtil::IsFileUTF8("..\\test\\bms\\BBKKBKK(easy)_n_Unicode.bms"));
+			Assert::AreEqual(0, BmsUtil::IsFileUTF8("..\\test\\bms\\47_LNM(TEN).bml"));
 		}
 
 		TEST_METHOD(BMS_TAG_Length_Test)
@@ -50,9 +50,9 @@ namespace bmstest
 			bms.GetChannelManager().DeleteChannel(BmsWord(365));
 			*/
 
-			Logger::WriteMessage(bms.GetHeaders().ToString().c_str());
-			Assert::AreEqual(L"TEN [LN MASTER]", bms.GetHeaders()[L"TITLE"].c_str());
-			Assert::AreEqual(L"2X / obj:ほげぇ", bms.GetHeaders()[L"ARTIST"].c_str());
+			Logger::WriteMessage(bms.GetHeaders().ToWString().c_str());
+			Assert::AreEqual(L"TEN [LN MASTER]", bms.GetHeaders()["TITLE"].ToWString().c_str());
+			Assert::AreEqual(L"2X / obj:ほげぇ", bms.GetHeaders()["ARTIST"].ToWString().c_str());
 			Assert::AreEqual(204507, int(timetable.GetEndTime() * 1000));
 		}
 

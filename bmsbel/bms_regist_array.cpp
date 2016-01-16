@@ -5,12 +5,12 @@
 #include "bmsbel\bms_exception.h"
 
 bool
-BmsRegistArray::CheckConstruction( const std::wstring& name, const std::wstring& str )
+BmsRegistArray::CheckConstruction( const std::string& name, const std::string& str )
 {
   if ( str.length() != name.length() + 2 ) {
     return false;
   }
-  std::wstring tmp = str.substr( 0, name.length() );
+  std::string tmp = str.substr( 0, name.length() );
   BmsUtil::StringToUpper( tmp );
   if ( tmp.compare( name ) != 0 ) {
     return false;
@@ -20,9 +20,9 @@ BmsRegistArray::CheckConstruction( const std::wstring& name, const std::wstring&
   }
 
   switch ( str.c_str()[name.length() + 2] ) {
-  case L' ':
-  case L'\t':
-  case L'\0':
+  case ' ':
+  case '\t':
+  case '\0':
     return true;
 
   default:
@@ -32,9 +32,9 @@ BmsRegistArray::CheckConstruction( const std::wstring& name, const std::wstring&
 
 
 
-BmsRegistArray::BmsRegistArray( const std::wstring& name ) :
+BmsRegistArray::BmsRegistArray( const std::string& name ) :
 name_( name ),
-array_( new std::pair<bool, std::wstring>[BmsConst::WORD_MAX_COUNT] )
+array_( new std::pair<bool, std::string>[BmsConst::WORD_MAX_COUNT] )
 {
   for ( unsigned int i = 0; i < BmsConst::WORD_MAX_COUNT; ++i ) {
     array_[i].first = false;
@@ -48,7 +48,7 @@ BmsRegistArray::~BmsRegistArray()
 }
 
 
-const std::wstring&
+const std::string&
 BmsRegistArray::GetName( void ) const
 {
   return name_;
@@ -81,7 +81,7 @@ BmsRegistArray::IsNotExists( const BmsWord &pos ) const
 }
 
 
-const std::wstring&
+const std::string&
 BmsRegistArray::At( const BmsWord &pos ) const
 {
   if ( this->IsNotExists( pos ) ) {
@@ -90,7 +90,7 @@ BmsRegistArray::At( const BmsWord &pos ) const
   return array_[pos.ToInteger()].second;
 }
 
-const std::wstring&
+const std::string&
 BmsRegistArray::operator []( const BmsWord &pos ) const
 {
   return this->At( pos );
@@ -98,7 +98,7 @@ BmsRegistArray::operator []( const BmsWord &pos ) const
 
 
 void
-BmsRegistArray::Set( const BmsWord &pos, const std::wstring& value )
+BmsRegistArray::Set( const BmsWord &pos, const std::string& value )
 {
   pos.CheckValid();
   array_[pos.ToInteger()].first = true;
@@ -111,7 +111,7 @@ BmsRegistArray::DeleteAt( BmsWord pos )
 {
   pos.CheckValid();
   array_[pos.ToInteger()].first = false;
-  array_[pos.ToInteger()].second = L"";
+  array_[pos.ToInteger()].second = "";
 }
 
 
@@ -120,22 +120,22 @@ BmsRegistArray::Clear( void )
 {
   for ( unsigned int i = 0; i < BmsConst::WORD_MAX_COUNT; ++i ) {
     array_[i].first = false;
-    array_[i].second = L"";
+    array_[i].second = "";
   }
 }
 
-std::wstring
+std::string
 BmsRegistArray::ToString( void ) const
 {
-  std::wstring tmp;
+  std::string tmp;
   for ( unsigned int i = 0; i < BmsConst::WORD_MAX_COUNT; ++i ) {
     if ( array_[i].first ) {
-      tmp.append( L"#" );
+      tmp.append( "#" );
       tmp.append( name_ );
-	  tmp.append(BmsWord(i).ToWString());
-      tmp.append( L" " );
+	  tmp.append(BmsWord(i).ToString());
+      tmp.append( " " );
       tmp.append( array_[i].second );
-      tmp.append( L"\n" );
+      tmp.append( "\n" );
     }
   }
   return tmp;
@@ -150,13 +150,13 @@ table_()
 
 BmsRegistArraySet::~BmsRegistArraySet()
 {
-  for ( std::map<std::wstring, BmsRegistArray*>::iterator it = table_.begin(); it != table_.end(); ++it ) {
+  for ( std::map<std::string, BmsRegistArray*>::iterator it = table_.begin(); it != table_.end(); ++it ) {
     delete it->second;
   }
 }
 
 BmsRegistArray&
-BmsRegistArraySet::MakeNewArray( const std::wstring& key )
+BmsRegistArraySet::MakeNewArray( const std::string& key )
 {
   if ( this->Exists( key ) ) {
     return *table_[key];
@@ -167,7 +167,7 @@ BmsRegistArraySet::MakeNewArray( const std::wstring& key )
 }
 
 void
-BmsRegistArraySet::DeleteArray( const std::wstring& key )
+BmsRegistArraySet::DeleteArray( const std::string& key )
 {
   if ( this->Exists( key ) ) {
     delete table_[key];
@@ -177,13 +177,13 @@ BmsRegistArraySet::DeleteArray( const std::wstring& key )
 
 
 bool
-BmsRegistArraySet::Exists( const std::wstring& key ) const
+BmsRegistArraySet::Exists( const std::string& key ) const
 {
   return table_.find( key ) != table_.end();
 }
 
 BmsRegistArray&
-BmsRegistArraySet::operator []( const std::wstring& key )
+BmsRegistArraySet::operator []( const std::string& key )
 {
   if ( NOT( this->Exists( key ) ) ) {
     throw BmsOutOfRangeAccessException( typeid( *this ) );;
@@ -192,7 +192,7 @@ BmsRegistArraySet::operator []( const std::wstring& key )
 }
 
 const BmsRegistArray&
-BmsRegistArraySet::operator []( const std::wstring& key ) const
+BmsRegistArraySet::operator []( const std::string& key ) const
 {
   if ( NOT( this->Exists( key ) ) ) {
     throw BmsOutOfRangeAccessException( typeid( *this ) );;
@@ -203,7 +203,7 @@ BmsRegistArraySet::operator []( const std::wstring& key ) const
 void
 BmsRegistArraySet::Clear( void )
 {
-  for ( std::map<std::wstring, BmsRegistArray*>::iterator it = table_.begin(); it != table_.end(); ++it ) {
+  for ( std::map<std::string, BmsRegistArray*>::iterator it = table_.begin(); it != table_.end(); ++it ) {
     it->second->Clear();
   }
 }

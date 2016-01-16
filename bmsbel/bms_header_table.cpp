@@ -2,6 +2,7 @@
 #include "bmsbel\bms_exception.h"
 
 #include "bmsbel\bms_header_table.h"
+#include "bmsbel\bms_util.h"
 
 
 BmsHeaderTable::BmsHeaderTable(void) :
@@ -20,21 +21,21 @@ BmsHeaderTable::GetCount(void) const
 }
 
 bool
-BmsHeaderTable::IsExists(const std::wstring& key) const
+BmsHeaderTable::IsExists(const std::string& key) const
 {
 	return table_.find(key) != table_.end();
 }
 
 
 bool
-BmsHeaderTable::IsNotExists(const std::wstring& key) const
+BmsHeaderTable::IsNotExists(const std::string& key) const
 {
 	return NOT(this->IsExists(key));
 }
 
 
-const std::wstring&
-BmsHeaderTable::operator [](const std::wstring& key)
+const BmsHeader&
+BmsHeaderTable::operator [](const std::string& key)
 {
 	if (NOT(this->IsExists(key))) {
 		throw BmsOutOfRangeAccessException(typeid(*this));;
@@ -43,13 +44,13 @@ BmsHeaderTable::operator [](const std::wstring& key)
 }
 
 void
-BmsHeaderTable::Set(const std::wstring& key, const std::wstring& value)
+BmsHeaderTable::Set(const std::string& key, const std::string& value)
 {
 	table_[key] = value;
 }
 
 void
-BmsHeaderTable::DeleteByKey(const std::wstring& key)
+BmsHeaderTable::DeleteByKey(const std::string& key)
 {
 	table_.erase(key);
 }
@@ -66,40 +67,52 @@ BmsHeaderTable::Clear(void)
 // So, `key` values will be introduced first.
 // used for BmsHeaderTable::ToString()
 //
-static void introduceHeaderIter(std::wstring& out, std::map<std::wstring, std::wstring>::iterator it) {
-	out.append(L"#");
+static void introduceHeaderIter(std::string& out, std::map<std::string, BmsHeader>::iterator it) {
+	out.append("#");
 	out.append(it->first);
-	out.append(L" ");
-	out.append(it->second);
-	out.append(L"\n");
+	out.append(" ");
+	out.append(it->second.ToString());
+	out.append("\n");
 }
 
 static void
-one_work(std::wstring& tmp, std::map<std::wstring, std::wstring>& table_clone, const wchar_t* key)
+one_work(std::string& tmp, std::map<std::string, BmsHeader>& table_clone, const char* key)
 {
-	std::map<std::wstring, std::wstring>::iterator it = table_clone.find(key);
+	std::map<std::string, BmsHeader>::iterator it = table_clone.find(key);
 	if (it != table_clone.end()) {
 		introduceHeaderIter(tmp, it);
 		table_clone.erase(it);
 	}
 }
 
-std::wstring
+std::string
 BmsHeaderTable::ToString(void) const
 {
-	std::wstring tmp;
-	std::map<std::wstring, std::wstring> table_clone = table_;
+	std::string tmp;
+	std::map<std::string, BmsHeader> table_clone = table_;
 
-	one_work(tmp, table_clone, L"TITLE");
-	one_work(tmp, table_clone, L"GENRE");
-	one_work(tmp, table_clone, L"ARTIST");
+	one_work(tmp, table_clone, "TITLE");
+	one_work(tmp, table_clone, "GENRE");
+	one_work(tmp, table_clone, "ARTIST");
 
-	for (std::map<std::wstring, std::wstring>::iterator it = table_clone.begin(); it != table_clone.end(); ++it) {
+	for (std::map<std::string, BmsHeader>::iterator it = table_clone.begin(); it != table_clone.end(); ++it) {
 		introduceHeaderIter(tmp, it);
 	}
 	return tmp;
 }
 
+#ifdef USE_MBCS
+std::wstring
+BmsHeaderTable::ToWString(void) const
+{
+	std::string s = ToString();
+	wchar_t *w = new wchar_t[10240];
+	BmsUtil::utf8_to_wchar(s.c_str(), w, 10240);
+	std::wstring _w = w;
+	delete w;
+	return _w;
+}
+#endif
 
 BmsHeaderTable::Iterator
 BmsHeaderTable::Begin(void) const
@@ -111,4 +124,41 @@ BmsHeaderTable::Iterator
 BmsHeaderTable::End(void) const
 {
 	return table_.end();
+}
+
+// BmsHeader ---------------------------
+
+BmsHeader::BmsHeader() {}
+
+BmsHeader::BmsHeader(const std::string& val) : value(val) {}
+
+void BmsHeader::Set(const std::string& val) { value = val; }
+std::string BmsHeader::ToString() const { return value; }
+const char *BmsHeader::c_str() const { return value.c_str(); }
+#ifdef USE_MBCS
+std::wstring BmsHeader::ToWString() const {
+	wchar_t *_w = new wchar_t[10240];
+	BmsUtil::utf8_to_wchar(c_str(), _w, 10240);
+	std::wstring w = _w;
+	delete _w;
+	return w;
+}
+#endif
+int BmsHeader::ToInteger() const {
+	return atoi(value.c_str());
+}
+double BmsHeader::ToFloat() const {
+	return atof(value.c_str());
+}
+bool BmsHeader::IsInteger() const {
+	char *t[20];
+	errno = 0;
+	strtol(value.c_str(), t, 10);
+	return errno == 0;
+}
+bool BmsHeader::IsFloat() const {
+	char *t[20];
+	errno = 0;
+	strtod(value.c_str(), t);
+	return errno == 0;
 }

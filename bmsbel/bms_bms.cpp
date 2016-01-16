@@ -15,10 +15,10 @@ array_set_(),
 channel_manager_(),
 bar_manager_()
 {
-	array_set_.MakeNewArray(L"WAV");
-	array_set_.MakeNewArray(L"BMP");
-	array_set_.MakeNewArray(L"BPM");
-	array_set_.MakeNewArray(L"STOP");
+	array_set_.MakeNewArray("WAV");
+	array_set_.MakeNewArray("BMP");
+	array_set_.MakeNewArray("BPM");
+	array_set_.MakeNewArray("STOP");
 }
 
 BmsBms::~BmsBms()
@@ -99,7 +99,7 @@ namespace {
 	void one_work(const BmsRegistArray& from, BmsRegistArray& to, const BmsWord& word) {
 		if (from.IsExists(word)) {
 			if (to.IsExists(word)) {
-				throw BmsDuplicateHeaderException(from.GetName() + word.ToWString());
+				throw BmsDuplicateHeaderException(from.GetName() + word.ToString());
 			}
 			to.Set(word, from[word]);
 		}
@@ -117,7 +117,7 @@ BmsBms::Merge(const BmsBms& other)
 		if (headers_.IsExists(it->first)) {
 			throw BmsDuplicateHeaderException(it->first);
 		}
-		headers_.Set(it->first, it->second);
+		headers_.Set(it->first, it->second.ToString());
 	}
 	// merge all registed information (#WAV, #BMP, etc channel)
 	// if same key exists, then raise exception
@@ -170,18 +170,18 @@ BmsBms::Merge(const BmsBms& other)
 }
 
 
-std::wstring
+std::string
 BmsBms::ToString(void) const
 {
-	std::wstring tmp;
+	std::string tmp;
 
 	if (headers_.GetCount() > 0) {
 		tmp.append(headers_.ToString());
-		tmp.append(L"\n");
+		tmp.append("\n");
 	}
 	for (BmsRegistArraySet::ConstIterator it = array_set_.Begin(); it != array_set_.End(); ++it) {
 		tmp.append(it->second->ToString());
-		tmp.append(L"\n");
+		tmp.append("\n");
 	}
 	int max_bar = this->GetObjectExistsMaxBarPosition();
 	unsigned int pos = 0;
@@ -189,8 +189,8 @@ BmsBms::ToString(void) const
 		BmsBar current_bar = bar_manager_[i];
 		// 小節長変更出力
 		if (current_bar.GetRatio() != 1.0) {
-			wchar_t buf[1024];
-			_swprintf(buf, L"#%03d%ls:%f\n", i, L"02", current_bar.GetRatio());
+			char buf[1024];
+			sprintf(buf, "#%03d%ls:%f\n", i, L"02", current_bar.GetRatio());
 			tmp.append(buf);
 		}
 		if (i > max_bar) {
@@ -208,18 +208,18 @@ BmsBms::ToString(void) const
 						step = BmsUtil::GCD(step, k);
 					}
 				}
-				std::wstring object_array_str;
+				std::string object_array_str;
 				for (unsigned int k = pos; k < pos + current_bar.GetLength(); k += step) {
-					object_array_str.append((**current_buffer)[k].ToWString());
+					object_array_str.append((**current_buffer)[k].ToString());
 				}
 				if (current_channel.GetChannelNumber() == BmsWord("01") ||
 					object_array_str.length() > 2 ||
-					(object_array_str.length() == 2 && object_array_str != L"00")) {
-					wchar_t buf[1024];
-					_swprintf(buf, L"#%03d%S:", i, current_channel.GetChannelNumber().ToCharPtr());
+					(object_array_str.length() == 2 && object_array_str != "00")) {
+					char buf[1024];
+					sprintf(buf, "#%03d%S:", i, current_channel.GetChannelNumber().ToCharPtr());
 					tmp.append(buf);
 					tmp.append(object_array_str);
-					tmp.append(L"\n");
+					tmp.append("\n");
 				}
 			}
 		}
@@ -235,10 +235,10 @@ BmsBms::GetBPMtable(std::map<BmsWord, double> &extended_bpm_table)
 {
 	for (unsigned int i = 0; i < BmsConst::WORD_MAX_COUNT; i++) {
 		BmsWord current_word(i);
-		if (this->GetRegistArraySet()[L"BPM"].IsExists(current_word)) {
+		if (this->GetRegistArraySet()["BPM"].IsExists(current_word)) {
 			double tmp;
-			if (NOT(BmsUtil::StringToFloat(this->GetRegistArraySet()[L"BPM"][current_word], &tmp)) || tmp == 0.0) {
-				throw InvalidFormatAsExtendedBpmChangeValueException(current_word, GetRegistArraySet()[L"BPM"][current_word]);
+			if (NOT(BmsUtil::StringToFloat(this->GetRegistArraySet()["BPM"][current_word], &tmp)) || tmp == 0.0) {
+				throw InvalidFormatAsExtendedBpmChangeValueException(current_word, GetRegistArraySet()["BPM"][current_word]);
 			}
 			else {
 				extended_bpm_table[current_word] = tmp;
@@ -252,10 +252,10 @@ BmsBms::GetSTOPtable(std::map<BmsWord, int> &stop_sequence_table)
 {
 	for (unsigned int i = 0; i < BmsConst::WORD_MAX_COUNT; i++) {
 		BmsWord current_word(i);
-		if (this->GetRegistArraySet()[L"STOP"].IsExists(BmsWord(i))) {
+		if (this->GetRegistArraySet()["STOP"].IsExists(BmsWord(i))) {
 			int tmp;
-			if (NOT(BmsUtil::StringToInteger(this->GetRegistArraySet()[L"STOP"][current_word], &tmp, 10))) {
-				throw InvalidFormatAsStopSequenceException(current_word, GetRegistArraySet()[L"STOP"][current_word]);
+			if (NOT(BmsUtil::StringToInteger(this->GetRegistArraySet()["STOP"][current_word], &tmp, 10))) {
+				throw InvalidFormatAsStopSequenceException(current_word, GetRegistArraySet()["STOP"][current_word]);
 			}
 			else {
 				stop_sequence_table[current_word] = tmp;
@@ -267,8 +267,8 @@ BmsBms::GetSTOPtable(std::map<BmsWord, int> &stop_sequence_table)
 double 
 BmsBms::GetBaseBPM() {
 	double bpm = 120.0;
-	if (this->GetHeaders().IsExists(L"BPM")) {
-		if (NOT(BmsUtil::StringToFloat(this->GetHeaders()[L"BPM"], &bpm)) || bpm == 0.0) {
+	if (this->GetHeaders().IsExists("BPM")) {
+		if ((bpm = this->GetHeaders()["BPM"].ToFloat()) == 0.0) {
 			throw InvalidFormatAsBpmHeaderException();
 		}
 	}
@@ -279,12 +279,12 @@ bool
 BmsBms::IsLongNoteExists()
 {
 	int lntype = 0;
-	if (this->GetHeaders().IsExists(L"LNTYPE")) {
-		if (!BmsUtil::StringToInteger(this->GetHeaders()[L"LNTYPE"], &lntype, 10)) {
-			throw InvalidLongNoteType(this->GetHeaders()[L"LNTYPE"]);
-		}
-		else if (lntype == 2) {
-			throw UnsupportedLongNoteType(this->GetHeaders()[L"LNTYPE"]);
+	if (this->GetHeaders().IsExists("LNTYPE")) {
+		if (!this->GetHeaders()["LNTYPE"].IsInteger())
+			throw InvalidLongNoteType(this->GetHeaders()["LNTYPE"].ToString());
+		lntype = this->GetHeaders()["LNTYPE"].ToInteger();
+		if (lntype == 2) {
+			throw UnsupportedLongNoteType(this->GetHeaders()["LNTYPE"].ToString());
 		}
 		else {
 			return true;
@@ -482,13 +482,14 @@ void
 BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 {
 	int LNtype = 0;
-	if (GetHeaders().IsExists(L"LNTYPE") &&
-		NOT(BmsUtil::StringToInteger(GetHeaders()[L"LNTYPE"], &LNtype, 10))) {
-		throw InvalidLongNoteType(GetHeaders()[L"LNTYPE"]);
+	if (GetHeaders().IsExists("LNTYPE")) {
+		if (!GetHeaders()["LNTYPE"].IsInteger())
+			throw InvalidLongNoteType(GetHeaders()["LNTYPE"].ToString());
+		LNtype = GetHeaders()["LNTYPE"].ToInteger();
 	}
 	BmsWord lnobj_word(0);
-	if (GetHeaders().IsExists(L"LNOBJ") && BmsWord::CheckConstruction(GetHeaders()[L"LNOBJ"])) {
-		lnobj_word = BmsWord(GetHeaders()[L"LNOBJ"]);
+	if (GetHeaders().IsExists("LNOBJ") && BmsWord::CheckConstruction(GetHeaders()["LNOBJ"].ToString())) {
+		lnobj_word = BmsWord(GetHeaders()["LNOBJ"].ToString());
 	}
 
 	//

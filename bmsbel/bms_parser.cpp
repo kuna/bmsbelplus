@@ -56,11 +56,11 @@ BmsParser::Reactor::~Reactor()
 {
 }
 
-std::wstring
+std::string
 BmsParser::Reactor::AtDuplicateHeader(Parser& parser,
-const std::wstring header,
-const std::wstring before,
-const std::wstring present)
+const std::string header,
+const std::string before,
+const std::string present)
 {
 	NOT_USE_VAR(before);
 	NOT_USE_VAR(present);
@@ -83,7 +83,7 @@ double       present)
 }
 
 bool
-BmsParser::Reactor::AtParseError(Parser& parser, BmsParseException& e, const std::wstring& line)
+BmsParser::Reactor::AtParseError(Parser& parser, BmsParseException& e, const std::string& line)
 {
 	NOT_USE_VAR(parser);
 	NOT_USE_VAR(e);
@@ -124,8 +124,26 @@ BmsParser::Reactor::AtParseEnd(Parser& parser)
 }
 
 // -- BmsParser::Parser -----------------------------------------------------------
+#ifdef USE_MBCS
 void
-BmsParser::Parse(const std::wstring& filename, BmsBms& bms)
+BmsParser::Parse(const std::wstring& filename_w, BmsBms& bms, const char *encoding)
+{
+	char filename[1024];
+	BmsUtil::wchar_to_utf8(filename_w.c_str(), filename, 1024);
+	Parse(filename, bms, encoding);
+}
+
+void
+BmsParser::Parse(const std::wstring& filename_w, BmsBms& bms)
+{
+	char filename[1024];
+	BmsUtil::wchar_to_utf8(filename_w.c_str(), filename, 1024);
+	Parse(filename, bms);
+}
+#endif
+
+void
+BmsParser::Parse(const std::string& filename, BmsBms& bms)
 {
 	if (BmsUtil::IsFileUTF8(filename))
 		BmsParser::Parse(filename, bms, "UTF-8");
@@ -134,7 +152,7 @@ BmsParser::Parse(const std::wstring& filename, BmsBms& bms)
 }
 
 void
-BmsParser::Parse(const std::wstring& filename, BmsBms &bms, const char* encoding)
+BmsParser::Parse(const std::string& filename, BmsBms &bms, const char* encoding)
 {
 	// create default Reactor & StartInfo
 	BmsRandom::RootStatement root_statement;					// for #RANDOM or some etc. commands
@@ -144,7 +162,7 @@ BmsParser::Parse(const std::wstring& filename, BmsBms &bms, const char* encoding
 }
 
 void
-BmsParser::Parse(const std::wstring& filename, const char* encoding, StartInfo& start_info)
+BmsParser::Parse(const std::string& filename, const char* encoding, StartInfo& start_info)
 {
 	BmsTextFileReader reader(filename, encoding);
 	BmsParser::Parse(reader, start_info);
@@ -163,7 +181,7 @@ BmsParser::Parse(BmsTextFileReader& reader, StartInfo& start_info)
 
 	BmsParser::Parser parser(start_info, *frame_stack_auto_ptr);
 	{
-		std::wstring tmp;
+		std::string tmp;
 		while (reader.ReadLine(tmp, true)) {
 			for (int i = tmp.length() - 1; i >= 0; --i) {
 				if (tmp[i] == L' ' || tmp[i] == L'\t') {
@@ -206,7 +224,7 @@ BmsParser::Parser::Start(void)
 	// first parsing
 	// - parse metadata / if clause / bar(measure) length first
 	//
-	for (std::vector<std::wstring>::const_iterator it = info_.line_data_.begin(); it != info_.line_data_.end(); ++it) {
+	for (std::vector<std::string>::const_iterator it = info_.line_data_.begin(); it != info_.line_data_.end(); ++it) {
 		info_.line_number_ += 1;
 		try {
 			this->ParseDefault(it->c_str());
@@ -231,7 +249,7 @@ BmsParser::Parser::Start(void)
 	// second parsing
 	// - parse bar data
 	//
-	for (std::vector<std::wstring>::const_iterator it = info_.line_data_.begin(); it != info_.line_data_.end(); ++it) {
+	for (std::vector<std::string>::const_iterator it = info_.line_data_.begin(); it != info_.line_data_.end(); ++it) {
 		info_.line_number_ += 1;
 		if (ignore_line_set.find(info_.line_number_) != ignore_line_set.end()) {
 			continue;
@@ -255,17 +273,17 @@ BmsParser::Parser::Start(void)
 }
 
 void
-BmsParser::Parser::ParseDefault(const wchar_t* str)
+BmsParser::Parser::ParseDefault(const char* str)
 {
 	while (*str == L' ' || *str == L'\t') {
 		++str;
 	}
 	switch (*str) {
-	case L'#':
+	case '#':
 		this->ParseHeaderOrBar(str + 1);
 		break;
 
-	case L'\0':
+	case '\0':
 		break;
 
 	default:
@@ -275,14 +293,14 @@ BmsParser::Parser::ParseDefault(const wchar_t* str)
 }
 
 void
-BmsParser::Parser::ParseComment(const wchar_t* str)
+BmsParser::Parser::ParseComment(const char* str)
 {
 	// 今は特に何もしない
 	NOT_USE_VAR(str);
 }
 
 void
-BmsParser::Parser::ParseHeaderOrBar(const wchar_t* str)
+BmsParser::Parser::ParseHeaderOrBar(const char* str)
 {
 	if (BmsUtil::IsDigit(*str)) {
 		this->ParseBar(str);
@@ -291,12 +309,12 @@ BmsParser::Parser::ParseHeaderOrBar(const wchar_t* str)
 		this->ParseHeaderKey(str);
 	}
 	else {
-		throw BmsParseInvalidCharAsHeaderOrBarException(info_.line_number_, std::wstring(str, 1));
+		throw BmsParseInvalidCharAsHeaderOrBarException(info_.line_number_, std::string(str, 1));
 	}
 }
 
 void
-BmsParser::Parser::ParseHeaderKey(const wchar_t* str)
+BmsParser::Parser::ParseHeaderKey(const char* str)
 {
 	info_.key_.clear();
 	for (unsigned int i = 0;; ++i) {
@@ -307,13 +325,13 @@ BmsParser::Parser::ParseHeaderKey(const wchar_t* str)
 			break;
 		}
 		if (BmsUtil::IsNotHex36(str[i])) {
-			throw BmsParseInvalidCharAsHeaderKeyException(info_.line_number_, std::wstring(str + i, 1));
+			throw BmsParseInvalidCharAsHeaderKeyException(info_.line_number_, std::string(str + i, 1));
 		}
 	}
 }
 
 void
-BmsParser::Parser::ParseHeaderSeparator(const wchar_t* str)
+BmsParser::Parser::ParseHeaderSeparator(const char* str)
 {
 	while (*str == ' ' || *str == '\t') {
 		++str;
@@ -322,11 +340,11 @@ BmsParser::Parser::ParseHeaderSeparator(const wchar_t* str)
 }
 
 void
-BmsParser::Parser::ParseHeaderValue(const wchar_t* str)
+BmsParser::Parser::ParseHeaderValue(const char* str)
 {
 	info_.value_.assign(str);
 
-	if (info_.key_ == L"RANDOM" || info_.key_ == L"IF" || info_.key_ == L"ENDIF") {
+	if (info_.key_ == "RANDOM" || info_.key_ == "IF" || info_.key_ == "ENDIF") {
 		this->ParseRandomStatement();
 		return;
 	}
@@ -348,9 +366,9 @@ BmsParser::Parser::ParseHeaderValue(const wchar_t* str)
 void
 BmsParser::Parser::WriteDownHeader(const FrameData& data)
 {
-	std::wstring header_value = info_.value_;
+	std::string header_value = info_.value_;
 	if (data.bms_.GetHeaders().IsExists(info_.key_)) {
-		header_value = info_.reactor_.AtDuplicateHeader(*this, info_.key_, data.bms_.GetHeaders()[info_.key_], info_.value_);
+		header_value = info_.reactor_.AtDuplicateHeader(*this, info_.key_, data.bms_.GetHeaders()[info_.key_].ToString(), info_.value_);
 	}
 	data.bms_.GetHeaders().Set(info_.key_, header_value);
 }
@@ -358,9 +376,9 @@ BmsParser::Parser::WriteDownHeader(const FrameData& data)
 void
 BmsParser::Parser::WriteDownRegistArray(const FrameData& data)
 {
-	std::wstring header_value = info_.value_;
+	std::string header_value = info_.value_;
 	BmsWord pos(info_.key_.substr(info_.key_.length() - 2));
-	std::wstring array_name = info_.key_.substr(0, info_.key_.length() - 2);
+	std::string array_name = info_.key_.substr(0, info_.key_.length() - 2);
 	if (NOT(data.bms_.GetRegistArraySet().Exists(array_name))) {
 		throw BMS_INTERNAL_EXCEPTION;
 	}
@@ -373,22 +391,22 @@ BmsParser::Parser::WriteDownRegistArray(const FrameData& data)
 }
 
 void
-BmsParser::Parser::ParseBar(const wchar_t* str)
+BmsParser::Parser::ParseBar(const char* str)
 {
 	if (BmsUtil::IsNotDigit(str[0]) ||
 		BmsUtil::IsNotDigit(str[1]) ||
 		BmsUtil::IsNotDigit(str[2])) {
-		throw BmsParseInvalidCharAsBarException(info_.line_number_, std::wstring(str, 3));
+		throw BmsParseInvalidCharAsBarException(info_.line_number_, std::string(str, 3));
 	}
-	info_.bar_ = _wtoi(std::wstring(str, 3).c_str());
+	info_.bar_ = atoi(std::string(str, 3).c_str());
 	this->ParseChannel(str + 3);
 }
 
 void
-BmsParser::Parser::ParseChannel(const wchar_t* str)
+BmsParser::Parser::ParseChannel(const char* str)
 {
 	if (NOT(BmsWord::CheckConstruction(str))) {
-		throw BmsParseInvalidCharAsChannelException(info_.line_number_, std::wstring(str, 2));
+		throw BmsParseInvalidCharAsChannelException(info_.line_number_, std::string(str, 2));
 	}
 	info_.channel_number_ = BmsWord(str);
 	if (info_.ignore_channel_set_.find(info_.channel_number_) != info_.ignore_channel_set_.end()) {
@@ -401,10 +419,10 @@ BmsParser::Parser::ParseChannel(const wchar_t* str)
 }
 
 void
-BmsParser::Parser::ParseColon(const wchar_t* str)
+BmsParser::Parser::ParseColon(const char* str)
 {
 	if (*str != ':') {
-		throw BmsParseInvalidCharAsColonException(info_.line_number_, std::wstring(str, 1));
+		throw BmsParseInvalidCharAsColonException(info_.line_number_, std::string(str, 1));
 	}
 	if (info_.is_first_parse_) {
 		this->ParseBarChangeValue(str + 1);
@@ -415,13 +433,13 @@ BmsParser::Parser::ParseColon(const wchar_t* str)
 }
 
 void
-BmsParser::Parser::ParseBarChangeValue(const wchar_t* str)
+BmsParser::Parser::ParseBarChangeValue(const char* str)
 {
 	if (NOT(BmsUtil::StringToFloat(str, &info_.bar_change_ratio_))) {
-		throw BmsParseInvalidBarChangeValueException(info_.line_number_, std::wstring(str));
+		throw BmsParseInvalidBarChangeValueException(info_.line_number_, std::string(str));
 	}
 	if (info_.bar_change_ratio_ <= 0.0) {
-		throw BmsParseInvalidBarChangeValueException(info_.line_number_, std::wstring(str));
+		throw BmsParseInvalidBarChangeValueException(info_.line_number_, std::string(str));
 	}
 	info_.frame_stack_.CallWriteDownFunction(*this, &Parser::WriteDownBarChangeValue);
 }
@@ -445,7 +463,7 @@ BmsParser::Parser::WriteDownBarChangeValue(const FrameData& data)
 }
 
 void
-BmsParser::Parser::ParseObjectArray(const wchar_t* str)
+BmsParser::Parser::ParseObjectArray(const char* str)
 {
 	info_.word_array_.clear();
 
@@ -470,7 +488,7 @@ BmsParser::Parser::ParseObjectArray(const wchar_t* str)
 		}
 		else {
 			throw BmsParseInvalidCharAsObjectArrayException(
-				info_.line_number_, std::wstring(str + i, str[i + 1] != L'\0' ? 2 : 1));
+				info_.line_number_, std::string(str + i, str[i + 1] != L'\0' ? 2 : 1));
 		}
 	}
 
@@ -524,7 +542,7 @@ void
 BmsParser::Parser::ParseRandomStatement(void)
 {
 	if (info_.is_first_parse_) {
-		if (info_.key_ == L"RANDOM") {
+		if (info_.key_ == "RANDOM") {
 			int tmp;
 			if (NOT(BmsUtil::StringToInteger(info_.value_, &tmp, 10))) {
 				throw BmsParseInvalidRandomValueException(info_.line_number_, info_.key_, info_.value_);
@@ -537,7 +555,7 @@ BmsParser::Parser::ParseRandomStatement(void)
 			info_.frame_stack_.SetRandomValue(info_.reactor_.AtGenerateRandom(*this, random_max));
 			info_.random_value_queue_.push(info_.frame_stack_.GetRandomValue());
 		}
-		else if (info_.key_ == L"IF") {
+		else if (info_.key_ == "IF") {
 			int prerequisite;
 			if (NOT(BmsUtil::StringToInteger(info_.value_, &prerequisite, 10)) ||
 				prerequisite <= 0) {
@@ -545,7 +563,7 @@ BmsParser::Parser::ParseRandomStatement(void)
 			}
 			info_.frame_stack_.PushIfStatement(static_cast<unsigned int>(prerequisite));
 		}
-		else if (info_.key_ == L"ENDIF") {
+		else if (info_.key_ == "ENDIF") {
 			if (info_.frame_stack_.GetDepth() <= 1) {
 				throw BmsParseUnexceptedEndIfException(info_.line_number_);
 			}
@@ -553,11 +571,11 @@ BmsParser::Parser::ParseRandomStatement(void)
 		}
 	}
 	else {
-		if (info_.key_ == L"RANDOM") {
+		if (info_.key_ == "RANDOM") {
 			info_.frame_stack_.SetRandomValue(info_.random_value_queue_.front());
 			info_.random_value_queue_.pop();
 		}
-		else if (info_.key_ == L"IF") {
+		else if (info_.key_ == "IF") {
 			int prerequisite;
 			if (NOT(BmsUtil::StringToInteger(info_.value_, &prerequisite, 10)) ||
 				prerequisite <= 0) {
@@ -565,7 +583,7 @@ BmsParser::Parser::ParseRandomStatement(void)
 			}
 			info_.frame_stack_.MoveChildIfStatement(static_cast<unsigned int>(prerequisite));
 		}
-		else if (info_.key_ == L"ENDIF") {
+		else if (info_.key_ == "ENDIF") {
 			if (info_.frame_stack_.GetDepth() <= 1) {
 				throw BmsParseUnexceptedEndIfException(info_.line_number_);
 			}

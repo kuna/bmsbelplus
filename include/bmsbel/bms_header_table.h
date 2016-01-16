@@ -5,6 +5,7 @@
 #include <map>
 
 // -- BmsHeaderTable -----------------------------------------------------
+class BmsHeader;
 class BmsHeaderTable {
 public:
 	explicit BmsHeaderTable(void);
@@ -13,26 +14,47 @@ public:
 
 	unsigned int GetCount(void) const;
 
-	bool IsExists(const std::wstring& key) const;
-	bool IsNotExists(const std::wstring& key) const;
+	bool IsExists(const std::string& key) const;
+	bool IsNotExists(const std::string& key) const;
 
-	const std::wstring& operator [](const std::wstring& key);
+	const BmsHeader& operator [](const std::string& key);
 
-	void Set(const std::wstring& key, const std::wstring& value);
-	void DeleteByKey(const std::wstring& key);
+	void Set(const std::string& key, const std::string& value);
+	void DeleteByKey(const std::string& key);
 
 	void Clear(void);
 
-	std::wstring ToString(void) const;
+	std::string ToString(void) const;
+#ifdef USE_MBCS
+	std::wstring ToWString(void) const;
+#endif
 
 	// -- Iterator ---------------------------------------------------------
-	typedef std::map<std::wstring, std::wstring>::const_iterator Iterator;
+	typedef std::map<std::string, BmsHeader>::const_iterator Iterator;
 
 	Iterator Begin(void) const;
 	Iterator End(void) const;
 
 private:
-	std::map<std::wstring, std::wstring> table_;
+	std::map<std::string, BmsHeader> table_;
+};
+
+class BmsHeader {
+public:
+	BmsHeader();
+	BmsHeader(const std::string& val);
+	void Set(const std::string& val);
+	std::string ToString() const;
+	const char *c_str() const;
+#ifdef USE_MBCS
+	std::wstring ToWString() const;
+#endif
+	int ToInteger() const;
+	double ToFloat() const;
+	bool IsInteger() const;
+	bool IsFloat() const;
+private:
+	std::string value;
 };
 
 #endif // BMSBEL_HEADER_TABLE_H_

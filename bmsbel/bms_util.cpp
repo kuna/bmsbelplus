@@ -198,20 +198,60 @@ BmsUtil::StringToUpper(std::wstring& str)
 	std::transform(str.begin(), str.end(), str.begin(), toupper);
 }
 
+
+bool BmsUtil::wchar_to_utf8(const wchar_t *org, char *out, int maxlen)
+{
+	iconv_t cd = iconv_open("UTF-8", "UTF-16LE");
+	if ((int)cd == -1)
+		return false;
+
+	out[0] = 0;
+	const char *buf_iconv = (const char*)org;
+	char *but_out_iconv = (char*)out;
+	size_t len_in = wcslen(org) * 2;
+	size_t len_out = maxlen;
+
+	int r = iconv(cd, &buf_iconv, &len_in, &but_out_iconv, &len_out);
+	if ((int)r == -1)
+		return false;
+	*but_out_iconv = 0;
+
+	return true;
+}
+
+bool BmsUtil::utf8_to_wchar(const char *org, wchar_t *out, int maxlen)
+{
+	iconv_t cd = iconv_open("UTF-16LE", "UTF-8");
+	if ((int)cd == -1)
+		return false;
+
+	out[0] = 0;
+	const char *buf_iconv = (const char*)org;
+	char *but_out_iconv = (char*)out;
+	size_t len_in = strlen(org);
+	size_t len_out = maxlen * 2;
+
+	int r = iconv(cd, &buf_iconv, &len_in, &but_out_iconv, &len_out);
+	if ((int)r == -1)
+		return false;
+	*but_out_iconv = *(but_out_iconv + 1) = 0;
+
+	return true;
+}
+
 //
 // global buffer for class
 //
 char utf8BOM[3] = { 0xEF, 0xBB, 0xBF };
-int BmsUtil::IsFileUTF8(const std::wstring& filename) {
-	FILE *file = _wfopen(filename.c_str(), L"r");
-	if (NOT(file)) {
+int BmsUtil::IsFileUTF8(const std::string& filename) {
+	FILE *file;
+	if (!OpenFile(&file, filename.c_str(), "r"))
 		throw BmsFileOpenException(filename, errno);
-	}
 
 	// buffers
 	char buf_char[BmsConst::BMS_MAX_LINE_BUFFER];
-	wchar_t buf_wchar[BmsConst::BMS_MAX_LINE_BUFFER];
-	size_t len_char, len_wchar;
+	char buf_char_out[BmsConst::BMS_MAX_LINE_BUFFER];
+	size_t len_char, len_char_out;
 
 	// check 4 byte to see is it UTF8 BOM
 	fseek(file, 0, SEEK_SET);
@@ -220,24 +260,42 @@ int BmsUtil::IsFileUTF8(const std::wstring& filename) {
 	}
 	// attempt to convert few lines
 	fseek(file, 0, SEEK_SET);
-	iconv_t cd = iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, "UTF-8");
+	iconv_t cd = iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, BmsBelOption::DEFAULT_FALLBACK_ENCODING);
 	if ((int)cd == -1) {
 		// conversion is not supported
 		return -1;
 	}
+	errno = 0;
 	for (int i = 0; i < BmsBelOption::CONVERT_ATTEMPT_LINES && NOT(feof(file)); i++) {
 		fgets(buf_char, BmsConst::BMS_MAX_LINE_BUFFER, file);
 		len_char = strlen(buf_char);
 		const char *buf_iconv = buf_char;
-		char *but_out_iconv = (char*)buf_wchar;
-		len_wchar = BmsConst::BMS_MAX_LINE_BUFFER;		// available characters for converting
-		int iconv_ret = iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_wchar);
+		char *but_out_iconv = (char*)buf_char_out;
+		len_char_out = BmsConst::BMS_MAX_LINE_BUFFER;		// available characters for converting
+		int iconv_ret = iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_char_out);
 		*but_out_iconv = *(but_out_iconv + 1) = 0;		// NULL terminal character
 		if (errno || iconv_ret < 0) {
 			iconv_close(cd);
-			return 0;	// failed to convert UTF8->wchar. maybe, SHIFT_JIS?
+			return 1;	// failed to convert Shift_JIS. maybe UTF-8?
 		}
 	}
 	iconv_close(cd);
-	return 1;
+	return 0;
+}
+
+bool BmsUtil::OpenFile(FILE **f, const char* filename, const char* mode) {
+	int r = 0;
+#if _WIN32
+	wchar_t filename_w[1024];
+	wchar_t mode_w[100];
+	utf8_to_wchar(filename, filename_w, 1024);
+	utf8_to_wchar(mode, mode_w, 100);
+	r = _wfopen_s(f, filename_w, mode_w);
+#else
+	r = _fopen_s(&f, filename, mode);
+#endif
+	if (r != 0) {
+		return false;
+	}
+	return true;
 }
