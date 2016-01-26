@@ -281,7 +281,6 @@ BmsWord::ToWString(void) const
 	return std::wstring(s.begin(), s.end());
 }
 
-
 void
 BmsWord::CheckValid(void) const
 {

@@ -43,6 +43,7 @@ public:
 
   void SetChannelNumber( const BmsWord& channel_number );
   BmsWord& GetChannelNumber();
+  int GetLaneIndex();
 
   unsigned int GetBufferCount( void ) const;
 
@@ -70,6 +71,7 @@ public:
   bool Is9KeyChannel(void) const;			// DEP
   bool IsLongNoteChannel(void) const;
   bool IsMineNoteChannel(void) const;
+  bool IsVisibleChannel() const;
   int GetChannelType() const;
 
   // -- Iterator ---------------------------------------------------------

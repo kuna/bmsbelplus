@@ -343,6 +343,33 @@ bool BmsChannel::Is9KeyChannel(void) const {
 		|| c_key == 8 || c_key == 9 || c_key == 6 || c_key == 7);
 }
 
+bool BmsChannel::IsVisibleChannel() const {
+	return IsFirstPlayerNoteChannel() || IsSecondPlayerNoteChannel();
+}
+
+int BmsChannel::GetLaneIndex() {
+	// normal note
+	// 11 -- 17
+	// 21 -- 27
+	// invisible note
+	// 31 -- 36
+	// 41 -- 46
+	// longnote (loose)
+	// 51 -- 59
+	// 61 -- 69
+	// minefield
+	// D1 -- D9
+	// E1 -- E9
+	int channel_to_lane[] = {
+		0, 1, 2, 3, 4, 5, 0, 8, 6, 7,
+		10, 11, 12, 13, 14, 15, 10, 18, 16, 17,
+	};
+	int channel = GetChannelNumber().ToInteger();
+	int b = (channel - 36) / 36;
+	int s = channel % 36 % 10;
+	return ((b % 2) * 10 + channel_to_lane[s]);
+}
+
 int BmsChannel::GetChannelType() const {
 	int c = channel_number_.ToInteger();
 	if (c == 1)

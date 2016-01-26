@@ -46,7 +46,7 @@ public:
 	// note
 	bool IsLongNoteExists();
 	bool IsMineNoteExists();
-	void GetNotes(BmsNoteContainer &note_manager_);
+	void GetNotes(BmsNoteManager &note_manager_);
 	int GetKey();
 
 	// get other metedatas

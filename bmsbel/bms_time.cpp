@@ -106,7 +106,7 @@ int BmsTimeManager::GetBarIndexFromTime(double time, int start) {
 
 	for (int i = 1; i < array_.size(); i++) {
 		if (array_[i - 1].time <= time && time < array_[i].time) {
-			return i;
+			return i - 1;
 		}
 	}
 	return GetSize() - 1;

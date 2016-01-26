@@ -479,7 +479,7 @@ BmsBms::CalculateTime(BmsTimeManager& time_manager_)
 // must call after time is calculated (CalculateTimeTable())
 //
 void
-BmsBms::GetNotes(BmsNoteContainer &note_manager_)
+BmsBms::GetNotes(BmsNoteManager &note_manager_)
 {
 	int LNtype = 0;
 	if (GetHeaders().IsExists("LNTYPE")) {
@@ -509,7 +509,9 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 				BmsChannelBuffer& current_buffer = **it2;
 				BmsWord current_word(current_buffer[i]);
 				if (current_word == BmsWord::MIN) continue;
-				BmsNote current_note(BmsNote::NOTE_NONE, current_channel.GetChannelNumber().ToInteger(), current_word);
+				int laneidx = current_channel.GetLaneIndex();
+				int channel = current_channel.GetChannelNumber().ToInteger();
+				BmsNote current_note(BmsNote::NOTE_NONE, current_word);
 
 				switch (current_channel.GetChannelType()) {
 				case BmsChannelType::FIRSTPLAYER:
@@ -517,14 +519,14 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 					// check if it's LNOBJ registered note
 					if (current_word == lnobj_word) {
 						// set previous note as LongNote
-						if (NOT(channelLastNote[current_note.channel])
-							|| channelLastNote[current_note.channel]->type == BmsNote::NOTE_LNEND) {
+						if (NOT(channelLastNote[channel])
+							|| channelLastNote[channel]->type == BmsNote::NOTE_LNEND) {
 							// exception: longnote was double closed
 							// or there's no Longnote start position(previous note)
 							throw BmsLongNoteObjectInvalidEncloseException(0, it->first, i);
 						}
 						// change previous note to LNSTART
-						channelLastNote[current_note.channel]->type = BmsNote::NOTE_LNSTART;
+						channelLastNote[channel]->type = BmsNote::NOTE_LNSTART;
 						// add LNEND note
 						current_note.type = BmsNote::NOTE_LNEND;
 					}
@@ -541,8 +543,8 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 				case BmsChannelType::FIRSTPLAYERLN:
 				case BmsChannelType::SECONDPLAYERLN:
 					// start longnote ONLY IF there's no previous note, or previous note is LN.
-					if (NOT(channelLastNote[current_note.channel])
-						|| channelLastNote[current_note.channel]->type == BmsNote::NOTE_LNEND) {
+					if (NOT(channelLastNote[channel])
+						|| channelLastNote[channel]->type == BmsNote::NOTE_LNEND) {
 						current_note.type = BmsNote::NOTE_LNSTART;
 					}
 					else {
@@ -565,7 +567,7 @@ BmsBms::GetNotes(BmsNoteContainer &note_manager_)
 				case BmsChannelType::SECONDPLAYERLN:
 				case BmsChannelType::FIRSTPLAYERMINE:
 				case BmsChannelType::SECONDPLAYERMINE:
-					channelLastNote[current_note.channel] = note_manager_.SetNoteData(current_note, i);
+					channelLastNote[channel] = note_manager_.SetNoteData(current_note, laneidx, i);
 					break;
 				}
 			}
