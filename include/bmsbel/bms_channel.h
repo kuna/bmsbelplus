@@ -8,124 +8,100 @@
 #include "bms_word.h"
 #include "bms_buffer.h"
 
-class BmsChannel;
-
-// -- BmsChannelBuffer ---------------------------------------------------
-class BmsChannelBuffer : public BmsBuffer {
-private:
-  static const int DEFAULT_LENGTH = BmsConst::DEFAULT_BAR_DIVISION_COUNT * 10;
-
-  friend class BmsChannel;
-  explicit BmsChannelBuffer( void );
-
-  void ExtendArrayOver( unsigned int pos );
-
-public:
-  virtual BmsWord& operator []( unsigned int pos );
-
-  virtual void Merge( const BmsBuffer& buffer );
-  virtual void Merge( unsigned int start, const BmsBuffer& buffer );
-
-  int GetObjectExistsMaxPosition( unsigned int start ) const;
-
-  void MultiplyBarDivisionCount( unsigned int multiplier );
-};
-
-
 // -- BmsChannel ---------------------------------------------------------
+// only bgm channel is allowed to have duplicated channels
 class BmsChannel {
 private:
-  friend class BmsChannelManager;
-  explicit BmsChannel( const BmsWord& channel_number );
+	friend class BmsChannelManager;
+	explicit BmsChannel(const BmsWord& channel_number);
 
 public:
-  ~BmsChannel();
+	~BmsChannel();
 
-  void SetChannelNumber( const BmsWord& channel_number );
-  BmsWord& GetChannelNumber();
-  int GetLaneIndex();
+	void SetChannelNumber(const BmsWord& channel_number);
+	BmsWord& GetChannelNumber();
+	int GetLaneIndex();
 
-  unsigned int GetBufferCount( void ) const;
+	unsigned int GetBufferCount(void) const;
 
-  BmsChannelBuffer& MakeNewBuffer( void );
+	BmsBuffer& MakeNewBuffer(void);
+	BmsBuffer& GetBuffer(unsigned int pos = 0);
+	BmsBuffer& operator [](unsigned int pos);
 
-  BmsChannelBuffer& GetBuffer( unsigned int pos );
-  BmsChannelBuffer& operator []( unsigned int pos );
+	bool Contains(const BmsWord &word) const;
 
-  bool Contains( const BmsWord &word ) const;
+	int GetObjectExistsMaxPosition(unsigned int start) const;
 
-  int GetObjectExistsMaxPosition( unsigned int start ) const;
+	void MultiplyBarDivisionCount(unsigned int multiplier);
 
-  void MultiplyBarDivisionCount( unsigned int multiplier );
+	bool IsChannel() const;
+	bool IsWavChannel(void) const;
+	bool IsBmpChannel() const;
+	bool IsShouldPlayWavChannel(void) const;
+	bool IsFirstPlayerNoteChannel(void) const;
+	bool IsSecondPlayerNoteChannel(void) const;
+	bool IsFirstPlayerChannel(void) const;
+	bool IsSecondPlayerChannel(void) const;	// includes invisible/mine note
+	bool Is5KeyChannel(void) const;			// DEP
+	bool Is7KeyChannel(void) const;			// DEPRECIATED
+	bool Is9KeyChannel(void) const;			// DEP
+	bool IsLongNoteChannel(void) const;
+	bool IsMineNoteChannel(void) const;
+	bool IsVisibleChannel() const;
+	int GetChannelType() const;
 
-  bool IsChannel() const;
-  bool IsWavChannel( void ) const;
-  bool IsBmpChannel() const;
-  bool IsShouldPlayWavChannel(void) const;
-  bool IsFirstPlayerNoteChannel(void) const;
-  bool IsSecondPlayerNoteChannel(void) const;
-  bool IsFirstPlayerChannel(void) const;
-  bool IsSecondPlayerChannel(void) const;	// includes invisible/mine note
-  bool Is5KeyChannel(void) const;			// DEP
-  bool Is7KeyChannel(void) const;			// DEPRECIATED
-  bool Is9KeyChannel(void) const;			// DEP
-  bool IsLongNoteChannel(void) const;
-  bool IsMineNoteChannel(void) const;
-  bool IsVisibleChannel() const;
-  int GetChannelType() const;
+	// -- Iterator ---------------------------------------------------------
+	typedef std::vector<BmsBuffer*>::iterator Iterator;
+	typedef std::vector<BmsBuffer*>::const_iterator ConstIterator;
 
-  // -- Iterator ---------------------------------------------------------
-  typedef std::vector<BmsChannelBuffer*>::iterator Iterator;
-  typedef std::vector<BmsChannelBuffer*>::const_iterator ConstIterator;
-
-  Iterator Begin( void );
-  Iterator End( void );
-  ConstIterator Begin( void ) const;
-  ConstIterator End( void ) const;
+	Iterator Begin(void);
+	Iterator End(void);
+	ConstIterator Begin(void) const;
+	ConstIterator End(void) const;
 
 private:
-  BmsWord                        channel_number_;
-  std::vector<BmsChannelBuffer*> buffers_;
+	BmsWord							channel_number_;
+	std::vector<BmsBuffer*>	buffers_;
 };
 
 
 // -- BmsChannelManager --------------------------------------------------
 class BmsChannelManager {
 public:
-  typedef bool (BmsChannel::*BmsChannelConditionJudgeFunction)( void ) const;
+	typedef bool (BmsChannel::*BmsChannelConditionJudgeFunction)(void) const;
 
-  explicit BmsChannelManager( void );
+	explicit BmsChannelManager(void);
 
-  ~BmsChannelManager();
+	~BmsChannelManager();
 
-  unsigned int GetCount( void ) const;
+	unsigned int GetCount(void) const;
 
-  BmsChannel& GetChannel( const BmsWord &channel_number );
-  BmsChannel& operator []( const BmsWord &channel_number );
+	BmsChannel& GetChannel(const BmsWord &channel_number);
+	BmsChannel& operator [](const BmsWord &channel_number);
 
-  void DeleteChannel( const BmsWord &channel_number );
+	void DeleteChannel(const BmsWord &channel_number);
 
-  void Clear( void );
+	void Clear(void);
 
-  bool Contains( const BmsWord &word ) const;
-  bool Contains( const BmsWord &word, BmsChannelConditionJudgeFunction func ) const;
+	bool Contains(const BmsWord &word) const;
+	bool Contains(const BmsWord &word, BmsChannelConditionJudgeFunction func) const;
 
-  int GetObjectExistsMaxPosition( void ) const;
-  int GetObjectExistsMaxPosition( BmsChannelConditionJudgeFunction func ) const;
+	int GetObjectExistsMaxPosition(void) const;
+	int GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction func) const;
 
-  void MultiplyBarDivisionCount( unsigned int multiplier );
+	void MultiplyBarDivisionCount(unsigned int multiplier);
 
-  // -- Iterator ---------------------------------------------------------
-  typedef std::map<BmsWord, BmsChannel*>::iterator Iterator;
-  typedef std::map<BmsWord, BmsChannel*>::const_iterator ConstIterator;
+	// -- Iterator ---------------------------------------------------------
+	typedef std::map<BmsWord, BmsChannel*>::iterator Iterator;
+	typedef std::map<BmsWord, BmsChannel*>::const_iterator ConstIterator;
 
-  Iterator Begin( void );
-  Iterator End( void );
-  ConstIterator Begin( void ) const;
-  ConstIterator End( void ) const;
+	Iterator Begin(void);
+	Iterator End(void);
+	ConstIterator Begin(void) const;
+	ConstIterator End(void) const;
 
 private:
-  std::map<BmsWord, BmsChannel*> channels_;
+	std::map<BmsWord, BmsChannel*> channels_;
 };
 
 #endif // BMSBEL_CHANNEL_H_

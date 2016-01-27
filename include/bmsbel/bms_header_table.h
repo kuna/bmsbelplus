@@ -29,6 +29,11 @@ public:
 	std::wstring ToWString(void) const;
 #endif
 
+	bool Query(const std::string& key, int* v);
+	bool Query(const std::string& key, double* v);
+	bool Query(const std::string& key, std::string& v);
+	bool Query(const std::string& key, char* v);
+
 	// -- Iterator ---------------------------------------------------------
 	typedef std::map<std::string, BmsHeader>::const_iterator Iterator;
 

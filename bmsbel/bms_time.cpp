@@ -1,103 +1,104 @@
 #include "bmsbel\bms_time.h"
 #include "bmsbel\bms_exception.h"
 
+#define BEGIN(a) ((a).begin()->second)
+#define RBEGIN(a) ((a).rbegin()->second)
+#define IT(a) ((a)->second)
+
 void BmsTimeManager::Clear() {
 	array_.clear();
 }
 
-void BmsTimeManager::Resize(int size) {
-	array_.resize(size);
+void BmsTimeManager::Reset() {
+	iter_ = array_.begin();
+	iternext_ = iter_;
+	++iternext_;
 }
 
-int BmsTimeManager::GetSize() {
-	return array_.size();
-}
-
-void BmsTimeManager::AddRow(const BmsTime& bmstime) {
-	if (array_.size() > 0 && array_.back().time >= bmstime.time) {
-		throw BmsTimeWrongException();
-	}
-	array_.push_back(bmstime);
-}
-
-void BmsTimeManager::SetRow(const BmsTime& bmstime, int idx) {
-	array_[idx] = bmstime;
-}
-
-const BmsTime& BmsTimeManager::GetRow(int idx) {
-	return array_[idx];
-}
-
-const BmsTime& BmsTimeManager::operator[](int idx) {
-	return array_[idx];
+void BmsTimeManager::Add(int bar, const BmsTime& bmstime) {
+	array_[bar] = bmstime;
+	Reset();
 }
 
 double BmsTimeManager::GetEndTime() {
 	if (array_.size() <= 0)
 		return 0;
-	return array_.back().time;
+	return RBEGIN(array_).time;
 }
 
 double BmsTimeManager::GetBeatFromTime(double time) {
-	if (array_.size() < 2) {
-		// exception BmsTooLittleRowData
-		// but, it shouldn't be happened
-		throw BmsParseNoObjectArrayException(0x7fffffff);
+	if (array_.size() < 1) {
+		// cannot get proper time
+		return 0;
 	}
+	BmsTime *row;
 	// if less then first data
 	// then no scroll
-	if (time < array_[0].time)
-		return array_[0].beat;
-
-	double db_dt;
-	double beat = 0;
-	for (int i = 1; i < array_.size(); i++) {
-		if (array_[i - 1].time <= time && time < array_[i].time) {
-			db_dt = (array_[i].beat - array_[i - 1].beat) / (array_[i].time - array_[i - 1].time);
-			return array_[i - 1].beat + db_dt * (time - array_[i - 1].time);
-		}
-		time -= array_[i].stop;
-		if (time < array_[i].time)
-			time = array_[i].time;
+	row = &BEGIN(array_);
+	if (time < row->time)
+		return row->beat;
+	// if bigger then last data
+	// then calculate beat from last BPM
+	row = &RBEGIN(array_);
+	if (time >= row->time) {
+		double lasttime = time - row->time;
+		return row->beat
+			+ lasttime / 60 * row->bpm;
 	}
-	db_dt = (array_.back().beat - (array_.end() - 1)->beat) / (array_.back().time - (array_.end() - 1)->time);
-	return (array_.end() - 1)->beat + db_dt * (time - (array_.end() - 1)->time);
+	// else then linear assumption
+	for (; iternext_ != array_.end();) {
+		if (IT(iter_).time <= time && time < IT(iternext_).time) {
+			time -= IT(iter_).stop;
+			if (time < IT(iter_).time) time = IT(iter_).time;
+			double db_dt = (IT(iternext_).beat - IT(iter_).beat) / (IT(iternext_).time - IT(iter_).time - IT(iter_).stop);
+			return IT(iter_).beat + db_dt * (time - IT(iter_).time);
+		}
+		++iternext_;
+		++iter_;
+	}
+	// if nothing found, then try again after Reset()
+	Reset();
+	return GetBeatFromTime(time);
 }
 
-double BmsTimeManager::GetAbsBeatFromTime(double time) {
-	if (array_.size() < 2) {
-		// exception BmsTooLittleRowData
-		// but, it shouldn't be happened
-		throw BmsParseNoObjectArrayException(0x7fffffff);
+double BmsTimeManager::GetPosFromTime(double time) {
+	if (array_.size() < 1) {
+		// cannot get proper pos
+		return 0;
 	}
+	BmsTime *row;
 	// if less then first data
 	// then no scroll
-	if (time < array_[0].time)
-		return array_[0].absbeat;
-	// (CHECK: in case of stop exists)
-
-	double db_dt;
-	for (int i = 1; i < array_.size(); i++) {
-		if (array_[i - 1].time <= time && time < array_[i].time) {
-			db_dt = (array_[i].absbeat - array_[i - 1].absbeat) / (array_[i].time - array_[i - 1].time - array_[i - 1].stop);
-			double t = (time - array_[i - 1].time - array_[i - 1].stop);
-			if (t < 0)
-				t = 0;
-			return array_[i - 1].absbeat + db_dt * t;
-		}
+	row = &BEGIN(array_);
+	if (time < row->time)
+		return row->beat;
+	// if bigger then last data
+	// then calculate from last BPM
+	row = &RBEGIN(array_);
+	if (time >= row->time) {
+		double lasttime = time - row->time;
+		return row->pos
+			+ lasttime / 60 * row->bpm;
 	}
-	db_dt = (array_.back().absbeat - (array_.end() - 1)->absbeat) / (array_.back().time - (array_.end() - 1)->time);
-	double t = (time - (array_.end() - 1)->time - (array_.end() - 1)->stop);
-	if (t < 0)
-		t = 0;
-	return (array_.end() - 1)->absbeat + db_dt * t;
+	// else then linear assumption
+	for (; iternext_ != array_.end();) {
+		if (IT(iter_).time <= time && time < IT(iternext_).time) {
+			time -= IT(iter_).stop;
+			if (time < IT(iter_).time) time = IT(iter_).time;
+			double db_dt = (IT(iternext_).beat - IT(iter_).beat) / (IT(iternext_).time - IT(iter_).time - IT(iter_).stop);
+			return IT(iter_).beat + db_dt * (time - IT(iter_).time);
+		}
+		++iternext_;
+		++iter_;
+	}
+	// if nothing found, then try again after Reset()
+	Reset();
+	return GetBeatFromTime(time);
 }
 
-int BmsTimeManager::GetBarIndexFromTime(double time, int start) {
-	if (array_.size() < 2) {
-		// exception BmsTooLittleRowData
-		// but, it shouldn't be happened
-		throw BmsParseNoObjectArrayException(0x7fffffff);
+int BmsTimeManager::GetBarNumberFromTime(double time) {
+	if (array_.size() < 1) {
+		return 0;
 	}
 	// if less then first data
 	// then no scroll

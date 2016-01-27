@@ -20,6 +20,8 @@ public:
 	BmsRegistArraySet&	GetRegistArraySet(void);
 	BmsChannelManager&	GetChannelManager(void);
 	BmsBarManager&		GetBarManager(void);
+	/** @brief timemanager won't be initalized unless you call(require) this function. */
+	BmsTimeManager&		GetTimeManager();
 
 	// get number of measure of last object
 	int GetObjectExistsMaxBarPosition(void) const;
@@ -43,16 +45,17 @@ public:
 	void GetSTOPtable(std::map<BmsWord, int> &stop_sequence_table);
 	double GetBaseBPM();
 
+	/*
+	 * @brief returns #TOTAL of this song
+	 * you may can set fallback from total calculated from BmsNoteManager.
+	 */
+	double GetTotal(double fallback = 200);
+
 	// note
 	bool IsLongNoteExists();
 	bool IsMineNoteExists();
 	void GetNotes(BmsNoteManager &note_manager_);
 	int GetKey();
-
-	// get other metedatas
-	// must call after CalculateTimeTable()
-	//std::string& GetTitle();
-	//int GetRank();
 private:
 	BmsHeaderTable		headers_;
 	BmsRegistArraySet	array_set_;

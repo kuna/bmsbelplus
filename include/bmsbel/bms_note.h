@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bms_word.h"
+#include <map>
 #include <vector>
 
 /*
@@ -16,13 +17,68 @@ public:
 	const static int NOTE_LNEND = 3;
 	const static int NOTE_MINE = 4;
 	const static int NOTE_HIDDEN = 5;
-
+	bool operator==(BmsNote& note) { return note.type == type; }
+	bool operator!=(BmsNote& note) { return note.type != type; }
 public:
 	BmsNote();		// NONEtype note
 	BmsNote(int type, const BmsWord& value);
 	int type;		// available note type - refered on top
 
+	// under these are metadatas.
 	BmsWord value;
+	//int bar;
+	//int measure;
+};
+
+/*
+ * @description
+ * A lane includes notes, used for rendering note.
+ * <pseudocode>
+ * // initalize iterator
+ * Reset()
+ * // update iterator(which is going to be processed) to proper pos
+ * for (; Current != End && Current.pos < pos; Next) {}
+ * // render from current note
+ * for (c = Current; shows in screen; c.next) { Render() }
+ * COMMENT: I think there can be many different types of iterator
+ *          from implementation method, so I removed inner iterator. make it by your own.
+ */
+class BmsNoteLane {
+public:
+	friend void swap(BmsNoteLane &a, BmsNoteLane &b) { a.notes_.swap(b.notes_); }
+
+	// iterator
+	typedef std::map<int, BmsNote>::iterator Iterator;
+	Iterator Begin() { notes_.begin(); };
+	Iterator Begin(int bar) { return notes_.equal_range(bar).first; }
+	Iterator End() { notes_.end(); };
+#if 0
+	Iterator Next() { return ++iter_; };		// move inner iterator to next and return that iter.
+	Iterator Current() { return iter_; };		// returns current iterator without modifying anything.
+	void Reset() { iter_ = notes_.begin(); }	// reset position of current note lane(initalizing)
+	void Reset(int bar) { iter_ = notes_.equal_range(bar).first; }
+#endif
+
+	// setter / getter
+	BmsNote Get(int bar) { 
+		if (notes_.find(bar) != notes_.end()) return notes_[bar]; 
+		else return BmsNote();
+	};
+	void Set(int bar, const BmsNote& v) { if (v.type != BmsNote::NOTE_NONE) notes_[bar] = v; };
+	void Delete(int bar) { notes_.erase(bar); }
+	void Clear() { notes_.clear(); }
+
+	// <barpos, notecount(1)>
+	// use iterator to get note existing bar
+	void GetNoteExistBar(std::map<int, int> &barmap);
+	int GetNoteCount() { return notes_.size(); }
+private:
+	// data
+	std::map<int, BmsNote> notes_;
+#if 0
+	// iterator for each lane
+	Iterator iter_;
+#endif
 };
 
 /*
@@ -37,24 +93,26 @@ public:
 
 class BmsNoteManager {
 private:
-	std::vector<BmsNote> notes[_MAX_NOTE_LANE];		// 20 key data will be enough
+	BmsNoteLane lanes_[_MAX_NOTE_LANE];
 public:
-	void Resize(int size);				// this will make data initalized
-
 	// about note metadata
-	int GetNoteCount(bool longnotedoublecount = true);
+	int GetNoteCount();
 	int GetKeys();
-	int GetSize();
+	// <barpos, notecount(1)>
+	// use iterator to get note existing bar
+	void GetNoteExistBar(std::map<int, int> &barmap);
+
+	BmsNoteLane& operator[](int i) { return lanes_[i]; }
 
 	// about note modifing
 	// - better then modifying original bms file,
 	//   because we should load that BMS file again if we need to reuse that BMS file.
 	//   that's quite resource wasting.
-	void Random(int player, unsigned int seed, bool includeScratch = false);
-	void RRandom(int player, unsigned int seed, bool includeScratch = false);
-	void HRandom(int player, unsigned int seed, bool includeScratch = false);		// no combo note
-	void SRandom(int player, unsigned int seed, bool includeScratch = false);
-	void Mirror(int player);
+	void Random(unsigned int seed, int s = 1, int e = 7);
+	void RRandom(unsigned int seed, int s = 1, int e = 7);
+	void HRandom(unsigned int seed, int s = 1, int e = 7);		// no combo note
+	void SRandom(unsigned int seed, int s = 1, int e = 7);
+	void Mirror(int s = 1, int e = 7);
 	void MoreLongNote(double ratio);
 	void LessLongNote(double ratio);
 	void AllScratch(int seed);
@@ -64,13 +122,12 @@ public:
 	void LessMine(double ratio);
 	void Flip();
 	void SP_TO_DP(unsigned int seed);
-	void DP_TO_SP(unsigned int seed);
+	void DP_TO_SP();
 	void Battle();
+	
+	// calculated TOTAL (http://hitkey.nekokan.dyndns.info/cmds.htm).
+	double GetTotalFromNoteCount(int notecount);
+	double GetTotalFromNoteCount();
 
-	// notedata value
-	std::vector<BmsNote>& operator [](int lane);			// this method gives lane as index number.
-	std::vector<BmsNote>& operator [](const BmsWord& word);	// this method gives lane channel number.
-	BmsNote* SetNoteData(const BmsNote& note, int lane, int bar);
-	std::vector<BmsNote>::iterator Begin(int lane);
-	std::vector<BmsNote>::iterator End(int lane);
+	void FixIncorrectLongNote();
 };

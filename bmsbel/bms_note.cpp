@@ -1,11 +1,10 @@
 #include "bmsbel\bms_note.h"
+#include "bmsbel\bms_define.h"
 
-const int BmsNote::NOTE_NONE ;
-const int BmsNote::NOTE_NORMAL;
-const int BmsNote::NOTE_LNSTART;
-const int BmsNote::NOTE_LNEND;
-const int BmsNote::NOTE_MINE;
-const int BmsNote::NOTE_HIDDEN;
+
+//
+// BmsNote
+//
 
 BmsNote::BmsNote() :
 type(NOTE_NONE) {}
@@ -14,38 +13,36 @@ BmsNote::BmsNote(int type, const BmsWord& value) :
 type(type),
 value(value) {}
 
-/*
- * BmsNoteContainer
- *
- *
- */
-void BmsNoteManager::Resize(int size) {
-	for (int i = 0; i < _MAX_NOTE_LANE; i++)
-		notes[i].resize(size);
+
+
+//
+// BmsNoteLane
+//
+
+void BmsNoteLane::GetNoteExistBar(std::map<int, int> &barmap) {
+	for (Iterator i = Begin(); i != End(); ++i) {
+		barmap[i->first]++;
+	}
 }
 
-int BmsNoteManager::GetSize() { return notes[0].size(); }
 
-int BmsNoteManager::GetNoteCount(bool longnotedoublecount) {
+
+//
+// BmsNoteManager
+//
+
+int BmsNoteManager::GetNoteCount() {
 	int cnt = 0;
 	for (int i = 0; i < _MAX_NOTE_LANE; i++) {
-		for (auto it = notes[i].begin(); it != notes[i].end(); ++it) {
-			if (it->type == BmsNote::NOTE_NORMAL || it->type == BmsNote::NOTE_LNSTART)
-				cnt++;
-			if (longnotedoublecount && it->type == BmsNote::NOTE_LNEND)
-				cnt++;
-		}
+		cnt += lanes_[i].GetNoteCount();
 	}
 	return cnt;
 }
 
 int BmsNoteManager::GetKeys() {
 	int keycnt[_MAX_NOTE_LANE] = { 0, };
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) {
-		for (auto it = notes[i].begin(); it != notes[i].end(); ++it) {
-			keycnt[i] ++;
-		}
-	}
+	for (int i = 0; i < _MAX_NOTE_LANE; i++)
+		keycnt[i] = lanes_[i].GetNoteCount();
 	
 	// check DP first
 	if (keycnt[18])
@@ -65,6 +62,16 @@ int BmsNoteManager::GetKeys() {
 	return 0;
 }
 
+void BmsNoteManager::GetNoteExistBar(std::map<int, int> &barmap) {
+	for (int i = 0; i < _MAX_NOTE_LANE; i++)
+		lanes_[i].GetNoteExistBar(barmap);
+}
+
+/*
+ * obsolete code - left for backup
+ * (converts channel to lane number)
+ */
+#if 0
 namespace {
 	int channel_to_lane[] = {
 		0, 1, 2, 3, 4, 5, 0, 8, 6, 7,
@@ -80,75 +87,51 @@ std::vector<BmsNote>& BmsNoteManager::operator [](const BmsWord& word) {
 	int s = word.ToInteger() % 36 % 10;
 	return (*this)[channel_to_lane[(b % 2) * 10 + s]];
 }
-BmsNote* BmsNoteManager::SetNoteData(const BmsNote& note, int lane, int bar) {
-	notes[lane][bar] = note;
-	return &notes[lane][bar];
-}
-std::vector<BmsNote>::iterator BmsNoteManager::Begin(int lane) {
-	return notes[lane].begin();
-}
-std::vector<BmsNote>::iterator BmsNoteManager::End(int lane) {
-	return notes[lane].end();
-}
+#endif
 
-void BmsNoteManager::Random(int player, unsigned int seed, bool includeScratch) {
-	// get random channels & keys to make channel-mapping
+void BmsNoteManager::Random(unsigned int seed, int s, int e) {
+	// prepare
 	srand(seed);
-	int keycount = GetKeys();
-	std::vector<int> channels;
-	int mapping[20];
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) mapping[i] = i;
-	for (int i = includeScratch ? 0 : 1; i <= keycount; i++)
-		channels.push_back(player * 10 + i);
-	for (int i = includeScratch ? 0 : 1; i <= keycount; i++) {
-		int n = rand() % channels.size();
-		mapping[player * 10 + i] = channels[n];
-		channels.erase(channels.begin() + n);
-	}
-	// and scramble channels
-	std::vector<BmsNote> _cached_notes[_MAX_NOTE_LANE];
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) {
-		_cached_notes[i] = notes[i];
-	}
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) {
-		notes[i] = _cached_notes[mapping[i]];
+	int range = e - s + 1;
+	// use swap method to make random channel-mapping
+	for (int i = s; i <= e; i++) {
+		int lane = i;
+		int target = i + rand() % range--;
+		if (lane != target) swap(lanes_[lane], lanes_[target]);
 	}
 }
 
 // http://bemaniwiki.com/index.php?beatmania%20IIDX%2022%20PENDUAL%2F%B2%D4%C6%AF%C1%B0%BE%F0%CA%F3
-void BmsNoteManager::RRandom(int player, unsigned int seed, bool includeScratch) {
-	// get random channels & keys to make channel-mapping
+void BmsNoteManager::RRandom(unsigned int seed, int s, int e) {
+	// prepare
 	srand(seed);
-	int keycount = GetKeys();
-	int mapping[_MAX_NOTE_LANE] = { 0, };
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) mapping[i] = i;
-	int push = rand();
-	int domirror = rand() % 2;	// mirror or not?
-	for (int i = includeScratch ? 0 : 1; i <= keycount; i++) {
-		if (domirror) 
-			mapping[player * 10 + i] = player * 10 + (keycount - i + push) % (keycount - 1) + 1;
-		else
-			mapping[player * 10 + i] = player * 10 + (i + push) % (keycount - 1) + 1;
-	}
-	// and scramble channels
-	std::vector<BmsNote> _cached_notes[_MAX_NOTE_LANE];
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) {
-		_cached_notes[i] = notes[i];
-	}
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) {
-		notes[i] = _cached_notes[mapping[i]];
+	// mirror or not
+	if (rand() % 2) Mirror(s, e);
+	// push channel
+	int pushcnt = rand() % 10;
+	for (int i = 0; i < pushcnt; i++) {
+		for (int j = s; j < e; j++) {
+			swap(lanes_[j], lanes_[j + 1]);
+		}
 	}
 }
-void BmsNoteManager::HRandom(int player, unsigned int seed, bool includeScratch) {
+
+void BmsNoteManager::HRandom(unsigned int seed, int s, int e) {
+	// prepare
 	srand(seed);
 	int keycount = GetKeys();
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	// start to iterate all bars
 	bool isprev[_MAX_NOTE_LANE] = { false, };	// is there any note placed previously?
 	bool isln[_MAX_NOTE_LANE] = { false, };		// is there occupying longnote currently?
-	for (int i = 0; i < GetSize(); i++) {
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int row = it->first;
 		bool iscurrent[_MAX_NOTE_LANE] = { false, };
 		BmsNote currentrow[_MAX_NOTE_LANE];
 		int attempt = 0;
-		for (int c = player * 10 + includeScratch ? 0 : 1; c < player * 10 + 10; c++) {
+		// make new row data
+		for (int c = s; c <= e; c++) {
 			int newlane = rand() % keycount;
 			while (isln[newlane] || iscurrent[newlane] || isprev[newlane]) {
 				newlane = (newlane + 1) % keycount;
@@ -158,8 +141,9 @@ void BmsNoteManager::HRandom(int player, unsigned int seed, bool includeScratch)
 					break;
 				}
 			}
-			currentrow[newlane] = (*this)[i][c];
-			switch ((*this)[i][c].type) {
+			// copy previous note data to new temp row
+			currentrow[newlane] = lanes_[c].Get(row);
+			switch (lanes_[c].Get(row).type) {
 			case BmsNote::NOTE_LNSTART:
 				isln[newlane] = true;
 				break;
@@ -167,26 +151,38 @@ void BmsNoteManager::HRandom(int player, unsigned int seed, bool includeScratch)
 				isln[newlane] = false;
 				break;
 			}
-			iscurrent[i] = true;
+			iscurrent[c] = true;
 		}
 		// copy
-		for (int c = player * 10 + includeScratch ? 0 : 1; c < player * 10 + 10; c++)
-			(*this)[i][c] = currentrow[c];
+		for (int c = s; c <= e; c++) {
+			lanes_[c].Delete(row);
+			lanes_[c].Set(row, currentrow[c]);
+		}
 		memcpy(isprev, iscurrent, sizeof(isprev));
 	}
 }
-void BmsNoteManager::SRandom(int player, unsigned int seed, bool includeScratch) {
+void BmsNoteManager::SRandom(unsigned int seed, int s, int e) {
 	// similar to HRandom
+	// prepare
 	srand(seed);
 	int keycount = GetKeys();
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	// start to iterate all bars
 	bool isprev[_MAX_NOTE_LANE] = { false, };	// is there any note placed previously?
 	bool isln[_MAX_NOTE_LANE] = { false, };		// is there occupying longnote currently?
-	for (int i = 0; i < GetSize(); i++) {
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int row = it->first;
 		bool iscurrent[_MAX_NOTE_LANE] = { false, };
 		BmsNote currentrow[_MAX_NOTE_LANE];
 		int attempt = 0;
-		for (int c = player * 10 + includeScratch ? 0 : 1; c < player * 10 + 10; c++) {
+		// make new row data
+		for (int c = s; c <= e; c++) {
 			int newlane = rand() % keycount;
+			/*
+			 * only difference is here:
+			 * we don't check isprev[] (is previously note existed?)
+			 */
 			while (isln[newlane] || iscurrent[newlane]) {
 				newlane = (newlane + 1) % keycount;
 				attempt++;
@@ -195,8 +191,9 @@ void BmsNoteManager::SRandom(int player, unsigned int seed, bool includeScratch)
 					break;
 				}
 			}
-			currentrow[newlane] = (*this)[i][c];
-			switch ((*this)[i][c].type) {
+			// copy previous note data to new temp row
+			currentrow[newlane] = lanes_[c].Get(row);
+			switch (lanes_[c].Get(row).type) {
 			case BmsNote::NOTE_LNSTART:
 				isln[newlane] = true;
 				break;
@@ -204,39 +201,37 @@ void BmsNoteManager::SRandom(int player, unsigned int seed, bool includeScratch)
 				isln[newlane] = false;
 				break;
 			}
-			iscurrent[i] = true;
+			iscurrent[c] = true;
 		}
 		// copy
-		for (int c = player * 10 + includeScratch ? 0 : 1; c < player * 10 + 10; c++)
-			(*this)[i][c] = currentrow[c];
+		for (int c = s; c <= e; c++) {
+			lanes_[c].Delete(row);
+			lanes_[c].Set(row, currentrow[c]);
+		}
 		memcpy(isprev, iscurrent, sizeof(isprev));
 	}
 }
-void BmsNoteManager::Mirror(int player) {
+void BmsNoteManager::Mirror(int s, int e) {
 	// soooooooo easy one
-	int mapping[_MAX_NOTE_LANE] = { 0, };
-	int keycount = GetKeys();
-	for (int i = 0; i < _MAX_NOTE_LANE; i++) mapping[i] = i;
-	for (int i = player * 10 + 1; i < player * 10 + keycount; i++)
-		mapping[i] = player * 10 + (keycount - i % keycount) + 1;
-	// copy channels
-	std::vector<BmsNote> _cached_notes[_MAX_NOTE_LANE];
-	for (int i = player * 10 + 1; i < player * 10 + keycount; i++) {
-		_cached_notes[i] = notes[i];
-	}
-	for (int i = player * 10 + 1; i < player * 10 + keycount; i++) {
-		notes[i] = _cached_notes[mapping[i]];
+	// (excludes scratch)
+	int keycount = e - s + 1;
+	for (int i = 0; i < keycount / 2; i++) {
+		int lane = s + i;
+		int target = e - i;
+		swap(lanes_[lane], lanes_[target]);
 	}
 }
 void BmsNoteManager::MoreLongNote(double ratio) {
 	// hmm ...
+	// (excludes scratch)
 	BmsNote *prev[_MAX_NOTE_LANE] = { 0, };		// previously accessed note
 	bool islnstart[_MAX_NOTE_LANE] = { false, };
-	for (int i = 0; i < GetSize(); i++) {
-		for (int c = 1; c < _MAX_NOTE_LANE; c++) {
-			switch ((*this)[c][i].type) {
+	for (int c = 1; c < _MAX_NOTE_LANE; c++) {
+		for (auto it = lanes_[c].Begin(); it != lanes_[c].End(); ++it) {
+			BmsNote& note = it->second;
+			switch (note.type) {
 			case BmsNote::NOTE_NORMAL:
-				prev[c] = &(*this)[c][i];
+				prev[c] = &note;
 				if (islnstart[c]) {
 					prev[c]->type = BmsNote::NOTE_LNEND;
 					islnstart[c] = false;
@@ -255,23 +250,25 @@ void BmsNoteManager::MoreLongNote(double ratio) {
 			}
 		}
 	}
+	// if some note hadn't finished longnote conversion, cancel it.
 	for (int c = 0; c < _MAX_NOTE_LANE; c++) {
 		if (islnstart[c]) prev[c]->type = BmsNote::NOTE_NORMAL;
 	}
 }
 void BmsNoteManager::LessLongNote(double ratio) {
 	bool islnstart[_MAX_NOTE_LANE] = { false, };
-	for (int i = 0; i < GetSize(); i++) {
-		for (int c = 1; c < _MAX_NOTE_LANE; c++) {
-			switch ((*this)[c][i].type) {
+	for (int c = 1; c < _MAX_NOTE_LANE; c++) {
+		for (auto it = lanes_[c].Begin(); it != lanes_[c].End(); ++it) {
+			BmsNote& note = it->second;
+			switch (note.type) {
 			case BmsNote::NOTE_LNSTART:
 				if (rand() % 100 <= ratio * 100) {
-					(*this)[c][i].type = BmsNote::NOTE_NORMAL;
+					note.type = BmsNote::NOTE_NORMAL;
 					islnstart[c] = true;
 				}
 				break;
 			case BmsNote::NOTE_LNEND:
-				if (islnstart[c]) (*this)[c][i].type = BmsNote::NOTE_NORMAL;
+				if (islnstart[c]) note.type = BmsNote::NOTE_NORMAL;
 				islnstart[c] = false;
 				break;
 			}
@@ -281,30 +278,42 @@ void BmsNoteManager::LessLongNote(double ratio) {
 void BmsNoteManager::AllScratch(int seed) {
 	// get a note randomly from column
 	srand(seed);
-	int keycount = GetKeys();
-	int range = keycount >= 10 ? 20 : 10;
+	int isDP = GetKeys() >= 10 ? 1 : 0;
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
 	std::vector<int> channels;
-	for (int i = 0; i < GetSize(); i++) {
-		// if scratch is already existing then go out
-		if ((*this)[0][i].type != BmsNote::NOTE_NONE
-			|| (*this)[10][i].type != BmsNote::NOTE_NONE)
-			continue;
-		// find available note list
-		for (int c = 1; c < range; c++) {
-			switch ((*this)[c][i].type) {
-			case BmsNote::NOTE_NORMAL:
-				channels.push_back(c);
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int bar = it->first;
+		// SP
+		if (lanes_[0].Get(bar).type == BmsNote::NOTE_NONE) {
+			// find available note list
+			for (int c = 1; c < 10; c++) {
+				switch (lanes_[c].Get(bar).type) {
+				case BmsNote::NOTE_NORMAL:
+					channels.push_back(c);
+				}
 			}
+			// push scratch from available note list
+			int nc = channels[rand() % channels.size()];
+			lanes_[0].Set(bar, lanes_[nc].Get(bar));
+			lanes_[nc].Delete(bar);
+			channels.clear();
 		}
-		// push scratch from available note list
-		int sc_channel = 0;
-		if (keycount >= 10 && rand() % 2 == 1) sc_channel = 10;
-		int nc = channels[rand() % channels.size()];
-		(*this)[sc_channel][i].type = BmsNote::NOTE_NORMAL;
-		(*this)[sc_channel][i].value = (*this)[nc][i].value;
-		(*this)[nc][i].type = BmsNote::NOTE_NONE;
-
-		channels.clear();
+		// DP
+		if (isDP && lanes_[10].Get(bar).type == BmsNote::NOTE_NONE) {
+			// find available note list
+			for (int c = 11; c < 20; c++) {
+				switch (lanes_[c].Get(bar).type) {
+				case BmsNote::NOTE_NORMAL:
+					channels.push_back(c);
+				}
+			}
+			// push scratch from available note list
+			int nc = channels[rand() % channels.size()];
+			lanes_[10].Set(bar, lanes_[nc].Get(bar));
+			lanes_[nc].Delete(bar);
+			channels.clear();
+		}
 	}
 }
 void BmsNoteManager::MoreNote(double ratio) {
@@ -312,141 +321,167 @@ void BmsNoteManager::MoreNote(double ratio) {
 	// only create new note in rows where note is already exists
 	int keycount = GetKeys();
 	int range = keycount >= 10 ? 20 : 10;
-	for (int i = 0; i < GetSize(); i++) {
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int bar = it->first;
 		int existingnote = 0;
-		for (int c = 1; c < range; c++) {
-			switch ((*this)[c][i].type) {
+		for (int c = 0; c < range; c++) if (c % 10 > 0) {
+			switch (lanes_[c].Get(bar).type) {
 			case BmsNote::NOTE_NORMAL:
 				existingnote++;
 			}
 		}
-		while (existingnote > 0) {
-			int newcol = rand() % (range - 1) + 1;
-			if ((*this)[newcol][i].type == BmsNote::NOTE_NONE)
-				(*this)[newcol][i].type = BmsNote::NOTE_NORMAL;
+		for (; existingnote > 0; --existingnote) {
+			int newcol;
+			do newcol = rand() % range; while (newcol % 10 != 0);
+			if (lanes_[newcol].Get(bar).type == BmsNote::NOTE_NONE)
+				lanes_[newcol].Set(bar, BmsNote(BmsNote::NOTE_NORMAL, 0));
 		}
 	}
 }
 void BmsNoteManager::LessNote(double ratio) {
-	//
-	for (int i = 0; i < GetSize(); i++) {
-		for (int c = 1; c < _MAX_NOTE_LANE; c++) {
-			switch ((*this)[c][i].type) {
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int bar = it->first;
+		for (int c = 0; c < _MAX_NOTE_LANE; c++) if (c % 10 > 0) {
+			switch (lanes_[c].Get(bar).type) {
 			case BmsNote::NOTE_NORMAL:
 				if (rand() % 100 <= ratio * 100) {
-					(*this)[c][i].type = BmsNote::NOTE_NONE;
+					lanes_[c].Delete(bar);
 				}
 			}
 		}
 	}
 }
 void BmsNoteManager::MoreMine(double ratio) {
-	for (int i = 0; i < GetSize(); i++) {
-		for (int c = 1; c < _MAX_NOTE_LANE; c++) {
-			switch ((*this)[c][i].type) {
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int bar = it->first;
+		for (int c = 0; c < _MAX_NOTE_LANE; c++) if (c % 10 > 0) {
+			switch (lanes_[c].Get(bar).type) {
 			case BmsNote::NOTE_NORMAL:
 				if (rand() % 100 <= ratio * 100) {
-					(*this)[c][i].type = BmsNote::NOTE_MINE;
+					BmsNote mine = lanes_[c].Get(bar);
+					mine.type = BmsNote::NOTE_MINE;
+					lanes_[c].Set(bar, mine);
 				}
 			}
 		}
 	}
 }
 void BmsNoteManager::LessMine(double ratio) {
-	for (int i = 0; i < GetSize(); i++) {
-		for (int c = 1; c < _MAX_NOTE_LANE; c++) {
-			switch ((*this)[c][i].type) {
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int bar = it->first;
+		for (int c = 0; c < _MAX_NOTE_LANE; c++) if (c % 10 > 0) {
+			switch (lanes_[c].Get(bar).type) {
 			case BmsNote::NOTE_MINE:
 				if (rand() % 100 <= ratio * 100) {
-					(*this)[c][i].type = BmsNote::NOTE_NORMAL;
+					lanes_[c].Delete(bar);
 				}
 			}
 		}
 	}
 }
 void BmsNoteManager::Flip() {
-	// change 1P & 2P
-	int mapping[20] = {
-		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-	};
-	// copy channels
-	std::vector<BmsNote> _cached_notes[20];
-	for (int i = 0; i < 20; i++) {
-		_cached_notes[i] = notes[i];
-	}
-	for (int i = 0; i < 20; i++) {
-		notes[i] = _cached_notes[mapping[i]];
+	for (int i = 0; i < 10; i++) {
+		swap(lanes_[i], lanes_[i + 10]);
 	}
 }
 void BmsNoteManager::SP_TO_DP(unsigned int seed) {
-	// well?
-	int mapping[20] = {
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-	};
-	int isln = 0;
+	// copy some part of lanes to another
+	// this isn't accurate. just for ease.
+	int mapping[10];
 	srand(seed);
-	BmsNote prev[10];
-	for (int i = 0; i < GetSize(); i++) {
-		if (i % 256 == 0 && isln == 0) { // TODO
-			// mangle it - except during LN
-			for (int c = 0; c < 10; c++)
-				mapping[i] = c + (rand() % 2) * 10;
-		}
 
-		for (int c = 0; c < 10; c++) {
-			prev[c] = (*this)[c][i];
-			if ((*this)[c][i].type == BmsNote::NOTE_LNSTART) isln++;
-			if ((*this)[c][i].type == BmsNote::NOTE_LNEND) isln--;
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int bar = it->first;
+		if (bar % BmsConst::BAR_DIVISION_COUNT_MAX == 0) {
+			// if not during LN && okay
+			// then mangle mapping
+			mapping[0] = (rand() % 2) * 10;
+			for (int c = 1; c < 10; c++)
+				mapping[c] = c + (rand() % 2) * 10;
 		}
+		// just move notes
 		for (int c = 0; c < 10; c++) {
-			if ((*this)[mapping[c]][i].type == BmsNote::NOTE_NONE)
-				(*this)[mapping[c]][i] = prev[c];
+			BmsNote note = lanes_[c].Get(bar);
+			if (note.type != BmsNote::NOTE_NONE) {
+				lanes_[c].Delete(bar);
+				lanes_[mapping[c]].Set(bar, note);
+			}
 		}
 	}
+
+	// check ln validation
+	FixIncorrectLongNote();
 }
-void BmsNoteManager::DP_TO_SP(unsigned int seed) {
-	srand(seed);
-	bool isln[10] = { false, };
-	for (int i = 0; i < GetSize(); i++) {
-		// move SC
-		if ((*this)[0][i].type == BmsNote::NOTE_NONE)
-			(*this)[0][i] = (*this)[10][0];
-		(*this)[10][0].type = BmsNote::NOTE_NONE;
-
-		// move DP LN to SP
-		for (int c = 11; c < 20; c++) {
-			if ((*this)[c][i].type != BmsNote::NOTE_NONE) {
-				int attempt = 0;
-				int nc = c % 10;
-				for (; attempt < 10; attempt++) {
-					if (isln[nc]) {
-						if ((*this)[c][i].type != BmsNote::NOTE_LNEND)
-							continue;
-					}
-					if ((*this)[nc][i].type == BmsNote::NOTE_NONE) break;
-					nc = (nc + 1) % 10;
-				}
-				(*this)[nc][i] = (*this)[c][i];
-			}
-			(*this)[c][i].type = BmsNote::NOTE_NONE;
+void BmsNoteManager::DP_TO_SP() {
+	// just merge note at first
+	for (int c = 10; c < 20; c++) {
+		for (auto it = lanes_[c].Begin(); it != lanes_[c].End(); ++it) {
+			lanes_[c - 10].Set(it->first, it->second);
 		}
+		lanes_[c].Clear();
+	}
 
-		// check ln
+	// after merge, check LN validation.
+	FixIncorrectLongNote();
+}
+void BmsNoteManager::FixIncorrectLongNote() {
+	// there's may be 2 cases -
+	// - LN_START after LN_START / LN_END after LN_END
+	// - NORMAL_NOTE during LN
+	// first case must be fixed.
+	// second case well.. removing note isn't solution because keysound will be deleted.
+	// (you'll get miss if you don't hit not during LN... or act like HELLCHARGE note.)
+	bool isln[10] = { false, };
+	std::map<int, int> notemap;
+	GetNoteExistBar(notemap);
+	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
+		int bar = it->first;
 		for (int c = 0; c < 10; c++) {
-			if ((*this)[c][i].type == BmsNote::NOTE_LNSTART) isln[c] = true;
-			else if ((*this)[c][i].type == BmsNote::NOTE_LNEND) isln[c] = false;
+			if (lanes_[c].Get(bar).type == BmsNote::NOTE_LNSTART) {
+				if (isln[c] == false) {
+					lanes_[c].Get(bar).type == BmsNote::NOTE_LNEND;
+					isln[c] = false;
+				}
+				else isln[c] = true;
+			}
+			else if (lanes_[c].Get(bar).type == BmsNote::NOTE_LNEND) {
+				if (isln[c] == false) {
+					auto nextit = it;
+					if (++nextit == notemap.end())
+						lanes_[c].Get(bar).type == BmsNote::NOTE_NORMAL;
+					else
+						lanes_[c].Get(bar).type == BmsNote::NOTE_LNSTART;
+					isln[c] = true;
+				}
+				else isln[c] = false;
+			}
 		}
 	}
 }
 void BmsNoteManager::Battle() {
 	// copy SP to DP position
-	std::vector<BmsNote> _cached_notes[10];
-	for (int i = 0; i < 10; i++) {
-		_cached_notes[i] = notes[i];
-	}
-	for (int i = 10; i < 20; i++) {
-		notes[i] = _cached_notes[i - 10];
-	}
+	for (int i = 0; i < 10; i++)
+		lanes_[i + 10] = lanes_[i];
+}
+
+double BmsNoteManager::GetTotalFromNoteCount() {
+	return GetTotalFromNoteCount(GetNoteCount());
+}
+
+double BmsNoteManager::GetTotalFromNoteCount(int notecount) {
+	// 7.605*NOTES/(0.01*NOTES+6.5)
+	// 260 is applied when a value of #TOTAL becomes smaller than 260
+	double r = 7.605 * notecount / (0.01 * notecount + 6.5);
+	if (r < 260) r = 260;
+	return r;
 }

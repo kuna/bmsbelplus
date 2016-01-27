@@ -52,26 +52,8 @@ BmsBms::GetBarManager(void)
 int
 BmsBms::GetObjectExistsMaxBarPosition(void) const
 {
-	int pos = -1;
-	int bar = 0;
-
-	for (BmsChannelManager::ConstIterator m_it = channel_manager_.Begin(); m_it != channel_manager_.End(); ++m_it) {
-		for (BmsChannel::Iterator c_it = m_it->second->Begin(); c_it != m_it->second->End(); ++c_it) {
-			for (int i = pos > 0 ? pos : 0; i < static_cast<int>((*c_it)->GetLength()); ++i) {
-				if ((*c_it)->At(i) != BmsWord::MIN && i >= pos) {
-					while (pos <= i) {
-						pos += bar_manager_[bar].GetLength();
-						++bar;
-						if (bar > BmsConst::BAR_MAX_VALUE) {
-							return bar - 1;
-						}
-					}
-					i = pos;
-				}
-			}
-		}
-	}
-	return bar - 1;
+	// from max channelbar position, calculate bar(measure) position
+	return bar_manager_.GetBarNumberByChannelPosition(GetObjectExistsMaxPosition());
 }
 
 int 
@@ -107,7 +89,8 @@ namespace {
 }
 
 
-// merge information with another BmsBms Object
+// Merge channels with another BmsBms Object
+// (not insert/append, just merge.)
 void
 BmsBms::Merge(const BmsBms& other)
 {
@@ -157,11 +140,13 @@ BmsBms::Merge(const BmsBms& other)
 		unsigned int i = 0;
 		BmsChannel& current_channel = *it->second;
 		for (BmsChannel::ConstIterator current_buffer = current_channel.Begin(); current_buffer != current_channel.End(); ++current_buffer) {
+			// if bar division count is same, just merge two channels.
+			// otherwise, cut other channel bar(same as my channelbar size) and merge.
 			if (bar_manager_.GetBarDivisionCount() == other.bar_manager_.GetBarDivisionCount()) {
 				channel_manager_[current_channel.GetChannelNumber()][i].Merge(**current_buffer);
 			}
 			else {
-				BmsBuffer buf = (*current_buffer)->SubBufferLength(0, (*current_buffer)->GetLength());
+				BmsBuffer buf = (*current_buffer)->SubBuffer(0, (*current_buffer)->GetLength());
 				channel_manager_[current_channel.GetChannelNumber()][i].Merge(buf);
 			}
 			++i;
@@ -204,13 +189,13 @@ BmsBms::ToString(void) const
 			for (BmsChannel::ConstIterator current_buffer = current_channel.Begin(); current_buffer != current_channel.End(); ++current_buffer) {
 				int step = current_bar.GetLength();
 				for (unsigned int k = 1; k < current_bar.GetLength(); ++k) {
-					if ((**current_buffer)[pos + k] != BmsWord::MIN) {
+					if ((**current_buffer).Get(pos + k) != BmsWord::MIN) {
 						step = BmsUtil::GCD(step, k);
 					}
 				}
 				std::string object_array_str;
 				for (unsigned int k = pos; k < pos + current_bar.GetLength(); k += step) {
-					object_array_str.append((**current_buffer)[k].ToString());
+					object_array_str.append((**current_buffer).Get(k).ToString());
 				}
 				if (current_channel.GetChannelNumber() == BmsWord("01") ||
 					object_array_str.length() > 2 ||
@@ -273,6 +258,14 @@ BmsBms::GetBaseBPM() {
 		}
 	}
 	return bpm;
+}
+
+double
+BmsBms::GetTotal(BmsNoteManager *calculateDefaultTotal = 0) {
+	double r = 0;
+	if (!headers_.Query("TOTAL", &r)) {
+
+	}
 }
 
 bool
@@ -377,10 +370,10 @@ BmsBms::CalculateTime(BmsTimeManager& time_manager_)
 	//
 	// scan for BPM/STOP channels
 	//
-	std::vector<BmsChannelBuffer*> BpmChannelBuffer;
-	std::vector<BmsChannelBuffer*> ExtendedBpmChannelBuffer;
-	std::vector<BmsChannelBuffer*> StopChannelBuffer;
-	std::vector<BmsChannelBuffer*> MissBgaBuffer;
+	std::vector<BmsBuffer*> BpmChannelBuffer;
+	std::vector<BmsBuffer*> ExtendedBpmChannelBuffer;
+	std::vector<BmsBuffer*> StopChannelBuffer;
+	std::vector<BmsBuffer*> MissBgaBuffer;
 	for (BmsChannelManager::ConstIterator it = GetChannelManager().Begin(); it != GetChannelManager().End(); ++it) {
 		BmsChannel& current_channel = *it->second;
 		for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); ++it2) {

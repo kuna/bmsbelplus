@@ -2,147 +2,61 @@
 
 #include "bmsbel\bms_exception.h"
 
-
-// -- BmsBar -------------------------------------------------------------
-BmsBar::BmsBar( BmsBarManager* manager ) :
-manager_( manager ),
-length_( BmsConst::DEFAULT_BAR_DIVISION_COUNT )
+// -- BmsBarManager ------------------------------------------------------
+BmsBarManager::BmsBarManager(void)
 {
+	// fill all array with default bar count
+	for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++)
+		barcount_[i] = BmsConst::BAR_DIVISION_COUNT_MAX;
 }
 
-BmsBar::BmsBar( BmsBarManager* manager, unsigned int length ) :
-manager_( manager ),
-length_( length )
+unsigned int
+BmsBarManager::operator [](unsigned int pos)
 {
+	return barcount_[pos];
 }
 
-BmsBar::~BmsBar()
-{
+void
+BmsBarManager::SetMeasureLength(unsigned int pos, double l) {
+	if (l < 0) return;
+	barcount_[pos] *= l;
+}
+
+double 
+BmsBarManager::GetMeasureLength(unsigned int pos) {
+	return (double)BmsConst::BAR_DIVISION_COUNT_MAX / barcount_[pos];
 }
 
 
 unsigned int
-BmsBar::GetLength( void ) const
+BmsBarManager::GetMeasureByBarNumber(unsigned int pos) const
 {
-  return length_;
+	unsigned int current = 0;
+	for (unsigned int i = 0; i < pos; ++i) {
+		current += barcount_[i];
+	}
+	return current;
+}
+
+unsigned int
+BmsBarManager::GetBarNumberByMeasure(unsigned int pos) const
+{
+	unsigned int bar = 0;
+	for (unsigned int current = 0; bar <= BmsConst::BAR_MAX_VALUE; ++bar) {
+		if (current > pos) {
+			break;
+		}
+		current += barcount_[bar];
+	}
+	return bar - 1;
 }
 
 double
-BmsBar::GetRatio( void ) const
-{
-  return static_cast<double>( length_ ) / static_cast<double>( manager_->GetBarDivisionCount() );
+BmsBarManager::GetPosFromBarNumber(unsigned int bar) const {
+
 }
 
-void
-BmsBar::SetLength( unsigned int length )
-{
-  length_ = length;
-}
+double
+BmsBarManager::GetPosFromBarNumber(double bar) const {
 
-void
-BmsBar::SetRatio( double ratio )
-{
-  length_ = static_cast<unsigned int>( static_cast<double>( manager_->GetBarDivisionCount() ) * ratio );
-}
-
-
-// -- BmsBarManager ------------------------------------------------------
-BmsBarManager::BmsBarManager( void ) :
-bar_division_count_( BmsConst::DEFAULT_BAR_DIVISION_COUNT ),
-array_( BmsConst::BAR_MAX_COUNT, BmsBar( this ) )
-{
-}
-
-BmsBar
-BmsBarManager::At( unsigned int pos ) const
-{
-  this->IfPositionOverMaxError( pos );
-  return array_[pos];
-}
-
-BmsBar&
-BmsBarManager::operator []( unsigned int pos )
-{
-  this->IfPositionOverMaxError( pos );
-  return array_[pos];
-}
-
-const BmsBar&
-BmsBarManager::operator []( unsigned int pos ) const
-{
-  this->IfPositionOverMaxError( pos );
-  return array_[pos];
-}
-
-void
-BmsBarManager::InsertAt( unsigned int pos, BmsBar bar )
-{
-  this->IfPositionOverMaxError( pos );
-  array_.insert( array_.begin() + pos, bar );
-  array_.pop_back();
-}
-
-void
-BmsBarManager::DeleteAt( unsigned int pos )
-{
-  this->IfPositionOverMaxError( pos );
-  array_.erase( array_.begin() + pos );
-  array_.push_back( BmsBar( this, bar_division_count_ ) );
-}
-
-void
-BmsBarManager::Clear( void )
-{
-  for ( std::deque<BmsBar>::iterator it = array_.begin(); it != array_.end(); ++it ) {
-    it->SetLength( bar_division_count_ );
-  }
-}
-
-
-unsigned int
-BmsBarManager::GetChannelPositionByBarNumber( unsigned int pos ) const
-{
-  this->IfPositionOverMaxError( pos );
-  unsigned int current = 0;
-  for ( unsigned int i = 0; i < pos; ++i ) {
-    current += array_[i].GetLength();
-  }
-  return current;
-}
-
-unsigned int
-BmsBarManager::GetBarNumberByChannelPosition( unsigned int pos ) const
-{
-  unsigned int bar = 0;
-  for ( unsigned int current = 0; bar <= BmsConst::BAR_MAX_VALUE; ++bar ) {
-    if ( current > pos ) {
-      break;
-    }
-    current += array_[bar].GetLength();
-  }
-  return bar - 1;
-}
-
-
-unsigned int
-BmsBarManager::GetBarDivisionCount( void ) const
-{
-  return bar_division_count_;
-}
-
-void
-BmsBarManager::MultiplyBarDivisionCount( unsigned int multiplier )
-{
-  bar_division_count_ *= multiplier;
-  for ( std::deque<BmsBar>::iterator it = array_.begin(); it != array_.end(); ++it ) {
-    it->SetLength( it->GetLength() * multiplier );
-  }
-}
-
-void
-BmsBarManager::IfPositionOverMaxError( unsigned int pos ) const
-{
-  if ( pos > BmsConst::BAR_MAX_VALUE ) {
-    throw BmsOutOfRangeAccessException( typeid( *this ) );
-  }
 }

@@ -2,67 +2,6 @@
 
 #include "bmsbel\bms_exception.h"
 
-
-// -- BmsChannelBuffer ---------------------------------------------------
-BmsChannelBuffer::BmsChannelBuffer(void) :
-BmsBuffer(BmsChannelBuffer::DEFAULT_LENGTH)
-{
-}
-
-void
-BmsChannelBuffer::ExtendArrayOver(unsigned int pos)
-{
-	unsigned int extended_length = this->GetLength();
-	while (extended_length <= pos) {
-		extended_length *= 2;
-	}
-	if (extended_length > this->GetLength()) {
-		this->ExtendTo(extended_length);
-	}
-}
-
-BmsWord&
-BmsChannelBuffer::operator [](unsigned int pos)
-{
-	this->ExtendArrayOver(pos);
-	return this->BmsBuffer::operator [](pos);
-}
-
-
-void
-BmsChannelBuffer::Merge(const BmsBuffer& buffer)
-{
-	this->ExtendArrayOver(buffer.GetLength());
-	this->BmsBuffer::Merge(buffer);
-}
-
-void
-BmsChannelBuffer::Merge(unsigned int start, const BmsBuffer& buffer)
-{
-	this->ExtendArrayOver(start + buffer.GetLength());
-	this->BmsBuffer::Merge(start, buffer);
-}
-
-
-int
-BmsChannelBuffer::GetObjectExistsMaxPosition(unsigned int start) const
-{
-	int pos = -1;
-	for (unsigned int i = start; i < this->GetLength(); ++i) {
-		if (this->At(i) != BmsWord::MIN) {
-			pos = i;
-		}
-	}
-	return pos;
-}
-
-
-void
-BmsChannelBuffer::MultiplyBarDivisionCount(unsigned int multiplier)
-{
-	this->MagnifyBy(multiplier);
-}
-
 // -- BmsChannel ---------------------------------------------------------
 BmsChannel::BmsChannel(const BmsWord& channel_number) :
 channel_number_(channel_number),
@@ -98,15 +37,15 @@ BmsChannel::GetBufferCount(void) const
 }
 
 
-BmsChannelBuffer&
+BmsBuffer&
 BmsChannel::MakeNewBuffer(void)
 {
-	buffers_.push_back(new BmsChannelBuffer());
+	buffers_.push_back(new BmsBuffer());
 	return *buffers_.back();
 }
 
 
-BmsChannelBuffer&
+BmsBuffer&
 BmsChannel::GetBuffer(unsigned int pos)
 {
 	while (pos >= buffers_.size()) {
@@ -115,7 +54,7 @@ BmsChannel::GetBuffer(unsigned int pos)
 	return *buffers_[pos];
 }
 
-BmsChannelBuffer&
+BmsBuffer&
 BmsChannel::operator [](unsigned int pos)
 {
 	return this->GetBuffer(pos);
@@ -164,8 +103,7 @@ BmsChannel::GetObjectExistsMaxPosition(unsigned int start) const
 {
 	int pos = -1;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
-		int tmp = (*it)->GetObjectExistsMaxPosition(
-			static_cast<int>(start) > pos ? static_cast<int>(start) : pos > 0 ? pos : 0);
+		int tmp = (--(*it)->End())->first;
 		if (tmp > pos) {
 			pos = tmp;
 		}
@@ -178,7 +116,7 @@ void
 BmsChannel::MultiplyBarDivisionCount(unsigned int multiplier)
 {
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
-		(*it)->MultiplyBarDivisionCount(multiplier);
+		(*it)->MagnifyBy(multiplier);
 	}
 }
 
