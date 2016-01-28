@@ -17,10 +17,12 @@ array_set_(),
 channel_manager_(),
 bar_manager_()
 {
+	// STP is parsed using BmsSTPManager
 	array_set_.MakeNewArray("WAV");
 	array_set_.MakeNewArray("BMP");
 	array_set_.MakeNewArray("BPM");
 	array_set_.MakeNewArray("STOP");
+	array_set_.MakeNewArray("BGA");
 }
 
 BmsBms::~BmsBms()
@@ -296,9 +298,8 @@ BmsBms::GetKey()
 		} else if (it->second->Is9KeyChannel()) {
 			key = std::max(key, 9);
 		} else {
-			if (BmsBelOption::ERROR_ON_UNKNOWN_CHANNEL) {
-				throw UnknownChannelException(it->first);
-			}
+			// unknown key ...?
+			key = 0;
 		}
 	}
 

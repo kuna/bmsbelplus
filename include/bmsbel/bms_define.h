@@ -44,8 +44,6 @@ namespace BmsConst {
 
 namespace BmsBelOption {
 	// detailed option during parsing
-	const int ERROR_ON_DUPLICATED_HEADER = 0;
-	const int ERROR_ON_UNKNOWN_CHANNEL = 0;
 	const int CONVERT_ATTEMPT_LINES = 10;
 	const char DEFAULT_FALLBACK_ENCODING[] = "Shift_JIS";
 	const char DEFAULT_UNICODE_ENCODING[] = "UTF-8";

@@ -201,6 +201,10 @@ BmsUtil::StringToUpper(std::wstring& str)
 
 bool BmsUtil::wchar_to_utf8(const wchar_t *org, char *out, int maxlen)
 {
+	//
+	// should not use convert_to_utf8()
+	// because WCHAR is a little different from UTF8 (\0 bytes included)
+	//
 	iconv_t cd = iconv_open("UTF-8", "UTF-16LE");
 	if ((int)cd == -1)
 		return false;
@@ -235,6 +239,26 @@ bool BmsUtil::utf8_to_wchar(const char *org, wchar_t *out, int maxlen)
 	if ((int)r == -1)
 		return false;
 	*but_out_iconv = *(but_out_iconv + 1) = 0;
+
+	return true;
+}
+
+bool convert_to_utf8(const char *org, char *out, const char *encoding, int maxlen)
+{
+	iconv_t cd = iconv_open("UTF-8", encoding);
+	if ((int)cd == -1)
+		return false;
+
+	out[0] = 0;
+	const char *buf_iconv = (const char*)org;
+	char *but_out_iconv = (char*)out;
+	size_t len_in = strlen(org);
+	size_t len_out = maxlen;
+
+	int r = iconv(cd, &buf_iconv, &len_in, &but_out_iconv, &len_out);
+	if ((int)r == -1)
+		return false;
+	*but_out_iconv = 0;
 
 	return true;
 }
@@ -278,6 +302,47 @@ int BmsUtil::IsFileUTF8(const std::string& filename) {
 			iconv_close(cd);
 			return 1;	// failed to convert Shift_JIS. maybe UTF-8?
 		}
+	}
+	iconv_close(cd);
+	return 0;
+}
+
+int BmsUtil::IsUTF8(const char* text) {
+	// check BOM
+	if (strncmp(text, utf8BOM, 3) == 0) return true;
+	// initalize iconv
+	iconv_t cd = iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, BmsBelOption::DEFAULT_FALLBACK_ENCODING);
+	if ((int)cd == -1) {
+		// conversion is not supported
+		return -1;
+	}
+	errno = 0;
+	char buf_char_out[BmsConst::BMS_MAX_LINE_BUFFER];
+	size_t len_char, len_char_out;
+	// check few lines
+	const char* p = text;
+	for (int i = 0; i < BmsBelOption::CONVERT_ATTEMPT_LINES && p; i++) {
+		const char* pn = strchr(text, '\n');
+		std::string buf;
+		if (!pn)
+			buf.assign(p);
+		else
+			buf.assign(p, pn - p);
+
+		const char* buf_char = buf.c_str();
+		len_char = strlen(buf_char);
+		const char *buf_iconv = buf_char;
+		char *but_out_iconv = (char*)buf_char_out;
+		len_char_out = BmsConst::BMS_MAX_LINE_BUFFER;	// available characters for converting
+		int iconv_ret = iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_char_out);
+		*but_out_iconv = *(but_out_iconv + 1) = 0;		// NULL terminal character
+		if (errno || iconv_ret < 0) {
+			iconv_close(cd);
+			return 1;	// failed to convert Shift_JIS. maybe UTF-8?
+		}
+
+		if (!pn) break;
+		p = pn + 1;
 	}
 	iconv_close(cd);
 	return 0;
