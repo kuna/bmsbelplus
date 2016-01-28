@@ -101,8 +101,9 @@ BmsChannel::Contains(const BmsWord &word) const
 int
 BmsChannel::GetObjectExistsMaxPosition(unsigned int start) const
 {
-	int pos = -1;
+	int pos = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
+		if (!(*it)->GetCount()) continue;
 		int tmp = (--(*it)->End())->first;
 		if (tmp > pos) {
 			pos = tmp;

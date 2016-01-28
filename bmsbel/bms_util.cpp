@@ -322,7 +322,7 @@ int BmsUtil::IsUTF8(const char* text) {
 	// check few lines
 	const char* p = text;
 	for (int i = 0; i < BmsBelOption::CONVERT_ATTEMPT_LINES && p; i++) {
-		const char* pn = strchr(text, '\n');
+		const char* pn = strchr(p, '\n');
 		std::string buf;
 		if (!pn)
 			buf.assign(p);

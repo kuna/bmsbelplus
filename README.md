@@ -8,7 +8,6 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 
 ### additional modification:
 - compilable /w vc++ compiler
-- documentation (processing)
 - support ```#LNTYPE 1```
 - support ```#LNTYPE 2
 - parse/process #BGA, #STP definition
@@ -17,10 +16,11 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 - Save function implementation
 - Shift-JIS code to UTF8
 - nested #RANDOM statement
+- code coverage (processing)
+- documentation (processing)
 - (TODO) create bmsbgmmanager / bmsbga object
 - (TODO) support creating training pattern
 - (TODO) compile with MinGW
-- (TODO) code coverage
 - (TODO) git wiki documentation
 
 ### just a little documentation ...

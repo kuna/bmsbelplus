@@ -88,5 +88,11 @@ namespace bmstest
 			char buf[1024];	sprintf(buf, "%d", bmsnote.GetNoteCount());
 			Logger::WriteMessage(buf);
 		}
+
+		/*
+		 * STP test
+		 * RANDOM test (song length)
+		 * 
+		 */
 	};
 }

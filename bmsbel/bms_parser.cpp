@@ -115,7 +115,7 @@ namespace BmsParser {
 
 		// split lines
 		for (const char *p = text; p; ) {
-			const char* pn = strchr(text, '\n');
+			const char* pn = strchr(p, '\n');
 			std::string buf;
 			if (!pn)
 				buf.assign(p);
