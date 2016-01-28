@@ -19,9 +19,9 @@ value(value) {}
 // BmsNoteLane
 //
 
-void BmsNoteLane::GetNoteExistBar(std::map<int, int> &barmap) {
+void BmsNoteLane::GetNoteExistBar(std::set<int> &barmap) {
 	for (Iterator i = Begin(); i != End(); ++i) {
-		barmap[i->first]++;
+		barmap.insert(i->first);
 	}
 }
 
@@ -62,7 +62,7 @@ int BmsNoteManager::GetKeys() {
 	return 0;
 }
 
-void BmsNoteManager::GetNoteExistBar(std::map<int, int> &barmap) {
+void BmsNoteManager::GetNoteExistBar(std::set<int> &barmap) {
 	for (int i = 0; i < _MAX_NOTE_LANE; i++)
 		lanes_[i].GetNoteExistBar(barmap);
 }
@@ -120,13 +120,13 @@ void BmsNoteManager::HRandom(unsigned int seed, int s, int e) {
 	// prepare
 	srand(seed);
 	int keycount = e - s + 1;
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	// start to iterate all bars
 	bool isprev[_MAX_NOTE_LANE] = { false, };	// is there any note placed previously?
 	bool isln[_MAX_NOTE_LANE] = { false, };		// is there occupying longnote currently?
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int row = it->first;
+		int row = *it;
 		bool iscurrent[_MAX_NOTE_LANE] = { false, };
 		BmsNote currentrow[_MAX_NOTE_LANE];
 		int attempt = 0;
@@ -166,13 +166,13 @@ void BmsNoteManager::SRandom(unsigned int seed, int s, int e) {
 	// prepare
 	srand(seed);
 	int keycount = e - s + 1;
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	// start to iterate all bars
 	bool isprev[_MAX_NOTE_LANE] = { false, };	// is there any note placed previously?
 	bool isln[_MAX_NOTE_LANE] = { false, };		// is there occupying longnote currently?
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int row = it->first;
+		int row = *it;
 		bool iscurrent[_MAX_NOTE_LANE] = { false, };
 		BmsNote currentrow[_MAX_NOTE_LANE];
 		int attempt = 0;
@@ -278,11 +278,11 @@ void BmsNoteManager::LessLongNote(double ratio, int s, int e) {
 void BmsNoteManager::AllScratch(int seed, int sc, int s, int e) {
 	// get a note randomly from column
 	srand(seed);
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	std::vector<int> channels;
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int bar = it->first;
+		int bar = *it;
 		// SP
 		if (lanes_[0].Get(bar).type == BmsNote::NOTE_NONE) {
 			// find available note list
@@ -304,10 +304,10 @@ void BmsNoteManager::MoreNote(double ratio, int s, int e) {
 	// creates no-sound-note
 	// only create new note in rows where note is already exists
 	int keycount = e - s + 1;
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int bar = it->first;
+		int bar = *it;
 		int existingnote = 0;
 		for (int c = s; c <= e; c++) if (c % 10 > 0) {
 			switch (lanes_[c].Get(bar).type) {
@@ -323,10 +323,10 @@ void BmsNoteManager::MoreNote(double ratio, int s, int e) {
 	}
 }
 void BmsNoteManager::LessNote(double ratio, int s, int e) {
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int bar = it->first;
+		int bar = *it;
 		for (int c = s; c <= e; c++) {
 			switch (lanes_[c].Get(bar).type) {
 			case BmsNote::NOTE_NORMAL:
@@ -338,10 +338,10 @@ void BmsNoteManager::LessNote(double ratio, int s, int e) {
 	}
 }
 void BmsNoteManager::MoreMine(double ratio, int s, int e) {
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int bar = it->first;
+		int bar = *it;
 		for (int c = s; c <= e; c++) {
 			switch (lanes_[c].Get(bar).type) {
 			case BmsNote::NOTE_NORMAL:
@@ -355,10 +355,10 @@ void BmsNoteManager::MoreMine(double ratio, int s, int e) {
 	}
 }
 void BmsNoteManager::LessMine(double ratio, int s, int e) {
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int bar = it->first;
+		int bar = *it;
 		for (int c = s; c <= e; c++) {
 			switch (lanes_[c].Get(bar).type) {
 			case BmsNote::NOTE_MINE:
@@ -380,10 +380,10 @@ void BmsNoteManager::SP_TO_DP(unsigned int seed) {
 	int mapping[10];
 	srand(seed);
 
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int bar = it->first;
+		int bar = *it;
 		if (bar % BmsConst::BAR_DIVISION_COUNT_MAX == 0) {
 			// if not during LN && okay
 			// then mangle mapping
@@ -424,10 +424,10 @@ void BmsNoteManager::FixIncorrectLongNote() {
 	// second case well.. removing note isn't solution because keysound will be deleted.
 	// (you'll get miss if you don't hit not during LN... or act like HELLCHARGE note.)
 	bool isln[10] = { false, };
-	std::map<int, int> notemap;
+	std::set<int> notemap;
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
-		int bar = it->first;
+		int bar = *it;
 		for (int c = 0; c < 10; c++) {
 			if (lanes_[c].Get(bar).type == BmsNote::NOTE_LNSTART) {
 				if (isln[c] == false) {
