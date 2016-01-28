@@ -11,14 +11,13 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 - documentation (processing)
 - support ```#LNTYPE 1```
 - UTF8/auto-encode support (additional bmsext suggestion from (http://cosmic.mearie.org/f/sonorous/bmsexts)[Kang Seonghoon])
-- (TODO) (R-/H-/S-)RANDOM, MIRROR, ALL-LN, NO_LN, ALL-SCR, MORENOTE, LESSNOTE, SPEED_MULTIPLY, MOREMINE, NOMINE, SP-TO-DP option available
+- Support ```#LNTYPE 2```
+- (R-/H-/S-)RANDOM, MIRROR, ALL-LN, NO_LN, ALL-SCR, MORENOTE, LESSNOTE, SPEED_MULTIPLY, MOREMINE, NOMINE, SP-TO-DP option available
+- Save function implementation
+- Shift-JIS code to UTF8
 - (TODO) nested #RANDOM statement
 - (TODO) support creating training pattern
-- (TODO) tidier code ...
-- (TODO) support ```#LNTYPE 2``` (we won't support it currently as it's depreciated)
 - (TODO) compile with MinGW
-- (TODO) save function implementation
-- (TODO) change comments into english
 - (TODO) code coverage
 - (TODO) git wiki documentation
 
