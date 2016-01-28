@@ -17,6 +17,7 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 - Save function implementation
 - Shift-JIS code to UTF8
 - nested #RANDOM statement
+- (TODO) create bmsbgmmanager / bmsbga object
 - (TODO) support creating training pattern
 - (TODO) compile with MinGW
 - (TODO) code coverage

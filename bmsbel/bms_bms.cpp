@@ -54,6 +54,18 @@ BmsBms::GetBarManager(void)
 	return bar_manager_;
 }
 
+BmsTimeManager&
+BmsBms::GetTimeManager(void)
+{
+	return time_manager_;
+}
+
+BmsSTPManager&
+BmsBms::GetSTPManager(void)
+{
+	return stp_manager_;
+}
+
 int
 BmsBms::GetObjectExistsMaxMeasure(void) const
 {

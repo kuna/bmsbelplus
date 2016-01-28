@@ -243,7 +243,7 @@ bool BmsUtil::utf8_to_wchar(const char *org, wchar_t *out, int maxlen)
 	return true;
 }
 
-bool convert_to_utf8(const char *org, char *out, const char *encoding, int maxlen)
+bool BmsUtil::convert_to_utf8(const char *org, char *out, const char *encoding, int maxlen)
 {
 	iconv_t cd = iconv_open("UTF-8", encoding);
 	if ((int)cd == -1)

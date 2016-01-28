@@ -41,8 +41,8 @@ public:
 
 	// iterator
 	typedef std::map<int, BmsTime>::iterator Iterator;
-	Iterator Begin();
-	Iterator End();
+	Iterator Begin() { return array_.begin(); }
+	Iterator End() { return array_.end(); }
 
 	// before you get any information about time or something,
 	// convert time into bar position
