@@ -4,8 +4,7 @@
 #include <map>
 
 #include "bms_define.h"
-
-class BmsBarManager;
+#include "bms_buffer.h"
 
 /*
  * @description
@@ -19,72 +18,36 @@ class BmsBarManager;
  * (by setting this, resetting bar size is nearly unnecessary. that'll make cpu cost less).
  */
 
-struct BmsTime {
-	BmsTime() {}
-	BmsTime(double time, double stop, double bpm) :
-		time(time), stop(stop), bpm(bpm) {}
-	double time;
-	double stop;
-	/** @brief rendering position (1 per screen height). calculated from bar number. */
-	double bpm;
-};
-
 // -- BmsBarManager ------------------------------------------------------
 class BmsBarManager {
 public:
 	BmsBarManager();
 
+	// set to original state
+	void Clear();
+
 	// returns bar count by measure index
-	unsigned int operator [](unsigned int measure);
+	unsigned int operator [](unsigned int measure) const;
 
-	void SetMeasureLength(unsigned int measure, double l);
-	double GetMeasureLength(unsigned int measure);
+	void SetRatio(unsigned int measure, double l);
+	double GetRatio(unsigned int measure) const;
 
-	unsigned int GetMeasureByBarNumber(unsigned int bar) const;
-	unsigned int GetBarNumberByMeasure(unsigned int measure) const;
+	unsigned int	GetMeasureByBarNumber(unsigned int bar) const;
+	double			GetMeasureByBar(double bar) const;
+	unsigned int	GetBarNumberByMeasure(unsigned int measure) const;
+	double			GetBarByMeasure(double measure) const;
+	double			GetPosByBar(double bar) const;
+	int				GetBarByPos(double pos, int step = 4) const;
 
-	// about some basic metadata
-	// this is different from lastnote bar, get position of 
-	//double GetEndBar();
-
-	// before you get any information about time or something,
-	// convert time into bar position
-	double GetBarFromTime(double sec);
-	double GetBarFromBeat(double beat);
-	int GetBarNumberFromTime(double sec);
-
-	// get absolute position from bar position
-	double GetPosFromBar(double bar);
-	double GetTimeFromBar(double bar);
-
-	// get beat or time from bar number
-	double GetBeatFromBarNumber(unsigned int bar);
-	double GetTimeFromBarNumber(unsigned int bar);
-
-	// bpm
-	double GetBPMFromTime(double time);
-	double GetBPMFromBar(double bar);
-	double GetMediumBPM();
-	double GetMaxBPM();
-	double GetMinBPM();
-
-	// set time signature
-	void DeleteBPM(unsigned int bar);
-	void SetBPM(unsigned int bar, double bpm);
-	void DeleteSTOP(unsigned int bar);
-	void SetSTOP(unsigned int bar, double stop);
-
-	// reset iterator pos to first (automatically called)
-	void Reset();
+	/** @brief returns division(step) of measure */
+	unsigned int	GetDivision(const BmsBuffer& channelbuf, unsigned int measure) const;
 private:
 	/** @brief stores each bar count per measure */
-	unsigned int barcount_[BmsConst::BAR_MAX_COUNT];
-	/** @brief stores time/stop information per bar number */
-	std::map<int, BmsTime> array_;
-
-	// for fast iteration
-	std::map<int, BmsTime>::iterator iter_;
-	std::map<int, BmsTime>::iterator iternext_;
+	unsigned int		barcount_[BmsConst::BAR_MAX_COUNT];
+	/** @brief cached for fast bar/measure search <total bar / measure index> */
+	std::map<int, int>	barcache_;
+	/** @brief calculate cache. called when you SetRatio() */
+	void InvalidateCache();
 };
 
 #endif // BMSBEL_BAR_H_

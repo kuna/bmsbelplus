@@ -53,7 +53,11 @@ BmsBuffer::Get(unsigned int pos) const
 	if (array_.find(pos) == array_.end()) return 0;
 	else return array_.at(pos);
 }
+
 /*
+ * getting with operator can cause creation of unnecessary element.
+ * that'll make program much slower...
+ *
 const BmsWord
 BmsBuffer::operator [](unsigned int pos)
 {

@@ -20,7 +20,6 @@ public:
 
 	void SetChannelNumber(const BmsWord& channel_number);
 	BmsWord& GetChannelNumber();
-	int GetLaneIndex();
 
 	unsigned int GetBufferCount(void) const;
 
@@ -60,7 +59,7 @@ public:
 	ConstIterator End(void) const;
 
 private:
-	BmsWord							channel_number_;
+	BmsWord					channel_number_;
 	std::vector<BmsBuffer*>	buffers_;
 };
 

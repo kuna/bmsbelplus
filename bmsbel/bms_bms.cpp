@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+#define ITER_CHANNEL(channel, iter)\
+	for (auto iter = GetChannelManager()[channel].GetBuffer().Begin(); iter != GetChannelManager()[channel].GetBuffer().End(); ++iter)
 
 BmsBms::BmsBms(void) :
 headers_(),
@@ -50,30 +52,22 @@ BmsBms::GetBarManager(void)
 }
 
 int
-BmsBms::GetObjectExistsMaxBarPosition(void) const
+BmsBms::GetObjectExistsMaxMeasure(void) const
 {
 	// from max channelbar position, calculate bar(measure) position
-	return bar_manager_.GetBarNumberByChannelPosition(GetObjectExistsMaxPosition());
+	return bar_manager_.GetMeasureByBarNumber(GetObjectExistsMaxBar());
 }
 
 int 
-BmsBms::GetObjectExistsMaxPosition() const
+BmsBms::GetObjectExistsMaxBar() const
 {
 	return channel_manager_.GetObjectExistsMaxPosition(&BmsChannel::IsChannel);
 }
 
 int 
-BmsBms::GetPlayableMaxPosition() const
+BmsBms::GetPlayableMaxBar() const
 {
 	return channel_manager_.GetObjectExistsMaxPosition(&BmsChannel::IsShouldPlayWavChannel);
-}
-
-
-void
-BmsBms::MultiplyBarDivisionCount(unsigned int multiplier)
-{
-	bar_manager_.MultiplyBarDivisionCount(multiplier);
-	channel_manager_.MultiplyBarDivisionCount(multiplier);
 }
 
 
@@ -118,37 +112,17 @@ BmsBms::Merge(const BmsBms& other)
 			}
 		}
 	}
-
-	// merge bar division count
-	int lcm = BmsUtil::LCM(bar_manager_.GetBarDivisionCount(), other.bar_manager_.GetBarDivisionCount());
-	if (lcm > static_cast<int>(bar_manager_.GetBarDivisionCount())) {
-		this->MultiplyBarDivisionCount(lcm / bar_manager_.GetBarDivisionCount());
-	}
-
-	// set bar length
-	for (unsigned int i = 0; i < BmsConst::BAR_MAX_COUNT; ++i) {
-		if (other.bar_manager_[i].GetRatio() != 1.0) {
-			if (bar_manager_[i].GetRatio() != 1.0) {
-				throw BmsDuplicateBarChangeException(i);
-			}
-			bar_manager_[i].SetLength(other.bar_manager_[i].GetLength() * (lcm / other.bar_manager_.GetBarDivisionCount()));
-		}
+	// merge STP
+	for (auto it = other.stp_manager_.Begin(); it != other.stp_manager_.End(); ++it) {
+		stp_manager_.Add(it->first, it->second);
 	}
 
 	// merge channel
 	for (BmsChannelManager::ConstIterator it = other.channel_manager_.Begin(); it != other.channel_manager_.End(); ++it) {
 		unsigned int i = 0;
 		BmsChannel& current_channel = *it->second;
-		for (BmsChannel::ConstIterator current_buffer = current_channel.Begin(); current_buffer != current_channel.End(); ++current_buffer) {
-			// if bar division count is same, just merge two channels.
-			// otherwise, cut other channel bar(same as my channelbar size) and merge.
-			if (bar_manager_.GetBarDivisionCount() == other.bar_manager_.GetBarDivisionCount()) {
-				channel_manager_[current_channel.GetChannelNumber()][i].Merge(**current_buffer);
-			}
-			else {
-				BmsBuffer buf = (*current_buffer)->SubBuffer(0, (*current_buffer)->GetLength());
-				channel_manager_[current_channel.GetChannelNumber()][i].Merge(buf);
-			}
+		for (BmsChannel::ConstIterator current_buffer = current_channel.Begin(); current_buffer != current_channel.End(); ++current_buffer) {\
+			channel_manager_[current_channel.GetChannelNumber()][i].Merge(**current_buffer);
 			++i;
 		}
 	}
@@ -168,33 +142,34 @@ BmsBms::ToString(void) const
 		tmp.append(it->second->ToString());
 		tmp.append("\n");
 	}
-	int max_bar = this->GetObjectExistsMaxBarPosition();
+	tmp.append(stp_manager_.ToString());
+	int max_bar = this->GetObjectExistsMaxBar();
 	unsigned int pos = 0;
 	for (int i = 0; i <= BmsConst::BAR_MAX_VALUE; ++i) {
-		BmsBar current_bar = bar_manager_[i];
-		// 小節長変更出力
-		if (current_bar.GetRatio() != 1.0) {
+		unsigned int current_bar_count = bar_manager_[i];
+		double current_bar_ratio = bar_manager_.GetRatio(i);
+		// print if bar ratio isn't normal
+		if (current_bar_ratio != 1.0) {
 			char buf[1024];
-			sprintf(buf, "#%03d%ls:%f\n", i, L"02", current_bar.GetRatio());
+			sprintf(buf, "#%03d%ls:%f\n", i, L"02", current_bar_ratio);
 			tmp.append(buf);
 		}
 		if (i > max_bar) {
+			// There might be ratio change although no more note left,
+			// so don't break the loop but continue. (CHILD commented)
 			// オブジェが無くても小節長変更はあるかもしれないのでループは 999 小節までだが
 			// チャンネルのオブジェ出力はここまで
 			continue;
 		}
-
+		// print note object
 		for (BmsChannelManager::ConstIterator it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
 			BmsChannel& current_channel = *it->second;
 			for (BmsChannel::ConstIterator current_buffer = current_channel.Begin(); current_buffer != current_channel.End(); ++current_buffer) {
-				int step = current_bar.GetLength();
-				for (unsigned int k = 1; k < current_bar.GetLength(); ++k) {
-					if ((**current_buffer).Get(pos + k) != BmsWord::MIN) {
-						step = BmsUtil::GCD(step, k);
-					}
-				}
+				// get GCD for current measure
+				int division = bar_manager_.GetDivision(**current_buffer, i);
+				int step = BmsConst::BAR_DIVISION_COUNT_MAX / division;
 				std::string object_array_str;
-				for (unsigned int k = pos; k < pos + current_bar.GetLength(); k += step) {
+				for (unsigned int k = pos; k < pos + current_bar_count; k += step) {
 					object_array_str.append((**current_buffer).Get(k).ToString());
 				}
 				if (current_channel.GetChannelNumber() == BmsWord("01") ||
@@ -208,13 +183,11 @@ BmsBms::ToString(void) const
 				}
 			}
 		}
-		pos += bar_manager_[i].GetLength();
+		pos += current_bar_count;
 	}
 	return tmp;
 }
 
-
-// some new features ...
 void
 BmsBms::GetBPMtable(std::map<BmsWord, double> &extended_bpm_table)
 {
@@ -251,7 +224,7 @@ BmsBms::GetSTOPtable(std::map<BmsWord, int> &stop_sequence_table)
 
 double 
 BmsBms::GetBaseBPM() {
-	double bpm = 120.0;
+	double bpm = BmsConst::BMS_BASIC_BPM;
 	if (this->GetHeaders().IsExists("BPM")) {
 		if ((bpm = this->GetHeaders()["BPM"].ToFloat()) == 0.0) {
 			throw InvalidFormatAsBpmHeaderException();
@@ -261,11 +234,10 @@ BmsBms::GetBaseBPM() {
 }
 
 double
-BmsBms::GetTotal(BmsNoteManager *calculateDefaultTotal = 0) {
-	double r = 0;
-	if (!headers_.Query("TOTAL", &r)) {
-
-	}
+BmsBms::GetTotal(double fallback) {
+	double r = fallback;
+	headers_.Query("TOTAL", &r);
+	return r;
 }
 
 bool
@@ -343,9 +315,9 @@ BmsBms::GetKey()
 // - should called when BmsBarManager is created/modified.
 //
 void
-BmsBms::CalculateTime(BmsTimeManager& time_manager_)
+BmsBms::InvalidateTimeTable()
 {
-	// flush previous time table
+	// clear current time table
 	time_manager_.Clear();
 
 	//
@@ -359,121 +331,117 @@ BmsBms::CalculateTime(BmsTimeManager& time_manager_)
 	GetSTOPtable(stop_sequence_table);
 
 	//
-	// get start position and end position (by row)
+	// Add Base BPM first
 	//
-	int start_channel_position = static_cast<int>(
-		GetBarManager().GetChannelPositionByBarNumber(0));
-	int end_channel_position =
-		GetChannelManager().GetObjectExistsMaxPosition(&BmsChannel::IsShouldPlayWavChannel);
-	time_manager_.Resize(end_channel_position+1); // check validity TODO
+	time_manager_.Add(0, BmsTime(0, 0, GetBaseBPM()));
 
 	//
-	// scan for BPM/STOP channels
+	// input BPM channel
 	//
-	std::vector<BmsBuffer*> BpmChannelBuffer;
-	std::vector<BmsBuffer*> ExtendedBpmChannelBuffer;
-	std::vector<BmsBuffer*> StopChannelBuffer;
-	std::vector<BmsBuffer*> MissBgaBuffer;
-	for (BmsChannelManager::ConstIterator it = GetChannelManager().Begin(); it != GetChannelManager().End(); ++it) {
-		BmsChannel& current_channel = *it->second;
-		for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); ++it2) {
-			switch (current_channel.GetChannelType()) {
-			case BmsChannelType::BPM:
-				BpmChannelBuffer.push_back(*it2);
-				break;
-			case BmsChannelType::EXTBPM:
-				ExtendedBpmChannelBuffer.push_back(*it2);
-				break;
-			case BmsChannelType::STOP:
-				StopChannelBuffer.push_back(*it2);
-				break;
-			case BmsChannelType::BGAPOOR:
-				MissBgaBuffer.push_back(*it2);
-				break;
-			}
+	ITER_CHANNEL(BmsChannelType::BPM, iter) {
+		BmsWord current_word(iter->second);
+		if (current_word == BmsWord::MIN) continue;
+		int new_bpm;
+		if (NOT(BmsUtil::StringToInteger(current_word.ToCharPtr(), &new_bpm, 16))) {
+			throw InvalidFormatAsBpmChangeValueException(current_word);
+		}
+		time_manager_.Add(iter->first, BmsTime(0, 0, new_bpm));
+	}
+	ITER_CHANNEL(BmsChannelType::EXTBPM, iter) {
+		BmsWord current_word(iter->second);
+		if (current_word == BmsWord::MIN) continue;
+		if (extended_bpm_table.find(current_word) == extended_bpm_table.end()) {
+			throw ExtendedBpmChangeEntryNotExistException(current_word);
+		}
+		else {
+			int bpm = extended_bpm_table[current_word];
+			time_manager_.Add(iter->first, BmsTime(0, 0, bpm));
 		}
 	}
 
-	// check current bar
-	int barposition = 0;
-	int barlength = GetBarManager().At(0).GetLength();
-	int barleft = barlength;
-	bool is_row_measure = true;
 	//
-	// create time data
+	// input STOP/STP channel
 	//
-	double time = 0;
-	double absbeat_per_each_row = 1.0 / GetBarManager().GetBarDivisionCount();
-	double absbeat = 0;
-	double measure = 0;
-	double measure_per_each_row = 1.0 / barlength;
-	BmsWord missBga(0);
-	for (int i = 0; i <= end_channel_position; i++) {
-		double stop_sequence_time = 0.0;
-		if (barleft == 0) {
-			barlength = barleft = GetBarManager().At(++barposition).GetLength();
-			measure_per_each_row = 1.0 / barlength;
-			measure = round(measure);
-			is_row_measure = true;
+	ITER_CHANNEL(BmsChannelType::STOP, iter) {
+		BmsWord current_word(iter->second);
+		if (current_word == BmsWord::MIN) continue;
+		if (stop_sequence_table.find(current_word) == stop_sequence_table.end()) {
+			throw StopSequenceEntryNotExistException(current_word);
 		}
-		barleft--;
+		else {
+			// stop for 1 / 192 beat
+			// it doesn't consider the length(Ratio) of that measure.
+			double new_stop = (static_cast<double>(stop_sequence_table[current_word]) / 192.0 * 4.0) * (60.0 / bpm);
+			if (new_stop > 0) {
+				BmsTime t(0, 0, time_manager_.GetBPMFromBar(iter->first));
+				t.stop = new_stop;
+				time_manager_.Add(iter->first, t);
+			}
+		}
+	}
+	for (auto it = GetSTPManager().Begin(); it != GetSTPManager().End(); ++it) {
+		unsigned int bar = GetBarManager().GetBarByMeasure(it->first);
+		BmsTime t(0, 0, time_manager_.GetBPMFromBar(bar));
+		t.stop = it->second / 1000.0;
+		time_manager_.Add(bar, t);
+	}
 
-		for (auto it = BpmChannelBuffer.begin(); it != BpmChannelBuffer.end(); ++it) {
-			BmsWord current_word((**it)[i]);
-			if (current_word == BmsWord::MIN) continue;
-			int new_bpm;
-			if (NOT(BmsUtil::StringToInteger(current_word.ToCharPtr(), &new_bpm, 16))) {
-				throw InvalidFormatAsBpmChangeValueException(current_word);
-			}
-			bpm = static_cast<double>(new_bpm);
-		}
-		for (auto it = ExtendedBpmChannelBuffer.begin(); it != ExtendedBpmChannelBuffer.end(); ++it) {
-			BmsWord current_word((**it)[i]);
-			if (current_word == BmsWord::MIN) continue;
-			if (extended_bpm_table.find(current_word) == extended_bpm_table.end()) {
-				throw ExtendedBpmChangeEntryNotExistException(current_word);
-			}
-			else {
-				bpm = extended_bpm_table[current_word];
-			}
-		}
-		for (auto it = StopChannelBuffer.begin(); it != StopChannelBuffer.end(); ++it) {
-			BmsWord current_word((**it)[i]);
-			if (current_word == BmsWord::MIN) continue;
-			if (stop_sequence_table.find(current_word) == stop_sequence_table.end()) {
-				throw StopSequenceEntryNotExistException(current_word);
-			}
-			else {
-				// 192 指定で 1 小節分停止
-				double new_stop = (static_cast<double>(stop_sequence_table[current_word]) / 192.0 * 4.0) * (60.0 / bpm);
-				if (stop_sequence_time == 0.0 || new_stop > stop_sequence_time) {
-					stop_sequence_time = new_stop;
-				}
-			}
-		}
-		for (auto it = MissBgaBuffer.begin(); it != MissBgaBuffer.end(); ++it) {
-			BmsWord current_word((**it)[i]);
-			if (current_word == BmsWord::MIN) continue;
-			missBga = current_word;
-		}
+	//
+	// now calculate time data
+	//
+	BmsTime *currentsig = 0;
+	int prevbar = 0;
+	double totaltime = 0;
+	for (auto it = time_manager_.Begin(); it != time_manager_.End(); ++it) {
+		if (currentsig) {
+			int eslapedbar = it->first - prevbar + 1;
+			double stop = currentsig->stop;
+			double bpm = currentsig->bpm;
+			/*
+			* BPM: 4 measure( == 1 beat) per minute
+			* - convert measure to beat (divide by 4)
+			* - convert bpm to spb (second per beat)
+			*/
+			double time =
+				totaltime += stop +
+				(60.0 / bpm) / (((double)eslapedbar / BmsConst::BAR_DIVISION_COUNT_MAX) / 4.0);
 
-		time_manager_.SetRow(BmsTime(time, stop_sequence_time, measure, absbeat, bpm, is_row_measure, missBga), i);
-
-		measure += measure_per_each_row;
-		absbeat += absbeat_per_each_row;
-		time += ((60.0 / bpm) /
-			(static_cast<double>(GetBarManager().GetBarDivisionCount()) / 4.0));
-		time += stop_sequence_time;
-		is_row_measure = false;
+			it->second.time = time;
+		}
+		prevbar = it->first;
+		currentsig = &it->second;
 	}
 }
 
-//
-// must call after time is calculated (CalculateTimeTable())
-//
+namespace {
+	int GetLaneIndex(int channel) {
+		// normal note
+		// 11 -- 17
+		// 21 -- 27
+		// invisible note
+		// 31 -- 36
+		// 41 -- 46
+		// longnote (loose)
+		// 51 -- 59
+		// 61 -- 69
+		// minefield
+		// D1 -- D9
+		// E1 -- E9
+		int channel_to_lane[] = {
+			0, 1, 2, 3, 4, 5, 0, 8, 6, 7,
+			10, 11, 12, 13, 14, 15, 10, 18, 16, 17,
+		};
+		int b = (channel - 36) / 36;
+		int s = channel % 36 % 10;
+		return ((b % 2) * 10 + channel_to_lane[s]);
+	}
+}
+
 void
-BmsBms::GetNotes(BmsNoteManager &note_manager_)
+BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 {
+	// prepare
+	// check longnote type
 	int LNtype = 0;
 	if (GetHeaders().IsExists("LNTYPE")) {
 		if (!GetHeaders()["LNTYPE"].IsInteger())
@@ -485,84 +453,70 @@ BmsBms::GetNotes(BmsNoteManager &note_manager_)
 		lnobj_word = BmsWord(GetHeaders()["LNOBJ"].ToString());
 	}
 
-	//
-	// get start position and end position (by row)
-	//
-	int start_channel_position = static_cast<int>(
-		GetBarManager().GetChannelPositionByBarNumber(0));
-	int end_channel_position =
-		GetChannelManager().GetObjectExistsMaxPosition(&BmsChannel::IsShouldPlayWavChannel);
-	note_manager_.Resize(end_channel_position+1);
-
+	// fill note data
 	BmsNote* channelLastNote[BmsConst::WORD_MAX_COUNT] = { 0, };
-	for (int i = 0; i <= end_channel_position; i++) {
-		for (BmsChannelManager::ConstIterator it = GetChannelManager().Begin(); it != GetChannelManager().End(); ++it) {
-			BmsChannel& current_channel = *it->second;
-			for (BmsChannel::ConstIterator it2 = current_channel.Begin(); it2 != current_channel.End(); ++it2) {
-				BmsChannelBuffer& current_buffer = **it2;
-				BmsWord current_word(current_buffer[i]);
-				if (current_word == BmsWord::MIN) continue;
-				int laneidx = current_channel.GetLaneIndex();
-				int channel = current_channel.GetChannelNumber().ToInteger();
-				BmsNote current_note(BmsNote::NOTE_NONE, current_word);
-
-				switch (current_channel.GetChannelType()) {
-				case BmsChannelType::FIRSTPLAYER:
-				case BmsChannelType::SECONDPLAYER:
-					// check if it's LNOBJ registered note
-					if (current_word == lnobj_word) {
-						// set previous note as LongNote
-						if (NOT(channelLastNote[channel])
-							|| channelLastNote[channel]->type == BmsNote::NOTE_LNEND) {
-							// exception: longnote was double closed
-							// or there's no Longnote start position(previous note)
-							throw BmsLongNoteObjectInvalidEncloseException(0, it->first, i);
+	for (int c = 0; c < 32; c++) if (c % 16 < 10) {
+		// normal note (#LNOBJ)
+		if (channel_manager_.Contains(c + 16)) {	// 11 ~ 29
+			int channel = c + 16;
+			int laneidx = GetLaneIndex(channel);
+			int prev = 0;	// where previous note existed bar
+			ITER_CHANNEL(channel, iter) {
+				int bar = iter->first;
+				BmsWord current_word(iter->second);
+				if (current_word == lnobj_word && prev) {
+					// it means end of the longnote
+					// if previous longnote not exists, then don't make it longnote (wrong BMS)
+					BmsNote prevnote = note_manager_[laneidx].Get(prev);
+					prevnote.type = BmsNote::NOTE_LNSTART;
+					note_manager_[laneidx].Set(prev, prevnote);
+					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+					prev = 0;
+				}
+				else {
+					if (current_word == lnobj_word)
+						printf("Bms Warning: wrong end of the longnote found.\n");
+					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_NORMAL, current_word));
+					prev = bar;
+				}
+			}
+		}
+		// long note (#LNTYPE)
+		if (channel_manager_.Contains(c + 80)) {	// 51 ~ 69
+			int channel = c + 80;
+			int laneidx = GetLaneIndex(channel);
+			bool isln = false;
+			int step;	// used to find #LN
+			ITER_CHANNEL(channel, iter) {
+				int bar = iter->first;
+				BmsWord current_word(iter->second);
+				if (!isln) {
+					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNSTART, current_word));
+				}
+				else {
+					if (LNtype == 2) {
+						// if next note exists or not 00
+						// then it's PRESS note(HELL CHARGE)
+						auto iternext = iter; ++iternext;
+						if (iternext != GetChannelManager()[channel].GetBuffer().End() && iternext->second != BmsWord(0)) {
+							note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_PRESS, current_word));
 						}
-						// change previous note to LNSTART
-						channelLastNote[channel]->type = BmsNote::NOTE_LNSTART;
-						// add LNEND note
-						current_note.type = BmsNote::NOTE_LNEND;
+						else {
+							note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+						}
 					}
-					else {
-						// add normal note
-						current_note.type = BmsNote::NOTE_NORMAL;
-					}
-					break;
-				case BmsChannelType::FIRSTPLAYERHIDDEN:
-				case BmsChannelType::SECONDPLAYERHIDDEN:
-					// add hidden note
-					current_note.type = BmsNote::NOTE_HIDDEN;
-					break;
-				case BmsChannelType::FIRSTPLAYERLN:
-				case BmsChannelType::SECONDPLAYERLN:
-					// start longnote ONLY IF there's no previous note, or previous note is LN.
-					if (NOT(channelLastNote[channel])
-						|| channelLastNote[channel]->type == BmsNote::NOTE_LNEND) {
-						current_note.type = BmsNote::NOTE_LNSTART;
-					}
-					else {
-						// end of the longnote
-						current_note.type = BmsNote::NOTE_LNEND;
-					}
-					break;
-				case BmsChannelType::FIRSTPLAYERMINE:
-				case BmsChannelType::SECONDPLAYERMINE:
-					current_note.type = BmsNote::NOTE_MINE;
-					break;
 				}
-
-				switch (current_channel.GetChannelType()) {
-				case BmsChannelType::FIRSTPLAYER:
-				case BmsChannelType::SECONDPLAYER:
-				case BmsChannelType::FIRSTPLAYERHIDDEN:
-				case BmsChannelType::SECONDPLAYERHIDDEN:
-				case BmsChannelType::FIRSTPLAYERLN:
-				case BmsChannelType::SECONDPLAYERLN:
-				case BmsChannelType::FIRSTPLAYERMINE:
-				case BmsChannelType::SECONDPLAYERMINE:
-					channelLastNote[channel] = note_manager_.SetNoteData(current_note, laneidx, i);
-					break;
-				}
+				isln = !isln;
+			}
+		}
+		// mine note
+		if (channel_manager_.Contains(c + 64)) {
+			int channel = c + 80;
+			int laneidx = GetLaneIndex(channel);
+			ITER_CHANNEL(channel, iter) {
+				int bar = iter->first;
+				BmsWord current_word(iter->second);
+				note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_MINE, current_word));
 			}
 		}
 	}

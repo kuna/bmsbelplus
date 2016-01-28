@@ -17,6 +17,7 @@ public:
 	const static int NOTE_LNEND = 3;
 	const static int NOTE_MINE = 4;
 	const static int NOTE_HIDDEN = 5;
+	const static int NOTE_PRESS = 6;		// ok when just pressed
 	bool operator==(BmsNote& note) { return note.type == type; }
 	bool operator!=(BmsNote& note) { return note.type != type; }
 public:
@@ -63,8 +64,11 @@ public:
 	BmsNote Get(int bar) { 
 		if (notes_.find(bar) != notes_.end()) return notes_[bar]; 
 		else return BmsNote();
-	};
-	void Set(int bar, const BmsNote& v) { if (v.type != BmsNote::NOTE_NONE) notes_[bar] = v; };
+	}
+	// only allows NOT NONETYPE note.
+	void Set(int bar, const BmsNote& v) { 
+		if (v.type != BmsNote::NOTE_NONE) notes_[bar] = v; 
+	}
 	void Delete(int bar) { notes_.erase(bar); }
 	void Clear() { notes_.clear(); }
 
@@ -83,8 +87,8 @@ private:
 
 /*
  * @description
- * this 
- * and, this class treats note channels differently
+ * Store and modify note data for playing.
+ * You should access note data as a lane number.
  * - SC : 0 / 10
  * - All the other keys : 1 ~ 8
  * if you want to get note using channel no., use operator[](BmsWord) instead.
@@ -97,6 +101,7 @@ private:
 public:
 	// about note metadata
 	int GetNoteCount();
+	// @DEPRECIATED. use BmsBms::GetKeys() method.
 	int GetKeys();
 	// <barpos, notecount(1)>
 	// use iterator to get note existing bar
@@ -113,13 +118,13 @@ public:
 	void HRandom(unsigned int seed, int s = 1, int e = 7);		// no combo note
 	void SRandom(unsigned int seed, int s = 1, int e = 7);
 	void Mirror(int s = 1, int e = 7);
-	void MoreLongNote(double ratio);
-	void LessLongNote(double ratio);
-	void AllScratch(int seed);
-	void MoreNote(double ratio);
-	void LessNote(double ratio);
-	void MoreMine(double ratio);
-	void LessMine(double ratio);
+	void MoreLongNote(double ratio, int s = 1, int e = 7);
+	void LessLongNote(double ratio, int s = 1, int e = 7);
+	void AllScratch(int seed, int sc = 0, int s = 1, int e = 7);
+	void MoreNote(double ratio, int s = 1, int e = 7);
+	void LessNote(double ratio, int s = 1, int e = 7);
+	void MoreMine(double ratio, int s = 1, int e = 7);
+	void LessMine(double ratio, int s = 1, int e = 7);
 	void Flip();
 	void SP_TO_DP(unsigned int seed);
 	void DP_TO_SP();

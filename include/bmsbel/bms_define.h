@@ -39,6 +39,7 @@ namespace BmsConst {
 	const int BMS_MAX_KEY = 18;
 
 	const int BMS_MAX_LINE_BUFFER = 10240;
+	const double BMS_BASIC_BPM = 120.0;
 }
 
 namespace BmsBelOption {

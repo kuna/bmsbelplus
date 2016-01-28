@@ -4,57 +4,62 @@
 
 /*
  * @comment
- * you can get bar's absolute(rendering) position
- * by using BarManager::GetBarNumberByMeasure()
- * and GetPosFromBarNumber()
+ * timestamp of bms (translated data)
  */
 
 struct BmsTime {
 	BmsTime() {}
-	BmsTime(double time, double stop, double beat, double pos, double bpm) :
-		time(time), stop(stop), beat(beat), pos(pos), bpm(bpm) {}
+	BmsTime(double time, double stop, double bpm) :
+		time(time), stop(stop), bpm(bpm) {}
+	/** @brief incicates accessing time of current time signature (second) */
 	double time;
+	/** @brief incicates STOP time. don't include this in time value. */
 	double stop;
-	double beat;
 	/** @brief rendering position (1 per screen height). calculated from bar number. */
-	double pos;
 	double bpm;
 };
 
 /*
  * @description
  * retains information about time, position, beat
- * CAUTION: must add at least 1 row
+ * this class only transforms between time <-> bar.
+ * if you want to translate bar into beat / pos, use BmsBarManager class.
+ * CAUTION: must add at least 1 row (first timestamp)
+ *          add last note's timestamp (if you want to GetMediumBPM() work well)
  */
 class BmsTimeManager {
-private:
-	// std::pair<bar number / time related object>
-	std::map<int, BmsTime> array_;
-
-	// for fast iteration
-	std::map<int, BmsTime>::iterator iter_;
-	std::map<int, BmsTime>::iterator iternext_;
 public:
+	BmsTimeManager();
+
 	void Clear();
 	/** @brief Resets private iterator. Automatically called. */
 	void Reset();
 	/** @brief adds timemarker. Automatically calls Reset() */
 	void Add(int bar, const BmsTime& bmstime);
+	/** @brief */
+	void Delete(int bar);
 
-	int GetBarNumberFromTime(double sec);
-	double GetPosFromTime(double sec);
-	double GetBeatFromTime(double sec);
-	double GetEndTime();
+	// iterator
+	typedef std::map<int, BmsTime>::iterator Iterator;
+	Iterator Begin();
+	Iterator End();
 
-	double GetPosFromBarNumber(int bar);
-	double GetTimeFromBarNumber(int bar);
+	// before you get any information about time or something,
+	// convert time into bar position
+	double			GetBarFromTime(double sec);
+	double			GetTimeFromBar(double bar);
 
-	// bpm
-	double GetBPMFromTime(double time);
-	double GetCommonBPM();
-	double GetMaxBPM();
-	double GetMinBPM();
+	// BPM
+	double			GetBPMFromTime(double time);
+	double			GetBPMFromBar(double bar);
+	double			GetMediumBPM();
+	double			GetMaxBPM();
+	double			GetMinBPM();
+private:
+	// std::pair<bar number / time related object>
+	std::map<int, BmsTime> array_;
 
-	// bga
-	BmsWord GetMissBGAFromTime(double time);
+	// for fast iteration
+	Iterator iter_;
+	Iterator iternext_;
 };
