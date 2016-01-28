@@ -201,10 +201,10 @@ namespace BmsParser {
 		// to know what part is syntax we're going to parse
 		key_ = "";
 
-		if (KEY("RANDOM") || KEY("RONDOM")) {
+		if (KEY("RANDOM") || KEY("RONDOM") || KEY("SETRANDOM") || KEY("ENDRANDOM")) {
 			syntax_line_data_.push_back(str);
 		}
-		else if (KEY("IF") || KEY("SWITCH")) {
+		else if (KEY("IF") || KEY("SWITCH") || KEY("SETSWITCH")) {
 			syntax_line_data_.push_back(str);
 			syntax_tag_.push_back(key_);
 		}
@@ -252,19 +252,24 @@ namespace BmsParser {
 			std::string key_(p, sep - p);
 			std::string value_(sep + 1);
 			int num_ = atoi(value_.c_str());
-			if (key_ == "RANDOM" || key_ == "RONDOM") {
+			if (key_ == "RANDOM" || key_ == "SETRANDOM" || key_ == "RONDOM" ||
+				key_ == "SWITCH" || key_ == "SEtSWITCH") {
+				++syntax_depth_;
+				random_value_.push_back(-1);
+				condition_.push_back(0);
+				condition_matched_.push_back(0);
 				if (num_) {
-					random_value_[syntax_depth_] = rand() % num_ + 1;
+					if (key_ == "SETRANDOM" || key_ == "SETRANDOM") 
+						random_value_[syntax_depth_] = num_;
+					else 
+						random_value_[syntax_depth_] = rand() % num_ + 1;
 				}
 			}
-			else if (key_ == "SWITCH") {
-				if (num_) {
-					random_value_.push_back(rand() % num_ + 1);
-					condition_.push_back(0);
-					condition_matched_.push_back(0);
-				}
-			}
-			else if (key_ == "ENDIF" || key_ == "ENDSW") {
+			else if (key_ == "ENDSW" || key_ == "ENDRANDOM") {
+				--syntax_depth_;
+				random_value_.pop_back();
+				condition_.pop_back();
+				condition_matched_.pop_back();
 			}
 			else if (key_ == "IF" || key_ == "ELSEIF") {
 				if (key_ == "IF") CONDMATCHED = 0;
@@ -273,13 +278,28 @@ namespace BmsParser {
 				else
 					COND = 0;
 			}
+			else if (key_ == "ENDIF") {
+				COND = 0;
+			}
 			else if (key_ == "CASE") {
-
+				if (!CONDMATCHED && CONDMATCH(num_))
+					COND = 1;
+				else
+					COND = 0;
 			}
 			else if (key_ == "SKIP") {
+				if (!CONDMATCHED)
+					COND = 1;
+				else
+					COND = 0;
+			}
+			else if (key_ == "DEF") {
+				COND = 0;
 			}
 			else {
 				// else are basic commands - add them to line_data_
+				if (COND)
+					line_data_.push_back(*it);
 			}
 		}
 
