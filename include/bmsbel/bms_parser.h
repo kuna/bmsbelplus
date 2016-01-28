@@ -54,7 +54,6 @@ namespace BmsParser {
 		void ParseHeaderOrBar(const char* str);
 		void ParseHeaderKey(const char* str);
 		void ParseHeaderValue(const char* str);
-		void ParseMeasure(const char* str);
 		// object parsing
 		void ParseObjectArray(const char* str);
 
@@ -76,10 +75,9 @@ namespace BmsParser {
 		std::string					key_, value_;
 		std::ostringstream			log_;
 		//
-		// random statement
+		// check random statement
 		//
 		std::deque<std::string>		syntax_tag_;
-		std::deque<int>				random_value_;
 	};
 }
 

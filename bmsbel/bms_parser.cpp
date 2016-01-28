@@ -61,7 +61,6 @@ namespace BmsParser {
 		log_.clear();
 
 		syntax_tag_.clear();
-		random_value_.clear();
 	}
 
 #ifdef USE_MBCS
@@ -218,7 +217,8 @@ namespace BmsParser {
 			syntax_tag_.pop_back();
 			// check start ~ end tag matching
 			if (KEY("ENDIF") && starttag != "IF" ||
-				KEY("ENDSW") && starttag != "SWITCH") {
+				KEY("ENDSW") && starttag != "SWITCH" ||
+				KEY("ENDSW") && starttag != "SETSWITCH") {
 				WriteLogLine("%d line - start ~ end tag doesn't match.", line_);
 				return false;
 			}
@@ -259,7 +259,7 @@ namespace BmsParser {
 				condition_.push_back(0);
 				condition_matched_.push_back(0);
 				if (num_) {
-					if (key_ == "SETRANDOM" || key_ == "SETRANDOM") 
+					if (key_ == "SETRANDOM" || key_ == "SETSWITCH") 
 						random_value_[syntax_depth_] = num_;
 					else 
 						random_value_[syntax_depth_] = rand() % num_ + 1;
@@ -294,7 +294,7 @@ namespace BmsParser {
 					COND = 0;
 			}
 			else if (key_ == "DEF") {
-				COND = 0;
+				COND = 1;
 			}
 			else {
 				// else are basic commands - add them to line_data_

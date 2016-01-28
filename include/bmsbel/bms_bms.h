@@ -52,12 +52,8 @@ public:
 
 	// convert bms data to string. save this file to make new bms data.
 	std::string ToString(void) const;
-	// save (utf8 path; use BmsUtil::ConvertToUtf8 if you're TCHAR)
-	void LoadBmsFile(const char* path);
 	// load (utf8 path; use BmsUtil::ConvertToUtf8 if you're TCHAR)
 	void SaveBmsFile(const char* path);
-	// parse (utf8 data; use BmsUtil::ConvertToUtf8 if you're TCHAR)
-	void ParseBms(const char* data);
 private:
 	BmsHeaderTable		headers_;
 	BmsRegistArraySet	array_set_;

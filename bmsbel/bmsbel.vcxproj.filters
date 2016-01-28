@@ -27,12 +27,6 @@
     <ClCompile Include="bms_parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bms_parser_frame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="bms_random.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bms_regist_array.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -80,12 +74,6 @@
     <ClInclude Include="..\include\bmsbel\bms_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\bmsbel\bms_parser_frame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\bmsbel\bms_random.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\bmsbel\bms_regist_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -98,9 +86,6 @@
     <ClInclude Include="..\include\bmsbel\bms_word.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\bmsbel\bms_bar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\bmsbel\bms_bms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -108,6 +93,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\bmsbel\bms_note.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\bmsbel\bms_stp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\bmsbel\bms_bar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
