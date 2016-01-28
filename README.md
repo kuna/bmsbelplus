@@ -16,7 +16,7 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 - (R-/H-/S-)RANDOM, MIRROR, ALL-LN, NO_LN, ALL-SCR, MORENOTE, LESSNOTE, SPEED_MULTIPLY, MOREMINE, NOMINE, SP-TO-DP option available
 - Save function implementation
 - Shift-JIS code to UTF8
-- (TODO) nested #RANDOM statement
+- nested #RANDOM statement
 - (TODO) support creating training pattern
 - (TODO) compile with MinGW
 - (TODO) code coverage

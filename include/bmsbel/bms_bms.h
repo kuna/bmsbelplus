@@ -53,7 +53,13 @@ public:
 	// convert bms data to string. save this file to make new bms data.
 	std::string ToString(void) const;
 	// load (utf8 path; use BmsUtil::ConvertToUtf8 if you're TCHAR)
-	void SaveBmsFile(const char* path);
+	bool SaveBmsFile(const char* path);
+	// load (utf8 path; use BmsUtil::ConvertToUtf8 if you're TCHAR)
+	bool LoadBmsFile(const char* path);
+#ifdef USE_MBCS
+	bool SaveBmsFile(const wchar_t* path);
+	bool LoadBmsFile(const wchar_t* path);
+#endif
 private:
 	BmsHeaderTable		headers_;
 	BmsRegistArraySet	array_set_;

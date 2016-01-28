@@ -5,6 +5,7 @@
 #include "bmsbel\bms_define.h"
 #include "bmsbel\bms_util.h"
 #include "bmsbel\bms_exception.h"
+#include "bmsbel\bms_parser.h"
 
 #include <algorithm>
 
@@ -189,6 +190,52 @@ BmsBms::ToString(void) const
 	}
 	return tmp;
 }
+
+bool
+BmsBms::SaveBmsFile(const char* path) {
+	FILE *fp;
+	if (fopen_s(&fp, path, "wb") == 0) {
+		fputs(ToString().c_str(), fp);
+		fclose(fp);
+	}
+	else return false;
+}
+
+bool
+BmsBms::LoadBmsFile(const char* path) {
+	FILE *fp;
+	if (fopen_s(&fp, path, "rb") == 0) {
+		BmsParser::Parser *parser_ = new BmsParser::Parser(*this);
+		bool r = parser_->Load(path);
+		delete parser_;
+		return r;
+	}
+	else return false;
+}
+
+#ifdef USE_MBCS
+bool
+BmsBms::SaveBmsFile(const wchar_t* path) {
+	FILE *fp;
+	if (_wfopen_s(&fp, path, L"wb") == 0) {
+		fputs(ToString().c_str(), fp);
+		fclose(fp);
+	}
+	else return false;
+}
+
+bool
+BmsBms::LoadBmsFile(const wchar_t* path) {
+	FILE *fp;
+	if (_wfopen_s(&fp, path, L"rb") == 0) {
+		BmsParser::Parser *parser_ = new BmsParser::Parser(*this);
+		bool r = parser_->Load(path);
+		delete parser_;
+		return r;
+	}
+	else return false;
+}
+#endif
 
 void
 BmsBms::GetBPMtable(std::map<BmsWord, double> &extended_bpm_table)
@@ -530,4 +577,6 @@ BmsBms::Clear(void)
 	array_set_.Clear();
 	channel_manager_.Clear();
 	bar_manager_.Clear();
+	time_manager_.Clear();
+	stp_manager_.Clear();
 }

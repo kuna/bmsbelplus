@@ -51,9 +51,9 @@ public:
 
 	// iterator
 	typedef std::map<int, BmsNote>::iterator Iterator;
-	Iterator Begin() { notes_.begin(); };
+	Iterator Begin() { return notes_.begin(); };
 	Iterator Begin(int bar) { return notes_.equal_range(bar).first; }
-	Iterator End() { notes_.end(); };
+	Iterator End() { return notes_.end(); };
 #if 0
 	Iterator Next() { return ++iter_; };		// move inner iterator to next and return that iter.
 	Iterator Current() { return iter_; };		// returns current iterator without modifying anything.

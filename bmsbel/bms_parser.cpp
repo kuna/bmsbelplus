@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "bmsbel\bms_parser.h"
-
+#include "bmsbel\bms_bms.h"
 #include "bmsbel\bms_util.h"
 #include "bmsbel\bms_exception.h"
 #include <time.h>
@@ -74,6 +74,7 @@ namespace BmsParser {
 			bool r = Parse(buf);
 			// cleanup
 			delete buf;
+			fclose(fp);
 			return r;
 		}
 		else {
@@ -93,6 +94,7 @@ namespace BmsParser {
 			bool r = Parse(buf);
 			// cleanup
 			delete buf;
+			fclose(fp);
 			return r;
 		}
 		else {
@@ -182,6 +184,7 @@ namespace BmsParser {
 			ParseObjectArray(p + 1);
 		}
 
+		bms_.InvalidateTimeTable();
 		return true;
 	}
 

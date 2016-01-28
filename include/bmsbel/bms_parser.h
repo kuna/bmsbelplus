@@ -2,16 +2,15 @@
 #define BMSBEL_PARSER_H_
 
 #include <vector>
-#include <stack>
 #include <queue>
-#include <set>
+#include <sstream>
 
 #include "bms_define.h"
-#include "bms_bms.h"
 
 /*
  * isn't it too much complex?
  */
+class BmsBms;
 
 namespace BmsParser {
 	// -- ParsingInfo ------------------------------------------------------

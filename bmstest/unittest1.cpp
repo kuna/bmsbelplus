@@ -10,6 +10,15 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #endif
 
 // https://msdn.microsoft.com/en-us/library/hh598953.aspx
+/*
+// wanna to ignore channel set?
+bms.GetChannelManager().DeleteChannel(BmsWord(4));
+bms.GetChannelManager().DeleteChannel(BmsWord(6));
+bms.GetChannelManager().DeleteChannel(BmsWord(7));
+bms.GetChannelManager().DeleteChannel(BmsWord(10));
+bms.GetChannelManager().DeleteChannel(BmsWord(365));
+*/
+
 namespace bmstest
 {		
 	TEST_CLASS(UnitTest1)
@@ -22,18 +31,6 @@ namespace bmstest
 
 		TEST_METHOD(BMS_TAG_Length_Test)
 		{
-			/* Do you want to ignore BGA channel?
-			BmsRandom::RootStatement root_statement;					// for #RANDOM or some etc. commands
-			BmsParser::Reactor reactor;									// handler - but don't do anything this time
-			BmsParser::StartInfo info(bms, root_statement, reactor);	// contains information about parsing BMS
-			info.make_syntax_tree_ = false;
-			info.ignore_channel_set_.insert(BmsWord(4));
-			info.ignore_channel_set_.insert(BmsWord(6));
-			info.ignore_channel_set_.insert(BmsWord(7));
-			info.ignore_channel_set_.insert(BmsWord(10));
-			info.ignore_channel_set_.insert(BmsWord(365));
-			*/
-
 			// BMS read
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\47_LNM(TEN).bml";
@@ -41,14 +38,6 @@ namespace bmstest
 			BmsTimeManager timetable;
 			bms.CalculateTime(timetable);
 
-			/*
-			// wanna to ignore channel set?
-			bms.GetChannelManager().DeleteChannel(BmsWord(4));
-			bms.GetChannelManager().DeleteChannel(BmsWord(6));
-			bms.GetChannelManager().DeleteChannel(BmsWord(7));
-			bms.GetChannelManager().DeleteChannel(BmsWord(10));
-			bms.GetChannelManager().DeleteChannel(BmsWord(365));
-			*/
 
 			Logger::WriteMessage(bms.GetHeaders().ToWString().c_str());
 			Assert::AreEqual(L"TEN [LN MASTER]", bms.GetHeaders()["TITLE"].ToWString().c_str());
