@@ -2,6 +2,7 @@
 
 #include "bms_word.h"
 #include <map>
+#include <set>
 #include <vector>
 
 /*
@@ -74,7 +75,7 @@ public:
 
 	// <barpos, notecount(1)>
 	// use iterator to get note existing bar
-	void GetNoteExistBar(std::map<int, int> &barmap);
+	void GetNoteExistBar(std::set<int> &barmap);
 	int GetNoteCount() { return notes_.size(); }
 private:
 	// data
@@ -105,7 +106,7 @@ public:
 	int GetKeys();
 	// <barpos, notecount(1)>
 	// use iterator to get note existing bar
-	void GetNoteExistBar(std::map<int, int> &barmap);
+	void GetNoteExistBar(std::set<int> &barmap);
 
 	BmsNoteLane& operator[](int i) { return lanes_[i]; }
 
