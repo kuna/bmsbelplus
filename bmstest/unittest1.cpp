@@ -86,7 +86,7 @@ namespace bmstest
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar)); 
 
 			Assert::AreEqual(1086912, note.GetNoteCount());
-			Assert::AreEqual(15344627, (int)bms.GetTimeManager().GetTimeFromBar(lastbar));
+			Assert::IsTrue(15344627 == (barindex)bms.GetTimeManager().GetTimeFromBar(lastbar));
 		}
 
 		TEST_METHOD(BIG_BMS_Test2) {
@@ -187,12 +187,12 @@ namespace bmstest
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
 			Assert::AreEqual(88764, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 1000));
 			Assert::AreEqual(143.3, bms.GetBaseBPM());
-			WriteLog("Bar of 0s: %d", bms.GetTimeManager().GetBarFromTime(0));
-			WriteLog("Bar of 10s: %d", bms.GetTimeManager().GetBarFromTime(10));
-			WriteLog("Bar of 50s: %d", bms.GetTimeManager().GetBarFromTime(50));
-			WriteLog("Bar of 60s: %d", bms.GetTimeManager().GetBarFromTime(60));
-			WriteLog("Bar of 90s: %d", bms.GetTimeManager().GetBarFromTime(90));
-			WriteLog("Bar of 100s: %d", bms.GetTimeManager().GetBarFromTime(100));
+			WriteLog("Bar of 0s: %.1f", bms.GetTimeManager().GetBarFromTime(0));
+			WriteLog("Bar of 10s: %.1f", bms.GetTimeManager().GetBarFromTime(10));
+			WriteLog("Bar of 50s: %.1f", bms.GetTimeManager().GetBarFromTime(50));
+			WriteLog("Bar of 60s: %.1f", bms.GetTimeManager().GetBarFromTime(60));
+			WriteLog("Bar of 90s: %.1f", bms.GetTimeManager().GetBarFromTime(90));
+			WriteLog("Bar of 100s: %.1f", bms.GetTimeManager().GetBarFromTime(100));
 		}
 
 		TEST_METHOD(BMS_Key_Test) {
@@ -200,7 +200,24 @@ namespace bmstest
 			 * Test part
 			 * - 5 / 7 / 9 / 14k
 			 */
-			
+			BmsBms bms;
+			bms.LoadBmsFile(L"..\\test\\bms\\22_brain_5.bms");
+			Assert::AreEqual(5, bms.GetKey());
+			bms.LoadBmsFile(L"..\\test\\bms\\01_brain_7n.bme");
+			Assert::AreEqual(7, bms.GetKey());
+			// (TODO)
+			// PMS's channel construction is a little different;
+			// - If extension is BME, then it's BME type pms
+			// - If extension is PMS, then it's always pms
+			// may need some distingishing variable.
+			//bms.LoadBmsFile(L"..\\test\\bms\\_9keyN.pms");
+			//Assert::AreEqual(9, bms.GetKey());
+			bms.LoadBmsFile(L"..\\test\\bms\\_DPN.bms");
+			Assert::AreEqual(14, bms.GetKey());
+		}
+
+		TEST_METHOD(BMS_Save_Test) {
+			// (TODO)
 		}
 
 		TEST_METHOD(BMS_Negative_BPM) {
@@ -217,21 +234,45 @@ namespace bmstest
 			int lastbar = bms.GetObjectExistsMaxBar();
 			WriteLog("Last Bar: %d", lastbar);
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
-			WriteLog("Bar of 10s: %d", bms.GetTimeManager().GetBarFromTime(10));
-			WriteLog("Bar of 50s: %d", bms.GetTimeManager().GetBarFromTime(50));
-			WriteLog("Bar of 60s: %d", bms.GetTimeManager().GetBarFromTime(60));
-			WriteLog("Bar of 70s: %d", bms.GetTimeManager().GetBarFromTime(70));
-			WriteLog("Bar of 80s: %d", bms.GetTimeManager().GetBarFromTime(80));
+			WriteLog("Bar of 10s: %.1f", bms.GetTimeManager().GetBarFromTime(10));
+			WriteLog("Bar of 50s: %.1f", bms.GetTimeManager().GetBarFromTime(50));
+			WriteLog("Bar of 60s: %.1f", bms.GetTimeManager().GetBarFromTime(60));
+			WriteLog("Bar of 70s: %.1f", bms.GetTimeManager().GetBarFromTime(70));
+			WriteLog("Bar of 80s: %.1f", bms.GetTimeManager().GetBarFromTime(80));
+			WriteLog("Bar of 100s: %.1f", bms.GetTimeManager().GetBarFromTime(100));
 		}
 
-#if 0	// I can't find Bms using SWITCH ...
+
+#if 0	// thinking of test case, but yet...
+		TEST_METHOD(BMS_Note_Test) {
+			/*
+			 * Test part
+			 * - RANDOM
+			 * - Training mode
+			 * - S-RANDOM
+			 */
+		}
+#endif
+
 		TEST_METHOD(BMS_Switch_Test) {
 			/*
 			 * Test part
 			 * - SWITCH ~ ENDSW part
+			 * (look carefully with note count & end time)
 			 */
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\switch_test.bms";
+			bms.LoadBmsFile(filename);
+
+			BmsNoteManager bmsnote;
+			bms.GetNoteData(bmsnote);
+
+			WriteLog("Note count: %d", bmsnote.GetNoteCount());
+			int lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %d", lastbar);
+			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
+			Assert::AreEqual(4, bmsnote.GetNoteCount());
 		}
-#endif
 
 		TEST_METHOD(BMS_Note_Test) {
 			/*

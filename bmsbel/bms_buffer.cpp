@@ -31,13 +31,6 @@ BmsBuffer::~BmsBuffer()
 {
 }
 
-
-unsigned int
-BmsBuffer::GetLength(void) const
-{
-	return array_.size();
-}
-
 unsigned int
 BmsBuffer::GetCount(void) const
 {
@@ -46,7 +39,7 @@ BmsBuffer::GetCount(void) const
 
 
 BmsWord
-BmsBuffer::Get(unsigned int pos) const
+BmsBuffer::Get(barindex pos) const
 {
 	if (array_.find(pos) == array_.end()) return 0;
 	else return array_.at(pos);
@@ -63,12 +56,12 @@ BmsBuffer::operator [](unsigned int pos)
 }*/
 
 void
-BmsBuffer::Set(unsigned int pos, BmsWord v) {
+BmsBuffer::Set(barindex pos, BmsWord v) {
 	array_[pos] = v;
 }
 
 void
-BmsBuffer::DeleteAt(unsigned int pos)
+BmsBuffer::DeleteAt(barindex pos)
 {
 	array_.erase(pos);
 }
@@ -87,7 +80,7 @@ BmsBuffer::Merge(const BmsBuffer& buffer)
 }
 
 void
-BmsBuffer::Merge(unsigned int start, const BmsBuffer& buffer)
+BmsBuffer::Merge(barindex start, const BmsBuffer& buffer)
 {
 	// merge buffer from start position
 	for (auto it = buffer.Begin(); it != buffer.End(); ++it) {
@@ -96,7 +89,7 @@ BmsBuffer::Merge(unsigned int start, const BmsBuffer& buffer)
 }
 
 BmsBuffer
-BmsBuffer::SubBuffer(unsigned int from, unsigned int length) const
+BmsBuffer::SubBuffer(barindex from, barindex length) const
 {
 	BmsBuffer buf;
 	for (unsigned int i = 0; i < length; ++i) {
@@ -119,14 +112,13 @@ BmsBuffer::Contains(const BmsWord &word) const
 }
 
 void
-BmsBuffer::MagnifyBy(unsigned int multiplier)
+BmsBuffer::MagnifyBy(double multiplier)
 {
-	// COMMENT: we may can optimize this routine,
-	// like only changing key number.
-	int old_length = static_cast<int>(this->GetLength());
-	for (int i = old_length - 1; i > 0; --i) {
-		array_[i * multiplier] = array_[i];
-		DeleteAt(i);
+	if (GetCount() == 0) return;
+	for (auto it = --End();; --it) {
+		array_[it->first * multiplier] = array_[it->first];
+		DeleteAt(it->first);
+		if (it == Begin()) break;
 	}
 }
 
@@ -134,19 +126,19 @@ BmsBuffer::MagnifyBy(unsigned int multiplier)
 std::string
 BmsBuffer::ToString(void) const
 {
-	if (this->GetLength() == 0) {
+	if (this->GetCount() == 0) {
 		return "";
 	}
 
 	// calculate GCD (minimize output string)
-	unsigned int step = this->GetLength();
-	for (auto it = Begin(); it != End(); ++it) {
+	unsigned int step = Begin()->first;
+	for (auto it = ++Begin(); it != End(); ++it) {
 		step = BmsUtil::GCD(step, it->first);
 	}
 
 	std::string tmp;
-	tmp.reserve(this->GetLength() / step * 2);
-	for (unsigned int i = 0; i < this->GetLength(); i += step) {
+	tmp.reserve(this->GetCount() / step * 2);
+	for (unsigned int i = 0; i < this->GetCount(); i += step) {
 		tmp.append(Get(i).ToCharPtr());
 	}
 	return tmp;
@@ -177,18 +169,8 @@ BmsBuffer::End(void) const
 	return array_.end();
 }
 
-BmsBuffer::Iterator BmsBuffer::Reset(int startbar) {
-	for (iter_ = Begin(); iter_ != End(); ++iter_) {
-		if (iter_->first >= startbar) break;
-	}
-	return iter_;
-}
-
-BmsBuffer::Iterator BmsBuffer::Next() {
-	// COMMENT: should we check _iter == End() ?
-	return ++iter_;
-}
-
-BmsBuffer::Iterator BmsBuffer::Current() {
-	return iter_;
+BmsBuffer::Iterator
+BmsBuffer::Begin(barindex startbar) {
+	auto iters = array_.equal_range(startbar);
+	return iters.first;
 }

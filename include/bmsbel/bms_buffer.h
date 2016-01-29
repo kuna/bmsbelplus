@@ -34,52 +34,44 @@ public:
 
 	virtual ~BmsBuffer();
 
-	unsigned int GetLength(void) const;
 	unsigned int GetCount(void) const;
 
 	/** @brief safely get value from array. */
-	BmsWord Get(unsigned int pos) const;
+	BmsWord Get(barindex pos) const;
 	/** @brief this method only for Get() method. use Set() method to set value. */
 	//const BmsWord& operator [](unsigned int pos);
 	/** @brief set value at pos. */
-	void Set(unsigned int pos, BmsWord value);
+	void Set(barindex pos, BmsWord value);
 
-	void DeleteAt(unsigned int pos);
+	void DeleteAt(barindex pos);
 
 	void Clear(void);
 
 	/** @brief appends BmsBuffer to the start of this buffer */
 	virtual void Merge(const BmsBuffer& buffer);
 	/** @brief merge buffer data from start position (it doesn't make buffer longer) */
-	virtual void Merge(unsigned int start, const BmsBuffer& buffer);
+	virtual void Merge(barindex start, const BmsBuffer& buffer);
 	/** @brief cut note data at from ~ to position */
-	BmsBuffer SubBuffer(unsigned int from, unsigned int length) const;
+	BmsBuffer SubBuffer(barindex from, barindex length) const;
 
 	bool Contains(const BmsWord &word) const;
 
-	/** @depreciated */
-	void MagnifyBy(unsigned int multiplier);
+	void MagnifyBy(double multiplier);
 
 	std::string ToString(void) const;
 
 	// -- Iterator ---------------------------------------------------------
-	typedef std::map<int, BmsWord>::iterator Iterator;
-	typedef std::map<int, BmsWord>::const_iterator ConstIterator;
+	typedef std::map<barindex, BmsWord>::iterator Iterator;
+	typedef std::map<barindex, BmsWord>::const_iterator ConstIterator;
 	Iterator Begin(void);
 	Iterator End(void);
 	ConstIterator Begin(void) const;
 	ConstIterator End(void) const;
 	/** @brief reset iterator position to startbar. return End() if no proper element exists. */
-	Iterator Reset(int startbar = 0);
-	/** @brief get next iterator. */
-	Iterator Next();
-	/** @brief get current iterator. */
-	Iterator Current();
+	Iterator Begin(barindex startbar);
 private:
 	/** @brief contains (bar index, keyvalue) */
-	std::map<int, BmsWord> array_;
-	/** @brief current bar's position. used for finding / iterating. */
-	Iterator iter_;
+	std::map<barindex, BmsWord> array_;
 };
 
 #endif // BMSBEL_BUFFER_H_

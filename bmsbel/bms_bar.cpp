@@ -34,7 +34,7 @@ BmsBarManager::GetRatio(unsigned int pos) const {
 	return (double)barcount_[pos] / barresolution_;
 }
 
-unsigned int
+barindex
 BmsBarManager::GetBarNumberByMeasure(unsigned int pos) const
 {
 	unsigned int current = 0;
@@ -45,7 +45,7 @@ BmsBarManager::GetBarNumberByMeasure(unsigned int pos) const
 }
 
 unsigned int
-BmsBarManager::GetMeasureByBarNumber(unsigned int pos) const
+BmsBarManager::GetMeasureByBarNumber(barindex pos) const
 {
 	// find fast using cached data
 	return barcache_.equal_range(pos).first->second;

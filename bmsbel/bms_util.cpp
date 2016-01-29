@@ -4,6 +4,7 @@
 #include <errno.h>
 
 #include <algorithm>
+#include <string>
 
 #include "bmsbel\bms_define.h"
 #include "bmsbel\bms_util.h"

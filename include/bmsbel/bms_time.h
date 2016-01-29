@@ -41,13 +41,18 @@ public:
 	void Delete(int bar);
 
 	// iterator
-	typedef std::map<int, BmsTime>::iterator Iterator;
+	typedef std::map<barindex, BmsTime>::iterator Iterator;
 	Iterator Begin() { return array_.begin(); }
 	Iterator End() { return array_.end(); }
 
 	// before you get any information about time or something,
 	// convert time into bar position
 	double			GetBarFromTime(double sec);
+	// COMMENT: GetTimeFromBar may wrong in negative Bpm;
+	// no, it is true in exactly, but suppose in this case:
+	// - Bpm is negative, and song ends, so last note has lower timestamp then previous one.
+	// in that case, last note bar's timestamp != song's total play time.
+	// you might need to find max timestamp by yourself, comparing each other.
 	double			GetTimeFromBar(double bar);
 
 	// BPM
@@ -56,12 +61,15 @@ public:
 	double			GetMediumBPM();
 	double			GetMaxBPM();
 	double			GetMinBPM();
+
+	// faster/slower bms speed
+	void			SetRate(double freq);
 private:
 	// bar is somtimes necessary
 	BmsBarManager& bar_;
 
 	// std::pair<bar number / time related object>
-	std::map<int, BmsTime> array_;
+	std::map<barindex, BmsTime> array_;
 
 	// for fast iteration
 	Iterator iter_;

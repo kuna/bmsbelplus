@@ -32,9 +32,9 @@ public:
 	void SetRatio(unsigned int measure, double l);
 	double GetRatio(unsigned int measure) const;
 
-	unsigned int	GetMeasureByBarNumber(unsigned int bar) const;
+	unsigned int	GetMeasureByBarNumber(barindex bar) const;
 	double			GetMeasureByBar(double bar) const;
-	unsigned int	GetBarNumberByMeasure(unsigned int measure) const;
+	barindex		GetBarNumberByMeasure(unsigned int measure) const;
 	double			GetBarByMeasure(double measure) const;
 	double			GetPosByBar(double bar) const;
 	int				GetBarByPos(double pos, int step = 4) const;
@@ -47,16 +47,16 @@ public:
 	void			SetResolution(double d);
 private:
 	/** @brief stores each bar count per measure */
-	unsigned int		barcount_[BmsConst::BAR_MAX_COUNT];
+	unsigned int	barcount_[BmsConst::BAR_MAX_COUNT];
 	/** @brief cached for fast bar/measure search <total bar / measure index> */
-	std::map<int, int>	barcache_;
+	std::map<barindex, int>	barcache_;
 	/** @brief calculate cache. called when you SetRatio() */
 	void InvalidateCache();
 	/*
 	 * @brief bars per measure.
 	 * basically it's value is BmsConst::MAX_BAR_CONST
 	 */
-	unsigned int barresolution_;
+	unsigned int	barresolution_;
 };
 
 #endif // BMSBEL_BAR_H_

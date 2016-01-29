@@ -136,8 +136,14 @@ BmsBms::Merge(const BmsBms& other)
 	}
 
 	// before channel merge, check resolution
-	// - fit to smallest one for safety (quality << safety)
-	// (TODO)
+	// other one is const, so there's only one way - match my resolution to others ...
+	if (other.bar_manager_.GetResolution() != bar_manager_.GetResolution()) {
+		double ratio = (double)other.bar_manager_.GetResolution() / bar_manager_.GetResolution();
+		bar_manager_.SetResolution(ratio);
+		for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
+
+		}
+	}
 
 	// merge channel
 	for (BmsChannelManager::ConstIterator it = other.channel_manager_.Begin(); it != other.channel_manager_.End(); ++it) {
@@ -148,6 +154,11 @@ BmsBms::Merge(const BmsBms& other)
 			++i;
 		}
 	}
+}
+
+void BmsBms::Training(int startbar, int endbar, int repeat)
+{
+
 }
 
 
@@ -349,7 +360,7 @@ int
 BmsBms::GetKey()
 {
 	bool isDouble = false;
-	int key = 5;
+	int key = 4;	// stepmania?
 	for (BmsChannelManager::ConstIterator it = GetChannelManager().Begin(); it != GetChannelManager().End(); ++it) {
 		// check 2P side
 		if (it->second->IsSecondPlayerChannel()) {
@@ -358,14 +369,14 @@ BmsBms::GetKey()
 
 		// check 5/7/9key area
 		if (it->second->Is5KeyChannel()) {
-			// key is already 5, so don't do anything
+			key = std::max(key, 5);
 		} else if (it->second->Is7KeyChannel()) {
 			key = std::max(key, 7);
 		} else if (it->second->Is9KeyChannel()) {
 			key = std::max(key, 9);
 		} else {
-			// unknown key ...?
-			key = 0;
+			// unknown channel, don't affect key size.
+			//key = 0;
 		}
 	}
 
@@ -455,7 +466,7 @@ BmsBms::InvalidateTimeTable()
 		}
 	}
 	for (auto it = GetSTPManager().Begin(); it != GetSTPManager().End(); ++it) {
-		unsigned int bar = GetBarManager().GetBarByMeasure(it->first);
+		barindex bar = GetBarManager().GetBarByMeasure(it->first);
 		BmsTime t(0, 0, time_manager_.GetBPMFromBar(bar));
 		t.stop = it->second / 1000.0;
 		time_manager_.Add(bar, t);
@@ -489,6 +500,15 @@ BmsBms::InvalidateTimeTable()
 		prevbar = it->first;
 		prevstmp = &it->second;
 	}
+}
+
+double BmsBms::GetEndTime() {
+	double t = 0;
+	for (auto it = time_manager_.Begin(); it != time_manager_.End(); ++it) {
+		t = std::max(t, it->second.time);
+	}
+	int lastbar = GetObjectExistsMaxBar();
+	return std::max(t, time_manager_.GetTimeFromBar(lastbar));
 }
 
 namespace {

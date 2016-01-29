@@ -51,11 +51,9 @@ double BmsTimeManager::GetBarFromTime(double time) {
 			double db_dt = (iternext_->first - iter_->first) / (IT(iternext_).time - IT(iter_).time - IT(iter_).stop);
 			return iter_->first + db_dt * (time - IT(iter_).time);
 		}
-		else if (IT(iternext_).time <= time && time < IT(iter_).time) {
-			// in case of negative BPM - bar is reversed
-			// there's no end - but we may can make assumption from last note's time(bar time).
-			// 
-		}
+		// in case of negative BPM - between positive & negative note are inaccessible (stepmania method)
+		// that is, position moves instantly. we don't need to care about that thing.
+		// basic algorithm processes acts like that way :)
 		++iternext_;
 		++iter_;
 	}
@@ -67,7 +65,7 @@ double BmsTimeManager::GetBarFromTime(double time) {
 	if (time >= row->time) {
 		double lasttime = time - row->time;
 		return array_.rbegin()->first
-			+ lasttime / 60 * row->bpm * bar_.GetResolution();
+			+ lasttime / 60 * row->bpm * bar_.GetResolution() / 4;
 	}
 	// if nothing found, then try again after Reset()
 	Reset();
@@ -84,7 +82,7 @@ double BmsTimeManager::GetTimeFromBar(double bar) {
 	// then no scroll
 	if (bar < array_.begin()->first)
 		return BEGIN(array_).time;
-	// if bigger then last data
+	// if bigger then last bar
 	// then calculate time from last BPM
 	// (time depends on BPM, regardless of measure ratio)
 	if (bar >= array_.rbegin()->first) {
@@ -153,4 +151,10 @@ double BmsTimeManager::GetMinBPM() {
 		bpm = std::min(bpm, IT(it).bpm);
 	}
 	return bpm;
+}
+
+void BmsTimeManager::SetRate(double freq) {
+	for (auto it = array_.begin(); it != array_.end(); ++it) {
+		it->second.time *= freq;
+	}
 }

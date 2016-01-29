@@ -129,15 +129,16 @@ namespace BmsParser {
 		}
 
 		// split lines
-		for (const char *p = text; p && !panic_; ) {
+		for (const char *p = text; p && !panic_;) {
+			// trim first
+			p = Trim(p);
+			// cut command
 			const char* pn = strchr(p, '\n');
 			std::string buf;
 			if (!pn)
 				buf.assign(p);
 			else
 				buf.assign(p, pn - p);
-			// trim first
-			p = Trim(p);
 			// trim end of the line
 			while (buf.size() > 0) {
 				if (buf.back() == '\r' || buf.back() == ' ' || buf.back() == '\t')
@@ -197,11 +198,12 @@ namespace BmsParser {
 		// reduce if measure is over 2147483647 / 10240 ~= 209715
 		// (or you may can use __int64 as index - but that might cause decrease of the performance)
 		//
+#ifndef BMSBEL_BAR_LARGEINT_
 		double sum_measure = 0;
 		for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++) {
 			sum_measure += bms_.GetBarManager().GetRatio(i);
 		}
-		while (sum_measure > 200000) {
+		while (sum_measure > INT_MAX / BmsConst::BAR_DEFAULT_RESOLUTION) {
 			double mul = 0.5;
 			bms_.GetBarManager().SetResolution(mul);
 			sum_measure *= mul;
@@ -211,6 +213,7 @@ namespace BmsParser {
 			bms_.GetBarManager().SetResolution(mul);
 			sum_measure *= mul;
 		}
+#endif
 
 		//
 		// third parsing
@@ -264,9 +267,9 @@ namespace BmsParser {
 			std::string starttag = syntax_tag_.back();
 			syntax_tag_.pop_back();
 			// check start ~ end tag matching
-			if (KEY("ENDIF") && starttag != "IF" ||
-				KEY("ENDSW") && starttag != "SWITCH" ||
-				KEY("ENDSW") && starttag != "SETSWITCH") {
+			if (!(KEY("ENDIF") && starttag == "IF" ||
+				KEY("ENDSW") && starttag == "SWITCH" ||
+				KEY("ENDSW") && starttag == "SETSWITCH")) {
 				WriteLogLine("%d line - start ~ end tag doesn't match.", line_);
 				panic_ = true;
 			}
@@ -295,13 +298,19 @@ namespace BmsParser {
 		for (auto it = syntax_line_data_.begin(); it != syntax_line_data_.end(); ++it) {
 			const char *p = it->c_str() + 1;
 			const char *sep = ParseSeparator(p);
-			if (!sep) sep = p;
-			std::string key_(p, sep - p);
-			std::string value_(sep + 1);
+			std::string key_, value_;
+			if (!sep) {
+				key_.assign(p);
+				value_ = "";
+			}
+			else {
+				key_.assign(p, sep - p);
+				value_.assign(sep + 1);
+			}
 			BmsUtil::StringToUpper(key_);
 			int num_ = atoi(value_.c_str());
 			if (key_ == "RANDOM" || key_ == "SETRANDOM" || key_ == "RONDOM" ||
-				key_ == "SWITCH" || key_ == "SEtSWITCH") {
+				key_ == "SWITCH" || key_ == "SETSWITCH") {
 				++syntax_depth_;
 				random_value_.push_back(-1);
 				condition_.push_back(0);
@@ -330,18 +339,14 @@ namespace BmsParser {
 				COND = 0;
 			}
 			else if (key_ == "CASE") {
-				if (!CONDMATCHED && CONDMATCH(num_))
-					COND = 1;
-				else
-					COND = 0;
+				COND |= CONDMATCH(num_);
 			}
 			else if (key_ == "SKIP") {
-				if (!CONDMATCHED)
-					COND = 1;
-				else
-					COND = 0;
+				// kind of `break`
+				COND = 0;
 			}
 			else if (key_ == "DEF") {
+				// kind of `default`
 				COND = 1;
 			}
 			else {

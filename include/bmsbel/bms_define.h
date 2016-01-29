@@ -70,5 +70,19 @@ namespace BmsBelOption {
 #define FOR_BUFFER_AVAILABLE_UPDATE(buffer, bar)\
 	for (; buffer.Current() != buffer.End() && buffer.Current()->first <= bar; buffer.Next())
 
+//
+// you can use BMSBEL BAR as LARGEINT(__int64)
+// - that may drop performance in game
+// - this option may gain more precision.
+// use this option at your own risk.
+//
+
+//#define BMSBEL_BAR_LARGEINT_
+
+#ifdef BMSBEL_BAR_LARGEINT_
+typedef __int64	barindex;
+#else
+typedef int		barindex;
+#endif
 
 #endif // BMSBEL_DEFINE_H_

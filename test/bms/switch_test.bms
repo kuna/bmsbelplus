@@ -1,0 +1,18 @@
+#TITLE test
+#BPM 120
+
+#SETSWITCH 1
+  #CASE 1
+    #00111:XX
+  #CASE 2
+    #00212:YY
+    #SKIP
+  #CASE 3
+    #00313:ZZ
+  #DEF
+    #00114:AA
+    #00115:BB
+#ENDSW
+
+; so, note count is 4 (DEF 2 + CASE 2)
+; and song should end at 2nd measure
