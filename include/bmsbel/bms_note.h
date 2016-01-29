@@ -52,7 +52,7 @@ public:
 	// iterator
 	typedef std::map<int, BmsNote>::iterator Iterator;
 	Iterator Begin() { return notes_.begin(); };
-	Iterator Begin(int bar) { return notes_.equal_range(bar).first; }
+	Iterator Begin(int bar);
 	Iterator End() { return notes_.end(); };
 #if 0
 	Iterator Next() { return ++iter_; };		// move inner iterator to next and return that iter.

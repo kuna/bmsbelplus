@@ -88,9 +88,8 @@ double BmsTimeManager::GetTimeFromBar(double bar) {
 	}
 	// else then linear assumption
 	// CAUTION: consider STOP time
-	auto iters = array_.equal_range(bar);
-	auto iter__ = iters.first;
-	auto iternext__ = iters.second;
+	auto iter__ = (--array_.equal_range(bar).second);
+	auto iternext__ = iter__;	iternext__++;
 	return IT(iter__).time + IT(iter__).stop +
 		(double)(bar - iter__->first) / (iternext__->first - iter__->first) *
 		(IT(iternext__).time - IT(iter__).time - IT(iter__).stop);
@@ -102,7 +101,13 @@ double BmsTimeManager::GetBPMFromTime(double time) {
 }
 
 double BmsTimeManager::GetBPMFromBar(double bar) {
-	return array_.equal_range(bar).first->second.bpm;
+	if (bar < 0) return array_.begin()->second.bpm;
+	/*
+	 * equal_range.first = return key-mapped-object if same key exists, return next when not.
+	 * equal_range.second = always return next object
+	 * so, --equal_range.second may be the best choice.
+	 */
+	return (--array_.equal_range(bar).second)->second.bpm;
 }
 
 namespace {

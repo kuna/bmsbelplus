@@ -91,7 +91,7 @@ namespace bmstest
 			 * - Registheader case (#bpm01) / #BPMxx test
 			 * - Measure length
 			 *
-			 * Note: Needs loading time about 110ms in Release mode
+			 * Note: Needs loading time about 80ms in Release mode
 			 * (previous version needs 700ms)
 			 */
 			BmsBms bms;
@@ -106,6 +106,7 @@ namespace bmstest
 			// bms length test
 			int lastbar = bms.GetObjectExistsMaxBar();
 			WriteLog("Last Bar : %d", lastbar);
+			WriteLog("Time: %d", int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 1000));
 			Assert::AreEqual(78270, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 100) * 10);
 		}
 

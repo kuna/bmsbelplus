@@ -48,6 +48,11 @@ void BmsNoteLane::GetNoteExistBar(std::set<int> &barmap) {
 	}
 }
 
+BmsNoteLane::Iterator BmsNoteLane::Begin(int bar) {
+	Iterator it = notes_.equal_range(bar).second;
+	if (it == notes_.begin()) return it;
+	else --it;
+}
 
 
 //

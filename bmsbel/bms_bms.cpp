@@ -431,6 +431,7 @@ BmsBms::InvalidateTimeTable()
 	//
 	ITER_CHANNEL(BmsChannelType::STOP, iter) {
 		BmsWord current_word(iter->second);
+		int bar_ = iter->first;
 		if (current_word == BmsWord::MIN) continue;
 		if (stop_sequence_table.find(current_word) == stop_sequence_table.end()) {
 			throw StopSequenceEntryNotExistException(current_word);
@@ -438,10 +439,11 @@ BmsBms::InvalidateTimeTable()
 		else {
 			// stop for 1 / 192 beat
 			// it doesn't consider the length(Ratio) of that measure.
-			double new_stop = (static_cast<double>(stop_sequence_table[current_word]) / 192.0 * 4.0) * (60.0 / bpm);
+			// IMPORTANT: STOP bpm is affect by CURRENT bar's BPM!
+			double bpm_ = time_manager_.GetBPMFromBar(bar_);
+			double new_stop = (static_cast<double>(stop_sequence_table[current_word]) / 192.0 * 4.0) * (60.0 / bpm_);
 			if (new_stop > 0) {
-				BmsTime t(0, 0, time_manager_.GetBPMFromBar(iter->first));
-				t.stop = new_stop;
+				BmsTime t(0, new_stop, bpm_);
 				time_manager_.Add(iter->first, t);
 			}
 		}
