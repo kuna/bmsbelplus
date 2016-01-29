@@ -142,6 +142,7 @@ namespace bmstest
 			WriteLog("NoteCount: %d", note.GetNoteCount());
 
 			int lastbar = bms.GetObjectExistsMaxBar();
+			// 97.846
 			WriteLog("Last Bar: %d", lastbar);
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
 		}

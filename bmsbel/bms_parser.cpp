@@ -62,6 +62,7 @@ namespace BmsParser {
 		log_.clear();
 
 		syntax_tag_.clear();
+		panic_ = false;
 	}
 
 #ifdef USE_MBCS
@@ -135,6 +136,8 @@ namespace BmsParser {
 				buf.assign(p);
 			else
 				buf.assign(p, pn - p);
+			// trim first
+			p = Trim(p);
 			// trim end of the line
 			while (buf.size() > 0) {
 				if (buf.back() == '\r' || buf.back() == ' ' || buf.back() == '\t')
@@ -142,11 +145,25 @@ namespace BmsParser {
 				else
 					break;
 			}
-			line_data_.push_back(buf);
+			/*
+			 * it's more easy and better to distinguish random statement in here
+			 */
+			if (IsRandomStatement(buf.c_str() + 1))
+				syntax_line_data_.push_back(buf);
+			else
+				line_data_.push_back(buf);
 			if (!pn) break;
 			p = pn + 1;
 		}
 		if (encodetext) delete encodetext;
+
+		// if there's panic in random statement,
+		// stop parsing
+		if (syntax_tag_.size() != 0) {
+			WriteLogLine("parsing error - statement hadn't finished completely.");
+			panic_ = true;
+		}
+		if (panic_) return false;
 
 		// parse lines
 		return ParseLines();
@@ -154,31 +171,9 @@ namespace BmsParser {
 
 	bool Parser::ParseLines() {
 		//
-		// first parsing
-		// - parse syntaxs first, and decide to process
-		//
-		line_ = 0;
-		for (auto it = line_data_.begin(); it != line_data_.end(); ++it) {
-			++line_;
-			const char *p = Trim(it->c_str());
-			if (!*p || IsComment(p)) continue;
-			//
-			// if that line is random statement,
-			// skip that from line_data_
-			// (TODO)
-			//
-			if (!ParseRandomStatement(p + 1))
-				return false;
-		}
-
-		//
 		// if we should parse syntax tree then do it
 		// if #IF ~ #ENDIF clause had failed, then panic! stop parsing bms.
 		//
-		if (syntax_tag_.size() != 0) {
-			WriteLogLine("parsing error - statement hadn't finished completely.");
-			return false;
-		}
 		if (info_.make_syntax_tree_)
 			ProcessRandomStatement();
 
@@ -243,7 +238,7 @@ namespace BmsParser {
 	//
 
 #define KEY(v) (key_ == (v))
-	bool Parser::ParseRandomStatement(const char* str) {
+	bool Parser::IsRandomStatement(const char* str) {
 		// we should parse a little(like if / endif clause)
 		// to know what part is syntax we're going to parse
 		const char *p = ParseSeparator(str);
@@ -252,16 +247,16 @@ namespace BmsParser {
 		BmsUtil::StringToUpper(key_);
 
 		if (KEY("RANDOM") || KEY("RONDOM") || KEY("SETRANDOM") || KEY("ENDRANDOM")) {
-			syntax_line_data_.push_back(str);
+			return true;
 		}
 		else if (KEY("IF") || KEY("SWITCH") || KEY("SETSWITCH")) {
-			syntax_line_data_.push_back(str);
 			syntax_tag_.push_back(key_);
+			return true;
 		}
 		else if (KEY("ENDIF") || KEY("ENDSW")) {
 			if (syntax_tag_.size() == 0) {
 				WriteLogLine("%d line - end tag without start tag", line_);
-				return false;
+				panic_ = true;
 			}
 			syntax_line_data_.push_back(str);
 			std::string starttag = syntax_tag_.back();
@@ -271,15 +266,14 @@ namespace BmsParser {
 				KEY("ENDSW") && starttag != "SWITCH" ||
 				KEY("ENDSW") && starttag != "SETSWITCH") {
 				WriteLogLine("%d line - start ~ end tag doesn't match.", line_);
-				return false;
+				panic_ = true;
 			}
+			return true;
 		}
 		else {
-			if (syntax_tag_.size()) {
-				syntax_line_data_.push_back(str);
-			}
+			if (syntax_tag_.size()) return true;
+			else return false;
 		}
-		return true;
 	}
 
 #define COND			(condition_[syntax_depth_])
@@ -297,9 +291,9 @@ namespace BmsParser {
 		condition_matched_.push_back(0);
 
 		for (auto it = syntax_line_data_.begin(); it != syntax_line_data_.end(); ++it) {
-			const char *p = it->c_str();
+			const char *p = it->c_str() + 1;
 			const char *sep = ParseSeparator(p);
-			if (!sep) continue;
+			if (!sep) sep = p;
 			std::string key_(p, sep - p);
 			std::string value_(sep + 1);
 			BmsUtil::StringToUpper(key_);

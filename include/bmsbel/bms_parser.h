@@ -46,7 +46,7 @@ namespace BmsParser {
 		// comment parsing (this function isn't actually called)
 		void ParseComment(const char* str);
 		// random statement parsing
-		bool ParseRandomStatement(const char* str);
+		bool IsRandomStatement(const char* str);
 		void ProcessRandomStatement();
 		// measure / header / regist parsing
 		void ParseMeasure(const char* str);
@@ -77,6 +77,10 @@ namespace BmsParser {
 		// check random statement
 		//
 		std::deque<std::string>		syntax_tag_;
+		//
+		// panic?
+		//
+		bool						panic_;
 	};
 }
 
