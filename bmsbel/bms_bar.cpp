@@ -3,15 +3,16 @@
 #include "bmsbel\bms_util.h"
 
 // -- BmsBarManager ------------------------------------------------------
-BmsBarManager::BmsBarManager(void)
+BmsBarManager::BmsBarManager()
 {
+	barresolution_ = BmsConst::BAR_DEFAULT_RESOLUTION;
 	Clear();
 }
 
 void BmsBarManager::Clear() {
 	// fill all array with default bar count
 	for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++)
-		barcount_[i] = BmsConst::BAR_DIVISION_COUNT_MAX;
+		barcount_[i] = barresolution_;
 	InvalidateCache();
 }
 
@@ -30,7 +31,7 @@ BmsBarManager::SetRatio(unsigned int pos, double l) {
 
 double 
 BmsBarManager::GetRatio(unsigned int pos) const {
-	return (double)barcount_[pos] / BmsConst::BAR_DIVISION_COUNT_MAX;
+	return (double)barcount_[pos] / barresolution_;
 }
 
 unsigned int
@@ -77,13 +78,13 @@ BmsBarManager::GetBarByMeasure(double pos) const
 
 double
 BmsBarManager::GetPosByBar(double bar) const {
-	return bar / BmsConst::BAR_DIVISION_COUNT_MAX;
+	return bar / barresolution_;
 }
 
 int
 BmsBarManager::GetBarByPos(double pos, int step) const {
 	// 0.5: an easy round function
-	return (int)(pos * step + 0.5) * BmsConst::BAR_DIVISION_COUNT_MAX / step;
+	return (int)(pos * step + 0.5) * barresolution_ / step;
 }
 
 unsigned int
@@ -101,6 +102,19 @@ BmsBarManager::GetDivision(const BmsBuffer& channelbuf, unsigned int measure) co
 		}
 	}
 	return barsize / step;
+}
+
+void
+BmsBarManager::SetResolution(double d)
+{
+	barresolution_ *= d;
+
+	// make every cache size reseted and InvalidateCache
+	for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++)
+		barcount_[i] *= d;
+
+	// invalidate cache
+	InvalidateCache();
 }
 
 //

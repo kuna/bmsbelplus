@@ -8,7 +8,7 @@
 #define RBEGIN(a) ((a).rbegin()->second)
 #define IT(a) ((a)->second)
 
-BmsTimeManager::BmsTimeManager() {
+BmsTimeManager::BmsTimeManager(BmsBarManager& bar_) : bar_(bar_) {
 	// add basic(120 BPM) time signature
 	array_[0] = BmsTime(0, 0, BmsConst::BMS_BASIC_BPM);
 }
@@ -50,7 +50,7 @@ double BmsTimeManager::GetBarFromTime(double time) {
 	if (time >= row->time) {
 		double lasttime = time - row->time;
 		return array_.rbegin()->first
-			+ lasttime / 60 * row->bpm * BmsConst::BAR_DIVISION_COUNT_MAX;
+			+ lasttime / 60 * row->bpm * bar_.GetResolution();
 	}
 	// else then linear assumption
 	for (; iternext_ != array_.end();) {
@@ -84,7 +84,7 @@ double BmsTimeManager::GetTimeFromBar(double bar) {
 	if (bar >= array_.rbegin()->first) {
 		double lastbar = bar - array_.rbegin()->first;
 		return RBEGIN(array_).time
-			+ lastbar / BmsConst::BAR_DIVISION_COUNT_MAX * 4 / RBEGIN(array_).bpm * 60;
+			+ lastbar / bar_.GetResolution() * 4 / RBEGIN(array_).bpm * 60;
 	}
 	// else then linear assumption
 	// CAUTION: consider STOP time

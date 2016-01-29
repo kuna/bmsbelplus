@@ -76,7 +76,11 @@ public:
 	// <barpos, notecount(1)>
 	// use iterator to get note existing bar
 	void GetNoteExistBar(std::set<int> &barmap);
-	int GetNoteCount() { return notes_.size(); }
+	int GetNoteCount(
+		bool countLNend = true, 
+		bool countPress = true, 
+		bool countInvisible = false
+	);
 private:
 	// data
 	std::map<int, BmsNote> notes_;
@@ -101,7 +105,11 @@ private:
 	BmsNoteLane lanes_[_MAX_NOTE_LANE];
 public:
 	// about note metadata
-	int GetNoteCount();
+	int GetNoteCount(
+		bool countLNend = true,
+		bool countPress = true,
+		bool countInvisible = false
+	);
 	// @DEPRECIATED. use BmsBms::GetKeys() method.
 	int GetKeys();
 	// <barpos, notecount(1)>

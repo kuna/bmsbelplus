@@ -181,6 +181,31 @@ namespace BmsParser {
 		}
 
 		//
+		// before parse objects, we have to check resolution of the bar...
+		// if total sum of the measure is too big, we have to decrease resolution.
+		// if too small, then increase resolution.
+		//
+		// reduce if measure is over 2147483647 / 10240 ~= 209715
+		// (or you may can use __int64 as index - but that might cause decrease of the performance)
+		//
+		double sum_measure = 0;
+		for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++) {
+			sum_measure += bms_.GetBarManager().GetRatio(i);
+		}
+		while (sum_measure > 200000) {
+			double mul = 0.5;
+			if (sum_measure > 500000) mul = 0.2;
+			bms_.GetBarManager().SetResolution(mul);
+			sum_measure *= mul;
+		}
+		while (sum_measure < 500) {
+			double mul = 2;
+			if (sum_measure < 10) mul = 5;
+			bms_.GetBarManager().SetResolution(mul);
+			sum_measure *= mul;
+		}
+
+		//
 		// third parsing
 		// - parse objects and add them to buffer
 		//
@@ -405,7 +430,8 @@ namespace BmsParser {
 	void Parser::ParseObjectArray(const char* str) {
 		if (!IsBar(str)) return;
 		// if channel is 02 then ignore
-		int channel = atoi(str + 3);
+		
+		BmsWord channel = BmsWord(std::string(str + 3, 2));
 		if (channel == 2) return;
 		int bar_ = atoi(std::string(str, 3).c_str());
 		const char* value_s_ = ParseColon(str);

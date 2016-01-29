@@ -1,5 +1,6 @@
 #include "bms_define.h"
 #include "bms_word.h"
+#include "bms_bar.h"
 #include <map>
 
 /*
@@ -29,7 +30,7 @@ struct BmsTime {
  */
 class BmsTimeManager {
 public:
-	BmsTimeManager();
+	BmsTimeManager(BmsBarManager &bar_);
 
 	void Clear();
 	/** @brief Resets private iterator. Automatically called. */
@@ -56,6 +57,9 @@ public:
 	double			GetMaxBPM();
 	double			GetMinBPM();
 private:
+	// bar is somtimes necessary
+	BmsBarManager& bar_;
+
 	// std::pair<bar number / time related object>
 	std::map<int, BmsTime> array_;
 

@@ -29,7 +29,7 @@
 
 class BmsBuffer {
 public:
-	BmsBuffer(int length = BmsConst::BAR_DIVISION_COUNT_MAX);
+	BmsBuffer();
 	BmsBuffer(int length, const std::string& input);
 
 	virtual ~BmsBuffer();
@@ -52,13 +52,12 @@ public:
 	virtual void Merge(const BmsBuffer& buffer);
 	/** @brief merge buffer data from start position (it doesn't make buffer longer) */
 	virtual void Merge(unsigned int start, const BmsBuffer& buffer);
-	/** @brief insert buffer data (it WILL make buffer longer) */
-	virtual void Append(const BmsBuffer& buffer);
 	/** @brief cut note data at from ~ to position */
 	BmsBuffer SubBuffer(unsigned int from, unsigned int length) const;
 
 	bool Contains(const BmsWord &word) const;
 
+	/** @depreciated */
 	void MagnifyBy(unsigned int multiplier);
 
 	std::string ToString(void) const;
@@ -79,8 +78,6 @@ public:
 private:
 	/** @brief contains (bar index, keyvalue) */
 	std::map<int, BmsWord> array_;
-	/** @brief indicates bar's total size. used for Append/Insert. */
-	int length_;
 	/** @brief current bar's position. used for finding / iterating. */
 	Iterator iter_;
 };

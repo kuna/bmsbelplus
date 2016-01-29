@@ -66,7 +66,8 @@ namespace bmstest
 		TEST_METHOD(BIG_BMS_Test) {
 			/*
 			 * Test part
-			 * - Very Large bms file (note 32xxx)
+			 * - Very Large bms file (note 1024000 ?)
+			 * - Extreme large measure ratio & count (256 * 1000)
 			 *
 			 * Note: Needs loading time about 3 sec in Release mode
 			 * (previous version needs 700ms)
@@ -78,22 +79,31 @@ namespace bmstest
 			BmsNoteManager note;
 			bms.GetNoteData(note);
 			WriteLog("NoteCount: %d", note.GetNoteCount());
+
+			int lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %d", lastbar);
+			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar)); 
 		}
 
 		// test various bar size
 		TEST_METHOD(BIG_BMS_Test2) {
 			/*
 			 * Test part
-			 * - Large bms file (note 32xxx)
+			 * - Large bms file (note 32678)
 			 * - Registheader case (#bpm01) / #BPMxx test
 			 * - Measure length
 			 *
-			 * Note: Needs loading time about 70ms in Release mode
+			 * Note: Needs loading time about 110ms in Release mode
 			 * (previous version needs 700ms)
 			 */
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\L99999999.bme";				// this BMS should be loaded about 700ms 
 			bms.LoadBmsFile(filename);
+
+			BmsNoteManager note;
+			bms.GetNoteData(note);
+			//WriteLog("NoteCount: %d", note.GetNoteCount());
+			Assert::AreEqual(32678, note.GetNoteCount());
 
 			// bms length test
 			int lastbar = bms.GetObjectExistsMaxBar();
@@ -102,13 +112,51 @@ namespace bmstest
 		}
 
 		TEST_METHOD(BMS_STOP_Test) {
-			// bms length test
+			/* < BMS art >
+			 * Test part
+			 * - STOP / sudden BPM change
+			 * - BMS Length test
+			 * - Longnote
+			 */
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\engine_XYZ.bms";
+			bms.LoadBmsFile(filename);
+
+			int lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %d", lastbar);
+			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
+		}
+
+		TEST_METHOD(BMS_Random_Test) {
+			/* 
+			 * Test part
+			 * - RANDOM
+			 * - Length (it has regular song length)
+			 */
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\__litmus_slotmachine_foon.bme";
+			bms.LoadBmsFile(filename);
+
+			int lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %d", lastbar);
+			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
 		}
 
 		TEST_METHOD(BMS_Nested_Random_Test) {
 		}
 
+		TEST_METHOD(BMS_Switch_Test) {
+			/*
+			 * Test part
+			 * - SWITCH ~ ENDSW part
+			 */
+		}
+
 		TEST_METHOD(BMS_Note_Test) {
+			/*
+			 * Test part
+			 * - Longnote count
+			 */
 			// bms note count test
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\47_LNM(TEN).bml";
@@ -118,15 +166,10 @@ namespace bmstest
 			bms.GetNoteData(bmsnote);
 
 			// previous method: 2159 notes
-			// TODO new method(2combo per LN) ... we don't prepared about this.
-			//Assert::AreEqual(2159, bmsnote.GetNoteCount());
+			// new method (count LNEND): 2971 notes
+			//Assert::AreEqual(2159, bmsnote.GetNoteCount(false, false));
+			Assert::AreEqual(2971, bmsnote.GetNoteCount());
 			WriteLog("Note count: %d", bmsnote.GetNoteCount());
 		}
-
-		/*
-		 * STP test
-		 * RANDOM test (song length)
-		 * 
-		 */
 	};
 }

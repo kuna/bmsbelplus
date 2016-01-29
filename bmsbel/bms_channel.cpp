@@ -430,7 +430,7 @@ BmsChannelManager::GetObjectExistsMaxPosition(void) const
 int
 BmsChannelManager::GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction func) const
 {
-	int pos = -1;
+	int pos = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
 		if ((it->second->*func)()) {
 			int tmp = it->second->GetObjectExistsMaxPosition(pos > 0 ? pos : 0);

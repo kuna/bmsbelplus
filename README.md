@@ -88,7 +88,7 @@ bms.GetNoteData(note);
 int tick = GetTick();
 
 int bar = bms.GetTimeManager().GetBarFromTime(tick);
-for (auto it = note[lane].Get(bar); it != note[lane].End(); ++it) {
+for (auto it = note[lane].Begin(bar); it != note[lane].End(); ++it) {
   int pos = bms.GetBarManager().GetPosFromBar(it->first);
   if (pos > screen_height) break;
   RenderNote(lane, pos);

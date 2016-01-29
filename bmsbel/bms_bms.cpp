@@ -10,13 +10,16 @@
 #include <algorithm>
 
 #define ITER_CHANNEL(channel, iter)\
+	if (GetChannelManager().Contains(channel))\
 	for (auto iter = GetChannelManager()[channel].GetBuffer().Begin(); iter != GetChannelManager()[channel].GetBuffer().End(); ++iter)
 
 BmsBms::BmsBms(void) :
 headers_(),
 array_set_(),
 channel_manager_(),
-bar_manager_()
+bar_manager_(),
+time_manager_(bar_manager_),
+stp_manager_()
 {
 	// STP is parsed using BmsSTPManager
 	array_set_.MakeNewArray("WAV");
@@ -182,7 +185,7 @@ BmsBms::ToString(void) const
 			for (BmsChannel::ConstIterator current_buffer = current_channel.Begin(); current_buffer != current_channel.End(); ++current_buffer) {
 				// get GCD for current measure
 				int division = bar_manager_.GetDivision(**current_buffer, i);
-				int step = BmsConst::BAR_DIVISION_COUNT_MAX / division;
+				int step = bar_manager_.GetResolution() / division;
 				std::string object_array_str;
 				for (unsigned int k = pos; k < pos + current_bar_count; k += step) {
 					object_array_str.append((**current_buffer).Get(k).ToString());
@@ -463,12 +466,12 @@ BmsBms::InvalidateTimeTable()
 			double stop = prevstmp->stop;
 			double bpm = prevstmp->bpm;
 			/*
-			* BPM: 4 measure( == 1 beat) per minute
-			* - convert measure to beat (divide by 4)
-			* - convert bpm to spb (second per beat)
-			*/
+			 * BPM: 4 measure( == 1 beat) per minute
+			 * - convert measure to beat (divide by 4)
+			 * - convert bpm to spb (second per beat)
+			 */
 			totaltime += stop +
-				(60.0 / bpm) * ((double)eslapedbar / BmsConst::BAR_DIVISION_COUNT_MAX * 4.0);
+				(60.0 / bpm) * ((double)eslapedbar / bar_manager_.GetResolution() * 4.0);
 			it->second.time = totaltime;
 		}
 		prevbar = it->first;
@@ -518,15 +521,16 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 
 	// fill note data
 	BmsNote* channelLastNote[BmsConst::WORD_MAX_COUNT] = { 0, };
-	for (int c = 0; c < 32; c++) if (c % 16 < 10) {
+	for (int c = 0; c < 72; c++) if (c % 36 < 10) {
 		// normal note (#LNOBJ)
-		if (channel_manager_.Contains(c + 16)) {	// 11 ~ 29
-			int channel = c + 16;
+		if (channel_manager_.Contains(c + 36)) {	// 11 ~ 29
+			int channel = c + 36;
 			int laneidx = GetLaneIndex(channel);
 			int prev = 0;	// where previous note existed bar
 			ITER_CHANNEL(channel, iter) {
 				int bar = iter->first;
 				BmsWord current_word(iter->second);
+				if (current_word == BmsWord::MIN) continue;
 				if (current_word == lnobj_word && prev) {
 					// it means end of the longnote
 					// if previous longnote not exists, then don't make it longnote (wrong BMS)
@@ -545,15 +549,15 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			}
 		}
 		// long note (#LNTYPE)
-		if (channel_manager_.Contains(c + 80)) {	// 51 ~ 69
-			int channel = c + 80;
+		if (channel_manager_.Contains(c + 5 * 36)) {	// 51 ~ 69
+			int channel = c + 5 * 36;
 			int laneidx = GetLaneIndex(channel);
 			bool isln = false;
 			int step;	// used to find #LN
 			ITER_CHANNEL(channel, iter) {
 				int bar = iter->first;
 				BmsWord current_word(iter->second);
-				if (!isln) {
+				if (!isln && current_word != BmsWord::MIN) {
 					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNSTART, current_word));
 				}
 				else {
@@ -561,25 +565,42 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 						// if next note exists or not 00
 						// then it's PRESS note(HELL CHARGE)
 						auto iternext = iter; ++iternext;
-						if (iternext != GetChannelManager()[channel].GetBuffer().End() && iternext->second != BmsWord(0)) {
+						if (iternext != GetChannelManager()[channel].GetBuffer().End() && iternext->second != BmsWord::MIN) {
 							note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_PRESS, current_word));
+							continue;
 						}
 						else {
 							note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
 						}
+					}
+					else {
+						if (current_word == BmsWord::MIN) continue;
+						note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
 					}
 				}
 				isln = !isln;
 			}
 		}
 		// mine note
-		if (channel_manager_.Contains(c + 64)) {
-			int channel = c + 80;
+		if (channel_manager_.Contains(c + 13 * 36)) {	// D1 ~ E9
+			int channel = c + 13 * 36;
 			int laneidx = GetLaneIndex(channel);
 			ITER_CHANNEL(channel, iter) {
 				int bar = iter->first;
 				BmsWord current_word(iter->second);
+				if (current_word == BmsWord::MIN) continue;
 				note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_MINE, current_word));
+			}
+		}
+		// invisible note
+		if (channel_manager_.Contains(c + 3 * 36)) {	// 31 ~ 49
+			int channel = c + 3 * 36;
+			int laneidx = GetLaneIndex(channel);
+			ITER_CHANNEL(channel, iter) {
+				int bar = iter->first;
+				BmsWord current_word(iter->second);
+				if (current_word == BmsWord::MIN) continue;
+				note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_HIDDEN, current_word));
 			}
 		}
 	}

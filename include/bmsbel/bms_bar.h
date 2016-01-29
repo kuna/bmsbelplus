@@ -41,6 +41,10 @@ public:
 
 	/** @brief returns division(step) of measure */
 	unsigned int	GetDivision(const BmsBuffer& channelbuf, unsigned int measure) const;
+	/** @brief get resolution of bar */
+	unsigned int	GetResolution() const { return barresolution_; }
+	/** @brief set resolution of bar */
+	void			SetResolution(double d);
 private:
 	/** @brief stores each bar count per measure */
 	unsigned int		barcount_[BmsConst::BAR_MAX_COUNT];
@@ -48,6 +52,11 @@ private:
 	std::map<int, int>	barcache_;
 	/** @brief calculate cache. called when you SetRatio() */
 	void InvalidateCache();
+	/*
+	 * @brief bars per measure.
+	 * basically it's value is BmsConst::MAX_BAR_CONST
+	 */
+	unsigned int barresolution_;
 };
 
 #endif // BMSBEL_BAR_H_

@@ -19,6 +19,29 @@ value(value) {}
 // BmsNoteLane
 //
 
+int BmsNoteLane::GetNoteCount(bool countLNend, bool countPress, bool countInvisible) {
+	int r = 0;
+	for (auto it = Begin(); it != End(); ++it) {
+		switch (it->second.type) {
+		case BmsNote::NOTE_LNEND:
+			if (countLNend) r++;
+			break;
+		case BmsNote::NOTE_PRESS:
+			if (countPress) r++;
+			break;
+		case BmsNote::NOTE_HIDDEN:
+			if (countInvisible) r++;
+			break;
+		case BmsNote::NOTE_MINE:
+		case BmsNote::NOTE_NONE:
+			break;
+		default:
+			r++;
+		}
+	}
+	return r;
+}
+
 void BmsNoteLane::GetNoteExistBar(std::set<int> &barmap) {
 	for (Iterator i = Begin(); i != End(); ++i) {
 		barmap.insert(i->first);
@@ -31,10 +54,10 @@ void BmsNoteLane::GetNoteExistBar(std::set<int> &barmap) {
 // BmsNoteManager
 //
 
-int BmsNoteManager::GetNoteCount() {
+int BmsNoteManager::GetNoteCount(bool countLNend, bool countPress, bool countInvisible) {
 	int cnt = 0;
 	for (int i = 0; i < _MAX_NOTE_LANE; i++) {
-		cnt += lanes_[i].GetNoteCount();
+		cnt += lanes_[i].GetNoteCount(countLNend, countPress, countInvisible);
 	}
 	return cnt;
 }
@@ -384,7 +407,8 @@ void BmsNoteManager::SP_TO_DP(unsigned int seed) {
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
 		int bar = *it;
-		if (bar % BmsConst::BAR_DIVISION_COUNT_MAX == 0) {
+		// TODO: add cached pos/beat to note object
+		if (bar % BmsConst::BAR_DEFAULT_RESOLUTION == 0) {
 			// if not during LN && okay
 			// then mangle mapping
 			mapping[0] = (rand() % 2) * 10;

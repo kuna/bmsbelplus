@@ -6,14 +6,12 @@
 #include "bmsbel\bms_word.h"
 
 
-BmsBuffer::BmsBuffer(int length)
+BmsBuffer::BmsBuffer()
 {
-	length_ = length;
 }
 
 BmsBuffer::BmsBuffer(int length, const std::string& input)
 {
-	length_ = length;
 	if (input.size() % 2 == 1) {
 		throw BmsInvalidStringConvertedAsBufferException(input);
 	}
@@ -22,7 +20,7 @@ BmsBuffer::BmsBuffer(int length, const std::string& input)
 	// previous method was very bad in precision.
 	const char* p = input.c_str();
 	for (unsigned int i = 0; i < input.size() / 2; i++) {
-		int ai = length_ * i / (input.size() / 2);
+		int ai = length * i / (input.size() / 2);
 		array_[ai] = BmsWord(p);
 		p += 2;
 	}
@@ -97,15 +95,10 @@ BmsBuffer::Merge(unsigned int start, const BmsBuffer& buffer)
 	}
 }
 
-void BmsBuffer::Append(const BmsBuffer& buffer) {
-	length_ += buffer.GetLength();
-	Merge(GetLength(), buffer);
-}
-
 BmsBuffer
 BmsBuffer::SubBuffer(unsigned int from, unsigned int length) const
 {
-	BmsBuffer buf(length);
+	BmsBuffer buf;
 	for (unsigned int i = 0; i < length; ++i) {
 		BmsWord w = Get(from + i);
 		if (w != BmsWord::MIN)
@@ -131,7 +124,6 @@ BmsBuffer::MagnifyBy(unsigned int multiplier)
 	// COMMENT: we may can optimize this routine,
 	// like only changing key number.
 	int old_length = static_cast<int>(this->GetLength());
-	length_ *= multiplier;
 	for (int i = old_length - 1; i > 0; --i) {
 		array_[i * multiplier] = array_[i];
 		DeleteAt(i);
