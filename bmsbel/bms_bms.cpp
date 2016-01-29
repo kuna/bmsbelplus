@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #define ITER_CHANNEL(channel, iter)\
-	if (GetChannelManager().Contains(channel))\
+	if (GetChannelManager().IsExists(channel))\
 	for (auto iter = GetChannelManager()[channel].GetBuffer().Begin(); iter != GetChannelManager()[channel].GetBuffer().End(); ++iter)
 
 BmsBms::BmsBms(void) :
@@ -134,6 +134,10 @@ BmsBms::Merge(const BmsBms& other)
 	for (auto it = other.stp_manager_.Begin(); it != other.stp_manager_.End(); ++it) {
 		stp_manager_.Add(it->first, it->second);
 	}
+
+	// before channel merge, check resolution
+	// - fit to smallest one for safety (quality << safety)
+	// (TODO)
 
 	// merge channel
 	for (BmsChannelManager::ConstIterator it = other.channel_manager_.Begin(); it != other.channel_manager_.End(); ++it) {
@@ -523,7 +527,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 	BmsNote* channelLastNote[BmsConst::WORD_MAX_COUNT] = { 0, };
 	for (int c = 0; c < 72; c++) if (c % 36 < 10) {
 		// normal note (#LNOBJ)
-		if (channel_manager_.Contains(c + 36)) {	// 11 ~ 29
+		if (channel_manager_.IsExists(c + 36)) {	// 11 ~ 29
 			int channel = c + 36;
 			int laneidx = GetLaneIndex(channel);
 			int prev = 0;	// where previous note existed bar
@@ -549,7 +553,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			}
 		}
 		// long note (#LNTYPE)
-		if (channel_manager_.Contains(c + 5 * 36)) {	// 51 ~ 69
+		if (channel_manager_.IsExists(c + 5 * 36)) {	// 51 ~ 69
 			int channel = c + 5 * 36;
 			int laneidx = GetLaneIndex(channel);
 			bool isln = false;
@@ -582,7 +586,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			}
 		}
 		// mine note
-		if (channel_manager_.Contains(c + 13 * 36)) {	// D1 ~ E9
+		if (channel_manager_.IsExists(c + 13 * 36)) {	// D1 ~ E9
 			int channel = c + 13 * 36;
 			int laneidx = GetLaneIndex(channel);
 			ITER_CHANNEL(channel, iter) {
@@ -593,7 +597,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			}
 		}
 		// invisible note
-		if (channel_manager_.Contains(c + 3 * 36)) {	// 31 ~ 49
+		if (channel_manager_.IsExists(c + 3 * 36)) {	// 31 ~ 49
 			int channel = c + 3 * 36;
 			int laneidx = GetLaneIndex(channel);
 			ITER_CHANNEL(channel, iter) {

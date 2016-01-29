@@ -256,9 +256,13 @@ bool BmsUtil::convert_to_utf8(const char *org, char *out, const char *encoding, 
 	size_t len_out = maxlen;
 
 	int r = iconv(cd, &buf_iconv, &len_in, &but_out_iconv, &len_out);
-	if ((int)r == -1)
-		return false;
 	*but_out_iconv = 0;
+	if ((int)r == -1) {
+#ifdef _DEBUG
+		int e = errno;
+#endif
+		return false;
+	}
 
 	return true;
 }

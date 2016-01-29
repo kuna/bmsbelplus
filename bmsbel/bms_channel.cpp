@@ -401,6 +401,11 @@ BmsChannelManager::Clear(void)
 	channels_.clear();
 }
 
+bool
+BmsChannelManager::IsExists(const BmsWord channel) const
+{
+	return channels_.find(channel) != channels_.end();
+}
 
 bool
 BmsChannelManager::Contains(const BmsWord& word) const

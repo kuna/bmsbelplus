@@ -82,6 +82,7 @@ public:
 
 	void Clear(void);
 
+	bool IsExists(const BmsWord channel) const;
 	bool Contains(const BmsWord &word) const;
 	bool Contains(const BmsWord &word, BmsChannelConditionJudgeFunction func) const;
 

@@ -62,7 +62,6 @@ namespace bmstest
 			Assert::AreEqual(204507, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 1000));
 		}
 
-
 		TEST_METHOD(BIG_BMS_Test) {
 			/*
 			 * Test part
@@ -85,7 +84,6 @@ namespace bmstest
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar)); 
 		}
 
-		// test various bar size
 		TEST_METHOD(BIG_BMS_Test2) {
 			/*
 			 * Test part
@@ -136,6 +134,11 @@ namespace bmstest
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\__litmus_slotmachine_foon.bme";
 			bms.LoadBmsFile(filename);
+
+			// notecount should vary at every test
+			BmsNoteManager note;
+			bms.GetNoteData(note);
+			WriteLog("NoteCount: %d", note.GetNoteCount());
 
 			int lastbar = bms.GetObjectExistsMaxBar();
 			WriteLog("Last Bar: %d", lastbar);

@@ -17,7 +17,8 @@ namespace BmsParser {
 	namespace {
 		// simple utils
 		const char* Trim(const char* str) {
-			while (*str == ' ' || *str == '\t') ++str;
+			while ((*str == ' ' || *str == '\t')
+				&& *str != 0) ++str;
 			return str;
 		}
 		const char* ParseSeparator(const char* str) {
@@ -69,7 +70,8 @@ namespace BmsParser {
 		if (_wfopen_s(&fp, path, L"rb") == 0) {
 			// read whole file (about limit to 10mb)
 			char *buf = new char[1024 * 1024 * 10];
-			fread(buf, 1, 1024 * 1024 * 10, fp);
+			int l = fread(buf, 1, 1024 * 1024 * 10, fp);
+			buf[l] = 0;
 			// parse
 			bool r = Parse(buf);
 			// cleanup
@@ -89,7 +91,8 @@ namespace BmsParser {
 		if (fopen_s(&fp, path, "rb") == 0) {
 			// read whole file (about limit to 10mb)
 			char *buf = new char[1024 * 1024 * 10];
-			fread(buf, 1, 1024 * 1024 * 10, fp);
+			int l = fread(buf, 1, 1024 * 1024 * 10, fp);
+			buf[l] = 0;
 			// parse
 			bool r = Parse(buf);
 			// cleanup
@@ -113,9 +116,15 @@ namespace BmsParser {
 		char* encodetext = 0;
 		if (!BmsUtil::IsUTF8(text)) {
 			encodetext = new char[1024 * 1024 * 10];
-			BmsUtil::convert_to_utf8(text, encodetext,
+			bool r = BmsUtil::convert_to_utf8(text, encodetext,
 				BmsBelOption::DEFAULT_FALLBACK_ENCODING, 1024 * 1024 * 10);
-			text = encodetext;
+			if (!r) {
+				delete encodetext;
+				encodetext = 0;
+			}
+			else {
+				text = encodetext;
+			}
 		}
 
 		// split lines
@@ -194,13 +203,11 @@ namespace BmsParser {
 		}
 		while (sum_measure > 200000) {
 			double mul = 0.5;
-			if (sum_measure > 500000) mul = 0.2;
 			bms_.GetBarManager().SetResolution(mul);
 			sum_measure *= mul;
 		}
 		while (sum_measure < 500) {
 			double mul = 2;
-			if (sum_measure < 10) mul = 5;
 			bms_.GetBarManager().SetResolution(mul);
 			sum_measure *= mul;
 		}
@@ -420,7 +427,7 @@ namespace BmsParser {
 			WriteLogLine("line %d - cannot parse measure length (%s)", line_, str);
 			return;
 		}
-		double value_ = atof(Trim(++value_s_));
+		double value_ = atof(Trim(value_s_));
 		bms_.GetBarManager().SetRatio(bar_, value_);
 	}
 
