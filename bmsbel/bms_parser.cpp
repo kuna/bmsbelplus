@@ -42,7 +42,7 @@ namespace BmsParser {
 		}
 	}
 
-	Parser::Parser(BmsBms& bms) : Parser(bms, {true, rand()}) {}
+	Parser::Parser(BmsBms& bms) : Parser(bms, {true, time(0)}) {}
 	Parser::Parser(BmsBms& bms, ParsingInfo info_) : bms_(bms), info_(info_) { Clear(); }
 
 	void Parser::WriteLogLine(const char* t, ...) {
@@ -162,6 +162,11 @@ namespace BmsParser {
 			++line_;
 			const char *p = Trim(it->c_str());
 			if (!*p || IsComment(p)) continue;
+			//
+			// if that line is random statement,
+			// skip that from line_data_
+			// (TODO)
+			//
 			if (!ParseRandomStatement(p + 1))
 				return false;
 		}
@@ -242,8 +247,9 @@ namespace BmsParser {
 		// we should parse a little(like if / endif clause)
 		// to know what part is syntax we're going to parse
 		const char *p = ParseSeparator(str);
-		if (!p) key_ = "";
+		if (!p) key_ = str;
 		else key_.assign(str, p - str);
+		BmsUtil::StringToUpper(key_);
 
 		if (KEY("RANDOM") || KEY("RONDOM") || KEY("SETRANDOM") || KEY("ENDRANDOM")) {
 			syntax_line_data_.push_back(str);
@@ -296,6 +302,7 @@ namespace BmsParser {
 			if (!sep) continue;
 			std::string key_(p, sep - p);
 			std::string value_(sep + 1);
+			BmsUtil::StringToUpper(key_);
 			int num_ = atoi(value_.c_str());
 			if (key_ == "RANDOM" || key_ == "SETRANDOM" || key_ == "RONDOM" ||
 				key_ == "SWITCH" || key_ == "SEtSWITCH") {
@@ -346,6 +353,7 @@ namespace BmsParser {
 				if (COND)
 					line_data_.push_back(*it);
 			}
+			CONDMATCHED += COND;
 		}
 
 		// after processing, clear syntax_line_data_
