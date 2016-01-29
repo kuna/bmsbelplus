@@ -29,9 +29,9 @@ public:
 
 	bool Contains(const BmsWord &word) const;
 
-	int GetObjectExistsMaxPosition(unsigned int start) const;
+	barindex GetObjectExistsMaxPosition(barindex start) const;
 
-	void MultiplyBarDivisionCount(unsigned int multiplier);
+	void MultiplyBarDivisionCount(double multiplier);
 
 	bool IsChannel() const;
 	bool IsWavChannel(void) const;
@@ -86,10 +86,10 @@ public:
 	bool Contains(const BmsWord &word) const;
 	bool Contains(const BmsWord &word, BmsChannelConditionJudgeFunction func) const;
 
-	int GetObjectExistsMaxPosition(void) const;
-	int GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction func) const;
+	barindex GetObjectExistsMaxPosition(void) const;
+	barindex GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction func) const;
 
-	void MultiplyBarDivisionCount(unsigned int multiplier);
+	void MultiplyBarDivisionCount(double multiplier);
 
 	// -- Iterator ---------------------------------------------------------
 	typedef std::map<BmsWord, BmsChannel*>::iterator Iterator;

@@ -98,13 +98,13 @@ BmsChannel::Contains(const BmsWord &word) const
 
 
 
-int
-BmsChannel::GetObjectExistsMaxPosition(unsigned int start) const
+barindex
+BmsChannel::GetObjectExistsMaxPosition(barindex start) const
 {
-	int pos = 0;
+	barindex pos = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
 		if (!(*it)->GetCount()) continue;
-		int tmp = (--(*it)->End())->first;
+		barindex tmp = (--(*it)->End())->first;
 		if (tmp > pos) {
 			pos = tmp;
 		}
@@ -114,7 +114,7 @@ BmsChannel::GetObjectExistsMaxPosition(unsigned int start) const
 
 
 void
-BmsChannel::MultiplyBarDivisionCount(unsigned int multiplier)
+BmsChannel::MultiplyBarDivisionCount(double multiplier)
 {
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
 		(*it)->MagnifyBy(multiplier);
@@ -426,19 +426,19 @@ BmsChannelManager::Contains(const BmsWord& word, BmsChannelConditionJudgeFunctio
 }
 
 
-int
+barindex
 BmsChannelManager::GetObjectExistsMaxPosition(void) const
 {
 	return this->GetObjectExistsMaxPosition(&BmsChannel::IsChannel);
 }
 
-int
+barindex
 BmsChannelManager::GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction func) const
 {
-	int pos = 0;
+	barindex pos = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
 		if ((it->second->*func)()) {
-			int tmp = it->second->GetObjectExistsMaxPosition(pos > 0 ? pos : 0);
+			barindex tmp = it->second->GetObjectExistsMaxPosition(pos > 0 ? pos : 0);
 			if (tmp > pos) {
 				pos = tmp;
 			}
@@ -449,7 +449,7 @@ BmsChannelManager::GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction f
 
 
 void
-BmsChannelManager::MultiplyBarDivisionCount(unsigned int multiplier)
+BmsChannelManager::MultiplyBarDivisionCount(double multiplier)
 {
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
 		it->second->MultiplyBarDivisionCount(multiplier);

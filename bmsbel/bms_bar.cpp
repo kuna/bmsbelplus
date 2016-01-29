@@ -37,8 +37,8 @@ BmsBarManager::GetRatio(unsigned int pos) const {
 barindex
 BmsBarManager::GetBarNumberByMeasure(unsigned int pos) const
 {
-	unsigned int current = 0;
-	for (unsigned int i = 0; i < pos; ++i) {
+	barindex current = 0;
+	for (barindex i = 0; i < pos; ++i) {
 		current += barcount_[i];
 	}
 	return current;
@@ -68,7 +68,7 @@ double
 BmsBarManager::GetBarByMeasure(double pos) const
 {
 	if (pos < 0) return 0;
-	unsigned int current = 0;
+	double current = 0;
 	unsigned int m = 0;
 	for (; m <= pos; ++m) {
 		current += barcount_[m];
@@ -90,14 +90,14 @@ BmsBarManager::GetBarByPos(double pos, int step) const {
 unsigned int
 BmsBarManager::GetDivision(const BmsBuffer& channelbuf, unsigned int measure) const
 {
-	int bar = GetBarNumberByMeasure(measure);
-	int bar_end = GetBarNumberByMeasure(measure + 1);
+	barindex bar = GetBarNumberByMeasure(measure);
+	barindex bar_end = GetBarNumberByMeasure(measure + 1);
 	int barsize = barcount_[measure];
 	unsigned int step = barsize;
 	for (auto it = channelbuf.Begin(); it != channelbuf.End(); ++it) {
 		if (it->first >= bar_end) break;
 		if (it->first >= bar) {
-			int relativepos = it->first - bar;
+			barindex relativepos = it->first - bar;
 			step = BmsUtil::GCD(step, relativepos);
 		}
 	}
@@ -120,7 +120,7 @@ BmsBarManager::SetResolution(double d)
 //
 void BmsBarManager::InvalidateCache() {
 	barcache_.clear();
-	unsigned int barcount = 0;
+	barindex barcount = 0;
 	for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++) {
 		barcache_[barcount] = i;
 		barcount += barcount_[i];

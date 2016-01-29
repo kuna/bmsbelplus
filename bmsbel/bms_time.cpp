@@ -23,12 +23,12 @@ void BmsTimeManager::Reset() {
 	++iternext_;
 }
 
-void BmsTimeManager::Add(int bar, const BmsTime& bmstime) {
+void BmsTimeManager::Add(barindex bar, const BmsTime& bmstime) {
 	array_[bar] = bmstime;
 	Reset();
 }
 
-void BmsTimeManager::Delete(int bar) {
+void BmsTimeManager::Delete(barindex bar) {
 	array_.erase(bar);
 }
 

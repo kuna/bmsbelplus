@@ -81,12 +81,17 @@ namespace bmstest
 			bms.GetNoteData(note);
 			WriteLog("NoteCount: %d", note.GetNoteCount());
 
-			int lastbar = bms.GetObjectExistsMaxBar();
-			WriteLog("Last Bar: %d", lastbar);
+			barindex lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %ld", lastbar);
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar)); 
 
+			//WriteLog("bar1 %lld", bms.GetBarManager()[1]);
+			//WriteLog("bar2 %lld", bms.GetBarManager()[998]);
+			//WriteLog("bar last %lld", bms.GetBarManager().GetBarNumberByMeasure(999));
+
+			// 177 days == 15344627 secs
 			Assert::AreEqual(1086912, note.GetNoteCount());
-			Assert::IsTrue(15344627 == (barindex)bms.GetTimeManager().GetTimeFromBar(lastbar));
+			Assert::IsTrue(15344627 == bms.GetTimeManager().GetTimeFromBar(lastbar));
 		}
 
 		TEST_METHOD(BIG_BMS_Test2) {

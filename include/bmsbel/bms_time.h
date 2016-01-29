@@ -36,9 +36,9 @@ public:
 	/** @brief Resets private iterator. Automatically called. */
 	void Reset();
 	/** @brief adds timemarker. Automatically calls Reset() */
-	void Add(int bar, const BmsTime& bmstime);
+	void Add(barindex bar, const BmsTime& bmstime);
 	/** @brief */
-	void Delete(int bar);
+	void Delete(barindex bar);
 
 	// iterator
 	typedef std::map<barindex, BmsTime>::iterator Iterator;

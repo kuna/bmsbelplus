@@ -475,9 +475,9 @@ namespace BmsParser {
 		if (channel != 1) channel_dup_count = 0;
 
 		// write down values (write 00 value, too.)
-		int bar_measure = bms_.GetBarManager().GetBarNumberByMeasure(bar_);
+		barindex bar_measure = bms_.GetBarManager().GetBarNumberByMeasure(bar_);
 		for (int i = 0; i < word_array_.size(); i++) {
-			int bar_index = bar_measure +
+			barindex bar_index = bar_measure +
 				bms_.GetBarManager()[bar_] * i / word_array_.size();
 			bms_.GetChannelManager()[channel][channel_dup_count]
 				.Set(bar_index, word_array_[i]);

@@ -69,20 +69,20 @@ BmsBms::GetSTPManager(void)
 	return stp_manager_;
 }
 
-int
+unsigned int
 BmsBms::GetObjectExistsMaxMeasure(void) const
 {
 	// from max channelbar position, calculate bar(measure) position
 	return bar_manager_.GetMeasureByBarNumber(GetObjectExistsMaxBar());
 }
 
-int 
+barindex 
 BmsBms::GetObjectExistsMaxBar() const
 {
 	return channel_manager_.GetObjectExistsMaxPosition(&BmsChannel::IsChannel);
 }
 
-int 
+barindex
 BmsBms::GetPlayableMaxBar() const
 {
 	return channel_manager_.GetObjectExistsMaxPosition(&BmsChannel::IsShouldPlayWavChannel);
@@ -141,7 +141,7 @@ BmsBms::Merge(const BmsBms& other)
 		double ratio = (double)other.bar_manager_.GetResolution() / bar_manager_.GetResolution();
 		bar_manager_.SetResolution(ratio);
 		for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
-
+			it->second->MultiplyBarDivisionCount(ratio);
 		}
 	}
 
@@ -156,7 +156,7 @@ BmsBms::Merge(const BmsBms& other)
 	}
 }
 
-void BmsBms::Training(int startbar, int endbar, int repeat)
+void BmsBms::Training(barindex startbar, barindex endbar, int repeat)
 {
 
 }
@@ -176,8 +176,8 @@ BmsBms::ToString(void) const
 		tmp.append("\n");
 	}
 	tmp.append(stp_manager_.ToString());
-	int max_bar = this->GetObjectExistsMaxBar();
-	unsigned int pos = 0;
+	barindex max_bar = this->GetObjectExistsMaxBar();
+	barindex pos = 0;
 	for (int i = 0; i <= BmsConst::BAR_MAX_VALUE; ++i) {
 		unsigned int current_bar_count = bar_manager_[i];
 		double current_bar_ratio = bar_manager_.GetRatio(i);
@@ -187,7 +187,7 @@ BmsBms::ToString(void) const
 			sprintf(buf, "#%03d%ls:%f\n", i, L"02", current_bar_ratio);
 			tmp.append(buf);
 		}
-		if (i > max_bar) {
+		if (pos > max_bar) {
 			// There might be ratio change although no more note left,
 			// so don't break the loop but continue. (CHILD commented)
 			// オブジェが無くても小節長変更はあるかもしれないのでループは 999 小節までだが
@@ -202,7 +202,7 @@ BmsBms::ToString(void) const
 				int division = bar_manager_.GetDivision(**current_buffer, i);
 				int step = bar_manager_.GetResolution() / division;
 				std::string object_array_str;
-				for (unsigned int k = pos; k < pos + current_bar_count; k += step) {
+				for (barindex k = pos; k < pos + current_bar_count; k += step) {
 					object_array_str.append((**current_buffer).Get(k).ToString());
 				}
 				if (current_channel.GetChannelNumber() == BmsWord("01") ||
@@ -446,7 +446,7 @@ BmsBms::InvalidateTimeTable()
 	//
 	ITER_CHANNEL(BmsChannelType::STOP, iter) {
 		BmsWord current_word(iter->second);
-		int bar_ = iter->first;
+		barindex bar_ = iter->first;
 		if (current_word == BmsWord::MIN) continue;
 		if (stop_sequence_table.find(current_word) == stop_sequence_table.end()) {
 			//throw StopSequenceEntryNotExistException(current_word);
@@ -481,11 +481,11 @@ BmsBms::InvalidateTimeTable()
 	// now calculate time data
 	//
 	BmsTime *prevstmp = 0;
-	int prevbar = 0;
+	barindex prevbar = 0;
 	double totaltime = 0;
 	for (auto it = time_manager_.Begin(); it != time_manager_.End(); ++it) {
 		if (prevstmp) {
-			int eslapedbar = it->first - prevbar;
+			barindex eslapedbar = it->first - prevbar;
 			double stop = prevstmp->stop;
 			double bpm = prevstmp->bpm;
 			/*
@@ -507,7 +507,7 @@ double BmsBms::GetEndTime() {
 	for (auto it = time_manager_.Begin(); it != time_manager_.End(); ++it) {
 		t = std::max(t, it->second.time);
 	}
-	int lastbar = GetObjectExistsMaxBar();
+	barindex lastbar = GetObjectExistsMaxBar();
 	return std::max(t, time_manager_.GetTimeFromBar(lastbar));
 }
 
@@ -558,9 +558,9 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 		if (channel_manager_.IsExists(c + 36)) {	// 11 ~ 29
 			int channel = c + 36;
 			int laneidx = GetLaneIndex(channel);
-			int prev = 0;	// where previous note existed bar
+			barindex prev = 0;	// where previous note existed bar
 			ITER_CHANNEL(channel, iter) {
-				int bar = iter->first;
+				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (current_word == BmsWord::MIN) continue;
 				if (current_word == lnobj_word && prev) {
@@ -587,7 +587,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			bool isln = false;
 			int step;	// used to find #LN
 			ITER_CHANNEL(channel, iter) {
-				int bar = iter->first;
+				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (!isln && current_word != BmsWord::MIN) {
 					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNSTART, current_word));
@@ -618,7 +618,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			int channel = c + 13 * 36;
 			int laneidx = GetLaneIndex(channel);
 			ITER_CHANNEL(channel, iter) {
-				int bar = iter->first;
+				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (current_word == BmsWord::MIN) continue;
 				note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_MINE, current_word));
@@ -629,7 +629,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			int channel = c + 3 * 36;
 			int laneidx = GetLaneIndex(channel);
 			ITER_CHANNEL(channel, iter) {
-				int bar = iter->first;
+				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (current_word == BmsWord::MIN) continue;
 				note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_HIDDEN, current_word));

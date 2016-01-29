@@ -24,16 +24,16 @@ public:
 	BmsTimeManager&		GetTimeManager();
 	BmsSTPManager&		GetSTPManager();
 
-	int GetObjectExistsMaxMeasure() const;
-	int GetObjectExistsMaxBar() const;
-	int GetPlayableMaxBar() const;
+	unsigned int GetObjectExistsMaxMeasure() const;
+	barindex GetObjectExistsMaxBar() const;
+	barindex GetPlayableMaxBar() const;
 
 	void Merge(const BmsBms& other);
 
 	// copy & repeat only that part - just for training.
 	// don't put this function in note class, 'cause this work need to modify ALL channels.
 	// need quite much calculation, maybe?
-	void Training(int startbar, int endbar, int repeat);
+	void Training(barindex startbar, barindex endbar, int repeat);
 
 	void Clear(void);
 
