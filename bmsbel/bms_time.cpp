@@ -84,13 +84,16 @@ double BmsTimeManager::GetTimeFromBar(double bar) {
 	if (bar >= array_.rbegin()->first) {
 		double lastbar = bar - array_.rbegin()->first;
 		return RBEGIN(array_).time
-			+ lastbar / BmsConst::BAR_DIVISION_COUNT_MAX / RBEGIN(array_).bpm * 60;
+			+ lastbar / BmsConst::BAR_DIVISION_COUNT_MAX * 4 / RBEGIN(array_).bpm * 60;
 	}
 	// else then linear assumption
-	auto iters = array_.find(bar);
-	auto iter__ = iters->second;
-	auto iternext__ = iters->first;
-
+	// CAUTION: consider STOP time
+	auto iters = array_.equal_range(bar);
+	auto iter__ = iters.first;
+	auto iternext__ = iters.second;
+	return IT(iter__).time + IT(iter__).stop +
+		(double)(bar - iter__->first) / (iternext__->first - iter__->first) *
+		(IT(iternext__).time - IT(iter__).time - IT(iter__).stop);
 }
 
 double BmsTimeManager::GetBPMFromTime(double time) {

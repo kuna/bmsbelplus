@@ -23,6 +23,7 @@ namespace BmsConst {
 	// be cafeful with MAX int value (*1000)
 	// COMMENT: INT_MAX = 2147483647, RES_MAX should be under 2147483.
 	//          Primes should be consisted of 2 and 5.
+	//          (NOTE: 15360 is perfect for L999999999^999999999)
 	const int BAR_DIVISION_COUNT_MAX = 10240;
 
 	const int HEX36_MIN_VALUE = 0;

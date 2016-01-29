@@ -29,29 +29,38 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 - Class hierarchery
 ```
 namespace BmsParser
-  - class StartInfo			// staring argument for parsing
-  - class ParsingInfo		// status of current parsing
-  - class Parser			// a static-like class used during parsing BMS file
 class BmsBms
-  - class BmsHeaderTable	// contains #TITLE, #BPM, etc ...
-  - class BmsRegistArraySet	// contains #WAV, #BMP data
+  - class BmsHeaderTable    // contains #TITLE, #BPM, etc ...
+  - class BmsRegistArraySet	// contains #WAVxx, #BMPxx data
   - class BmsChannelManager	// <channel, BmsChannel> data
-    - class BmsChannel		// if there's duplicated channel, then it's stacked to here.
-  - class BmsBarManager		// has information about each bar(measure) - such as length
-    - class BmsBar			// -
-// under these are extracted information from BmsBms
-class BmsTimeManager	// contains definite time, pos, beat, etc data for each row(relative to BmsBar). read-only.
-class BmsNoteManager	// contains about pure note data - Normal, Longnote, Mine, Invisible. read-only.
+    - class BmsChannel      // contains each channel
+    - class BmsBuffer       // BmsChannel's real note data (single BGM channel can have multiple BmsBuffer)
+  - class BmsBarManager		  // contains bar(measure) ratio, and convert bar ~ time/pos.
+  - class BmsTimeManager    // converts time ~ bar
+  - class BmsSTPManager     // contains #STP information
+  -
+class BmsParser::Parser     // used for parsing Bms file
 ```
-- Loading bms file
+- Loading/Saving bms file (Automatically finds encoding)
 ```
-// with specific encoding
+// Without parsing RANDOM statement
 BmsBms bms;
-BmsParser::Parse(L"path-to-bms.bms", "Shift_JIS", bms);
+BmsParser::Parser *parser = new BmsParser::Parser(bms, { false, rand() });
+bool r = parser->Load("filepath.bms");
+delete parser;
 
-// with auto encoding
+// Setting custom seed for RANDOM statement
 BmsBms bms;
-BmsParser::Parse(L"path-to-bms.bms", bms);
+BmsParser::Parser *parser = new BmsParser::Parser(bms, { false, 123 });
+bool r = parser->Load("filepath.bms");
+delete parser;
+
+// Portable method (internally creates BmsParser::Parser object)
+BmsBms bms;
+bms.LoadBms("filepath.bms");
+
+// Save
+bms.SaveBms("outfilepath.bms");
 ```
 
 - get sound, bitmap or etc tag datas
@@ -67,23 +76,28 @@ if (bms.GetRegistArraySet()[L"WAV"].IsExists(word))
 
 - get data for game play
 ```
-BmsTimeManager bms_time;
-BmsNoteContainer bms_note;
-bms.CalculateTime(bms_time);
-bms.GetNotes(bms_note);
+/*
+ * You should change beat/time into internal bar position
+ * which library internally uses.
+ */
+BmsBms bms;
+bms.LoadBms("test.bms");
+BmsNoteContainer note;
+bms.GetNoteData(note);
 
-for (int i = 0; i <= bms.GetPlayableMaxPosition(); i++) {
-	// scan buffer / timetable / and so on~
+int tick = GetTick();
+
+int bar = bms.GetTimeManager().GetBarFromTime(tick);
+for (auto it = note[lane].Get(bar); it != note[lane].End(); ++it) {
+  int pos = bms.GetBarManager().GetPosFromBar(it->first);
+  if (pos > screen_height) break;
+  RenderNote(lane, pos);
 }
 ```
 
-- edit note & save for BMSE
-```
-// edit bms buffer
-// save function is not implemented~
-``` 
-
-### Problems / etc
+### etc
+  - Total structure is really different from original library BmsBel so it's not compatible from original one. 
+  - Performance: Most of the time, BmsBel+ works more fast and have more compatibility. *a bit slower in a very very large file - over 4MiB?*
   - It has limitation in decomposing note from buffer engine structure.
-    Currently, It can divide each measure into 1/19200.
+    You can change resolution in ```bms_define.h```.
   - bmx2ogg / SimpleBmxPlayer were made using this library.

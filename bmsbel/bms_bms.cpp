@@ -447,29 +447,32 @@ BmsBms::InvalidateTimeTable()
 	}
 
 	//
+	// (TODO) add last timestamp for ease of MediumBPM calculation
+	//
+
+
+	//
 	// now calculate time data
 	//
-	BmsTime *currentsig = 0;
+	BmsTime *prevstmp = 0;
 	int prevbar = 0;
 	double totaltime = 0;
 	for (auto it = time_manager_.Begin(); it != time_manager_.End(); ++it) {
-		if (currentsig) {
-			int eslapedbar = it->first - prevbar + 1;
-			double stop = currentsig->stop;
-			double bpm = currentsig->bpm;
+		if (prevstmp) {
+			int eslapedbar = it->first - prevbar;
+			double stop = prevstmp->stop;
+			double bpm = prevstmp->bpm;
 			/*
 			* BPM: 4 measure( == 1 beat) per minute
 			* - convert measure to beat (divide by 4)
 			* - convert bpm to spb (second per beat)
 			*/
-			double time =
-				totaltime += stop +
-				(60.0 / bpm) / (((double)eslapedbar / BmsConst::BAR_DIVISION_COUNT_MAX) / 4.0);
-
-			it->second.time = time;
+			totaltime += stop +
+				(60.0 / bpm) * ((double)eslapedbar / BmsConst::BAR_DIVISION_COUNT_MAX * 4.0);
+			it->second.time = totaltime;
 		}
 		prevbar = it->first;
-		currentsig = &it->second;
+		prevstmp = &it->second;
 	}
 }
 

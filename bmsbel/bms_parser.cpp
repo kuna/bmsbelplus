@@ -32,9 +32,9 @@ namespace BmsParser {
 			else return ++str;
 		}
 		bool IsBar(const char* str) {
-			return (BmsUtil::IsNotDigit(str[0]) ||
-				BmsUtil::IsNotDigit(str[1]) ||
-				BmsUtil::IsNotDigit(str[2]));
+			return (BmsUtil::IsDigit(str[0]) &&
+				BmsUtil::IsDigit(str[1]) &&
+				BmsUtil::IsDigit(str[2]));
 		}
 		bool IsComment(const char* str) {
 			return *str != '#';
@@ -42,12 +42,12 @@ namespace BmsParser {
 	}
 
 	Parser::Parser(BmsBms& bms) : Parser(bms, {true, rand()}) {}
-	Parser::Parser(BmsBms& bms, ParsingInfo info_) : bms_(bms), info_(info_) { }
+	Parser::Parser(BmsBms& bms, ParsingInfo info_) : bms_(bms), info_(info_) { Clear(); }
 
 	void Parser::WriteLogLine(const char* t, ...) {
 		va_list vl;
 		va_start(vl, t);
-		char buf[1024];
+		char buf[1024] = { 0, };
 		vsprintf_s(buf, t, vl);
 		log_ << buf << "\n";
 #ifdef _DEBUG
@@ -104,6 +104,11 @@ namespace BmsParser {
 	}
 
 	bool Parser::Parse(const char* text) {
+		// initalize first
+		Clear();
+		bms_.Clear();
+		WriteLogLine("Bms parsing started");
+
 		// detect encoding
 		char* encodetext = 0;
 		if (!BmsUtil::IsUTF8(text)) {
@@ -121,6 +126,13 @@ namespace BmsParser {
 				buf.assign(p);
 			else
 				buf.assign(p, pn - p);
+			// trim end of the line
+			while (buf.size() > 0) {
+				if (buf.back() == '\r' || buf.back() == ' ' || buf.back() == '\t')
+					buf.pop_back();
+				else
+					break;
+			}
 			line_data_.push_back(buf);
 			if (!pn) break;
 			p = pn + 1;
@@ -132,10 +144,6 @@ namespace BmsParser {
 	}
 
 	bool Parser::ParseLines() {
-		// initalize first
-		Clear();
-		WriteLogLine("Bms parsing started");
-
 		//
 		// first parsing
 		// - parse syntaxs first, and decide to process
@@ -201,7 +209,9 @@ namespace BmsParser {
 	bool Parser::ParseRandomStatement(const char* str) {
 		// we should parse a little(like if / endif clause)
 		// to know what part is syntax we're going to parse
-		key_ = "";
+		const char *p = ParseSeparator(str);
+		if (!p) key_ = "";
+		else key_.assign(str, p - str);
 
 		if (KEY("RANDOM") || KEY("RONDOM") || KEY("SETRANDOM") || KEY("ENDRANDOM")) {
 			syntax_line_data_.push_back(str);
@@ -333,7 +343,7 @@ namespace BmsParser {
 		key_.clear();
 		const char* val = ParseSeparator(str);
 		if (val) {
-			key_.assign(str, val - str + 1);
+			key_.assign(str, val - str);
 			ParseHeaderValue(val + 1);
 		}
 		else {
@@ -345,28 +355,30 @@ namespace BmsParser {
 	{
 		// regist value or metadata(header) value
 		value_.assign(str);
+		// #EXBPM behaves same as #BPM
+		if (key_ == "EXBPM") key_ = "BPM";
 		for (auto it = bms_.GetRegistArraySet().Begin(); it != bms_.GetRegistArraySet().End(); ++it) {
 			if (BmsRegistArray::CheckConstruction(it->first, key_)) {
 				BmsWord pos(key_.substr(key_.length() - 2));
-				std::string array_name = key_.substr(0, key_.length() - 2);
-				bms_.GetRegistArraySet()[array_name].Set(pos, value_);
+				it->second->Set(pos, value_);
+				return;
 			}
-			else {
-				if (key_ == "STP") {
-					const char* measure_s_ = ParseSeparator(str);
-					const char* time_s_ = ParseSeparator(measure_s_);
-					if (!measure_s_ || !time_s_) {
-						WriteLogLine("%d line - Failed to parse #STP (%s)", line_, str);
-						return;
-					}
-					double  measure_ = atof(measure_s_);
-					int time_ = atoi(time_s_);
-					bms_.GetSTPManager().Add(measure_, time_);
-				}
-				else {
-					bms_.GetHeaders().Set(key_, value_);
-				}
+		}
+		// if proper regist array hadn't found
+		// then add to header
+		if (key_ == "STP") {
+			const char* measure_s_ = ParseSeparator(str);
+			const char* time_s_ = ParseSeparator(measure_s_);
+			if (!measure_s_ || !time_s_) {
+				WriteLogLine("%d line - Failed to parse #STP (%s)", line_, str);
+				return;
 			}
+			double  measure_ = atof(measure_s_);
+			int time_ = atoi(time_s_);
+			bms_.GetSTPManager().Add(measure_, time_);
+		}
+		else {
+			bms_.GetHeaders().Set(key_, value_);
 		}
 	}
 
@@ -401,17 +413,17 @@ namespace BmsParser {
 			WriteLogLine("line %d - cannot parse measure length (%s)", line_, str);
 			return;
 		}
-		const char* value_ = Trim(++value_s_);
+		const char* value_ = Trim(value_s_);
 
 		// construct values
 		// if length is odd, ignore last one
 		std::vector<BmsWord> word_array_;
 		for (unsigned int i = 0; i < strlen(value_) - 1; i += 2) {
-			if (BmsWord::CheckConstruction(str + i)) {
-				word_array_.push_back(BmsWord(str + i));
+			if (BmsWord::CheckConstruction(value_ + i)) {
+				word_array_.push_back(BmsWord(value_ + i));
 			}
 			else {
-				WriteLogLine("line %d - wrong note object (%s)", std::string(str + i, 2).c_str());
+				WriteLogLine("line %d - wrong note object (%s)", line_, std::string(value_ + i, 2).c_str());
 			}
 		}
 
