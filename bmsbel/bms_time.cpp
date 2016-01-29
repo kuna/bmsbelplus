@@ -43,15 +43,6 @@ double BmsTimeManager::GetBarFromTime(double time) {
 	row = &BEGIN(array_);
 	if (time < row->time)
 		return array_.begin()->first;
-	// if bigger then last data
-	// then calculate bar using last BPM
-	// (1 beat consists with MAX_BAR_COUNT, regardless of measure ratio)
-	row = &RBEGIN(array_);
-	if (time >= row->time) {
-		double lasttime = time - row->time;
-		return array_.rbegin()->first
-			+ lasttime / 60 * row->bpm * bar_.GetResolution();
-	}
 	// else then linear assumption
 	for (; iternext_ != array_.end();) {
 		if (IT(iter_).time <= time && time < IT(iternext_).time) {
@@ -60,8 +51,23 @@ double BmsTimeManager::GetBarFromTime(double time) {
 			double db_dt = (iternext_->first - iter_->first) / (IT(iternext_).time - IT(iter_).time - IT(iter_).stop);
 			return iter_->first + db_dt * (time - IT(iter_).time);
 		}
+		else if (IT(iternext_).time <= time && time < IT(iter_).time) {
+			// in case of negative BPM - bar is reversed
+			// there's no end - but we may can make assumption from last note's time(bar time).
+			// 
+		}
 		++iternext_;
 		++iter_;
+	}
+	// if bigger then last data
+	// then calculate bar using last BPM
+	// (1 beat consists with MAX_BAR_COUNT, regardless of measure ratio)
+	// COMMENT: it won't work well in negative BPM - take care of it.
+	row = &RBEGIN(array_);
+	if (time >= row->time) {
+		double lasttime = time - row->time;
+		return array_.rbegin()->first
+			+ lasttime / 60 * row->bpm * bar_.GetResolution();
 	}
 	// if nothing found, then try again after Reset()
 	Reset();

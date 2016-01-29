@@ -410,7 +410,9 @@ BmsBms::InvalidateTimeTable()
 		if (current_word == BmsWord::MIN) continue;
 		int new_bpm;
 		if (NOT(BmsUtil::StringToInteger(current_word.ToCharPtr(), &new_bpm, 16))) {
-			throw InvalidFormatAsBpmChangeValueException(current_word);
+			//throw InvalidFormatAsBpmChangeValueException(current_word);
+			// ignore BPM change, rather then throwing exception
+			continue;
 		}
 		time_manager_.Add(iter->first, BmsTime(0, 0, new_bpm));
 	}
@@ -418,7 +420,9 @@ BmsBms::InvalidateTimeTable()
 		BmsWord current_word(iter->second);
 		if (current_word == BmsWord::MIN) continue;
 		if (extended_bpm_table.find(current_word) == extended_bpm_table.end()) {
-			throw ExtendedBpmChangeEntryNotExistException(current_word);
+			//throw ExtendedBpmChangeEntryNotExistException(current_word);
+			// ignore BPM change, rather then throwing exception
+			continue;
 		}
 		else {
 			int bpm = extended_bpm_table[current_word];
@@ -434,7 +438,9 @@ BmsBms::InvalidateTimeTable()
 		int bar_ = iter->first;
 		if (current_word == BmsWord::MIN) continue;
 		if (stop_sequence_table.find(current_word) == stop_sequence_table.end()) {
-			throw StopSequenceEntryNotExistException(current_word);
+			//throw StopSequenceEntryNotExistException(current_word);
+			// ignore STOP, rather then throwing exception
+			continue;
 		}
 		else {
 			// stop for 1 / 192 beat
@@ -456,7 +462,7 @@ BmsBms::InvalidateTimeTable()
 	}
 
 	//
-	// (TODO) add last timestamp for ease of MediumBPM calculation
+	// (TODO) add last note timestamp for ease of MediumBPM calculation
 	//
 
 

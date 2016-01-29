@@ -12,6 +12,8 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #pragma comment(lib, "..\\Release\\bmsbel.lib")
 #endif
 
+//
+// http://hitkey.nekokan.dyndns.info/edges.htm
 // https://msdn.microsoft.com/en-us/library/hh598953.aspx
 /*
 // wanna to ignore channel set?
@@ -155,14 +157,81 @@ namespace bmstest
 		}
 
 		TEST_METHOD(BMS_Nested_Random_Test) {
+			/*
+			* Test part
+			* - Very Big Bms (8MiB)
+			* - Nested Random
+			*/
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\ubmchallenge.bms";
+			bms.LoadBmsFile(filename);
+
+			int lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %d", lastbar);
+			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
 		}
 
+		TEST_METHOD(BMS_Decimal_Test) {
+			/*
+			 * Test part
+			 * - Fractional Bpm / Total
+			 * - Bar position test
+			 */
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\Uni_birth_h.bms";
+			bms.LoadBmsFile(filename);
+
+			int lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %d", lastbar);
+			WriteLog("Base BPM: %f", bms.GetBaseBPM());
+			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
+			Assert::AreEqual(88764, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 1000));
+			Assert::AreEqual(143.3, bms.GetBaseBPM());
+			WriteLog("Bar of 0s: %d", bms.GetTimeManager().GetBarFromTime(0));
+			WriteLog("Bar of 10s: %d", bms.GetTimeManager().GetBarFromTime(10));
+			WriteLog("Bar of 50s: %d", bms.GetTimeManager().GetBarFromTime(50));
+			WriteLog("Bar of 60s: %d", bms.GetTimeManager().GetBarFromTime(60));
+			WriteLog("Bar of 90s: %d", bms.GetTimeManager().GetBarFromTime(90));
+			WriteLog("Bar of 100s: %d", bms.GetTimeManager().GetBarFromTime(100));
+		}
+
+		TEST_METHOD(BMS_Key_Test) {
+			/*
+			 * Test part
+			 * - 5 / 7 / 9 / 14k
+			 */
+			
+		}
+
+		TEST_METHOD(BMS_Negative_BPM) {
+			/*
+			 * Test part
+			 * - Negative BPM
+			 * - undefined STOP(FD)
+			 * - setrandom
+			 */
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\u9.bml";
+			bms.LoadBmsFile(filename);
+
+			int lastbar = bms.GetObjectExistsMaxBar();
+			WriteLog("Last Bar: %d", lastbar);
+			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
+			WriteLog("Bar of 10s: %d", bms.GetTimeManager().GetBarFromTime(10));
+			WriteLog("Bar of 50s: %d", bms.GetTimeManager().GetBarFromTime(50));
+			WriteLog("Bar of 60s: %d", bms.GetTimeManager().GetBarFromTime(60));
+			WriteLog("Bar of 70s: %d", bms.GetTimeManager().GetBarFromTime(70));
+			WriteLog("Bar of 80s: %d", bms.GetTimeManager().GetBarFromTime(80));
+		}
+
+#if 0	// I can't find Bms using SWITCH ...
 		TEST_METHOD(BMS_Switch_Test) {
 			/*
 			 * Test part
 			 * - SWITCH ~ ENDSW part
 			 */
 		}
+#endif
 
 		TEST_METHOD(BMS_Note_Test) {
 			/*

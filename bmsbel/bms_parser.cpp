@@ -38,7 +38,7 @@ namespace BmsParser {
 				BmsUtil::IsDigit(str[2]));
 		}
 		bool IsComment(const char* str) {
-			return *str != '#';
+			return *str != '#' || !*str;
 		}
 	}
 
@@ -129,7 +129,7 @@ namespace BmsParser {
 		}
 
 		// split lines
-		for (const char *p = text; p; ) {
+		for (const char *p = text; p && !panic_; ) {
 			const char* pn = strchr(p, '\n');
 			std::string buf;
 			if (!pn)
@@ -148,7 +148,7 @@ namespace BmsParser {
 			/*
 			 * it's more easy and better to distinguish random statement in here
 			 */
-			if (IsRandomStatement(buf.c_str() + 1))
+			if (IsRandomStatement(buf.c_str()))
 				syntax_line_data_.push_back(buf);
 			else
 				line_data_.push_back(buf);
@@ -241,6 +241,8 @@ namespace BmsParser {
 	bool Parser::IsRandomStatement(const char* str) {
 		// we should parse a little(like if / endif clause)
 		// to know what part is syntax we're going to parse
+		if (IsComment(str)) return false;
+		str++;
 		const char *p = ParseSeparator(str);
 		if (!p) key_ = str;
 		else key_.assign(str, p - str);
@@ -257,8 +259,8 @@ namespace BmsParser {
 			if (syntax_tag_.size() == 0) {
 				WriteLogLine("%d line - end tag without start tag", line_);
 				panic_ = true;
+				return false;
 			}
-			syntax_line_data_.push_back(str);
 			std::string starttag = syntax_tag_.back();
 			syntax_tag_.pop_back();
 			// check start ~ end tag matching
