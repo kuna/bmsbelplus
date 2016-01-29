@@ -82,6 +82,9 @@ namespace bmstest
 			int lastbar = bms.GetObjectExistsMaxBar();
 			WriteLog("Last Bar: %d", lastbar);
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar)); 
+
+			Assert::AreEqual(1086912, note.GetNoteCount());
+			Assert::AreEqual(15344627, (int)bms.GetTimeManager().GetTimeFromBar(lastbar));
 		}
 
 		TEST_METHOD(BIG_BMS_Test2) {
@@ -124,6 +127,7 @@ namespace bmstest
 			int lastbar = bms.GetObjectExistsMaxBar();
 			WriteLog("Last Bar: %d", lastbar);
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
+			Assert::AreEqual(126867, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 1000));
 		}
 
 		TEST_METHOD(BMS_Random_Test) {
@@ -134,7 +138,8 @@ namespace bmstest
 			 */
 			BmsBms bms;
 			wchar_t filename[] = L"..\\test\\bms\\__litmus_slotmachine_foon.bme";
-			bms.LoadBmsFile(filename);
+			BmsParser::Parser p(bms, { true, 0 });
+			p.Load(filename);
 
 			// notecount should vary at every test
 			BmsNoteManager note;
@@ -145,6 +150,8 @@ namespace bmstest
 			// 97.846
 			WriteLog("Last Bar: %d", lastbar);
 			WriteLog("Time(sec): %.3f", bms.GetTimeManager().GetTimeFromBar(lastbar));
+			Assert::AreEqual(97846, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 1000));
+			Assert::AreEqual(727, note.GetNoteCount());
 		}
 
 		TEST_METHOD(BMS_Nested_Random_Test) {
