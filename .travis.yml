@@ -1,6 +1,19 @@
+sudo: false
 language: cpp
 compiler:
   - g++
+
+#
+# need to use c++11
+#
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+addons:
+  apt:
+    packages:
+	  - gcc-4.8
+	  - g++-4.8
+
 before_script:
   - mkdir build
   - cd build

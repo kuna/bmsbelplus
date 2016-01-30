@@ -9,11 +9,7 @@ file(GLOB HEADER
   "include/bmsbel/*.h"
 )
 #add_library(bmsbel STATIC ${SRC} ${HEADER})
-#
-# can't use c++11 because of travis g++ version is 4.6.3
-# use c++0x instead
-#
-add_definitions(-std=c++0x)
+add_definitions(-std=c++11)
 add_library(bmsbel SHARED
   "bmsbel/bms_bar.cpp"
   "bmsbel/bms_bms.cpp"
