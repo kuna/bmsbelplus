@@ -1,6 +1,6 @@
 # BmsBel+
 
-[!(https://travis-ci.org/kuna/bmsbelplus.svg)](https://travis-ci.org/kuna/bmsbelplus)
+[![travis](https://travis-ci.org/kuna/bmsbelplus.svg)](https://travis-ci.org/kuna/bmsbelplus)
 
 BMS library for C++
 
