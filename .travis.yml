@@ -1,11 +1,6 @@
 language: cpp
 
-#compiler: 
-#  - g++
-
 before-script:
-  - mkdir build
-  - cd build
-  - cmake ..
+  - cmake ./
 
 script: make
