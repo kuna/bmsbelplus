@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 
 #include "bms_word.h"
 #include "bms_define.h"
@@ -36,6 +37,7 @@ public:
 
 	unsigned int GetObjectCount() const;
 	unsigned int GetObjectCount(barindex start, barindex length = -1) const;
+	void GetObjectExistBar(std::set<barindex> &barmap) const;
 
 	/** @brief safely get value from array. */
 	BmsWord Get(barindex pos) const;

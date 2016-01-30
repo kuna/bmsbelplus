@@ -48,6 +48,13 @@ BmsBuffer::GetObjectCount(barindex start, barindex length) const
 	return r;
 }
 
+void
+BmsBuffer::GetObjectExistBar(std::set<barindex> &barmap) const
+{
+	for (auto it = Begin(); it != End(); ++it) {
+		barmap.insert(it->first);
+	}
+}
 
 BmsWord
 BmsBuffer::Get(barindex pos) const

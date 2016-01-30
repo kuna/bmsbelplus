@@ -29,8 +29,8 @@ public:
 
 	bool Contains(const BmsWord &word) const;
 
-	unsigned int GetObjectCount(barindex start = 0, barindex length = -1);
-
+	unsigned int GetObjectCount(barindex start = 0, barindex length = -1) const;
+	void GetObjectExistBar(std::set<barindex> &barmap) const;
 	barindex GetObjectExistsMaxPosition(barindex start) const;
 
 	void MultiplyBarDivisionCount(double multiplier);

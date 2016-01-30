@@ -122,12 +122,20 @@ BmsChannel::MultiplyBarDivisionCount(double multiplier)
 }
 
 unsigned int 
-BmsChannel::GetObjectCount(barindex start, barindex length) {
+BmsChannel::GetObjectCount(barindex start, barindex length) const {
 	unsigned int r = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
 		r += (*it)->GetObjectCount(start, length);
 	}
 	return r;
+}
+
+void 
+BmsChannel::GetObjectExistBar(std::set<barindex> &barmap) const
+{
+	for (auto it = Begin(); it != End(); ++it) {
+		(**it).GetObjectExistBar(barmap);
+	}
 }
 
 bool
