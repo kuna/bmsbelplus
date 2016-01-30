@@ -19,7 +19,7 @@ public:
 	std::string ToString() const {
 		std::ostringstream ss;
 		for (auto it = Begin(); it != End(); ++it) {
-			char fmt[10]; sprintf(fmt, "%03.03f", it->first);
+			char fmt[10]; sprintf_s(fmt, "%03.03f", it->first);
 			ss << "#STP " << fmt << " " << it->second << "\n";
 		}
 		return ss.str();

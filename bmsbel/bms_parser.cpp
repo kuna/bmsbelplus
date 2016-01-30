@@ -486,6 +486,9 @@ namespace BmsParser {
 				.Set(bar_index, word_array_[i]);
 		}
 	}
+
+
+	std::string Parser::GetLog() { return log_.str(); }
 }
 
 /* 
