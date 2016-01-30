@@ -24,7 +24,7 @@ namespace BmsConst {
 	//          Primes should be consisted of 2 and 5.
 	//          (NOTE: 15360 is perfect for L999999999^999999999)
 	//          Bar may can change it's resolution in some very hard case, so be careful - it's not fixed value.
-	const int BAR_DEFAULT_RESOLUTION = 10240;
+	const int BAR_DEFAULT_RESOLUTION = 15360;
 
 	const int HEX36_MIN_VALUE = 0;
 	const int HEX36_MAX_VALUE = 35;

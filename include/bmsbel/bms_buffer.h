@@ -34,7 +34,8 @@ public:
 
 	virtual ~BmsBuffer();
 
-	unsigned int GetCount(void) const;
+	unsigned int GetObjectCount() const;
+	unsigned int GetObjectCount(barindex start, barindex length = -1) const;
 
 	/** @brief safely get value from array. */
 	BmsWord Get(barindex pos) const;
@@ -63,12 +64,13 @@ public:
 	// -- Iterator ---------------------------------------------------------
 	typedef std::map<barindex, BmsWord>::iterator Iterator;
 	typedef std::map<barindex, BmsWord>::const_iterator ConstIterator;
-	Iterator Begin(void);
-	Iterator End(void);
-	ConstIterator Begin(void) const;
-	ConstIterator End(void) const;
-	/** @brief reset iterator position to startbar. return End() if no proper element exists. */
+	Iterator Begin();
+	Iterator End();
+	ConstIterator Begin() const;
+	ConstIterator End() const;
+	/** @brief get iterator of current note. if not exists, then returns next note. */
 	Iterator Begin(barindex startbar);
+	ConstIterator Begin(barindex startbar) const;
 private:
 	/** @brief contains (bar index, keyvalue) */
 	std::map<barindex, BmsWord> array_;

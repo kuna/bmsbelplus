@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bms_word.h"
+#include "bms_define.h"
 #include <map>
 #include <set>
 #include <vector>
@@ -75,7 +76,7 @@ public:
 
 	// <barpos, notecount(1)>
 	// use iterator to get note existing bar
-	void GetNoteExistBar(std::set<int> &barmap);
+	void GetNoteExistBar(std::set<barindex> &barmap);
 	int GetNoteCount(
 		bool countLNend = true, 
 		bool countPress = true, 
@@ -114,7 +115,7 @@ public:
 	int GetKeys();
 	// <barpos, notecount(1)>
 	// use iterator to get note existing bar
-	void GetNoteExistBar(std::set<int> &barmap);
+	void GetNoteExistBar(std::set<barindex> &barmap);
 
 	BmsNoteLane& operator[](int i) { return lanes_[i]; }
 

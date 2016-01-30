@@ -73,6 +73,7 @@ namespace BmsParser {
 		std::vector<std::string>	line_data_;
 		std::string					key_, value_;
 		std::ostringstream			log_;
+		unsigned int				bgm_dup_count[BmsConst::BAR_MAX_COUNT];
 		//
 		// check random statement
 		//

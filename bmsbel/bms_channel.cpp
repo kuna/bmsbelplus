@@ -103,7 +103,7 @@ BmsChannel::GetObjectExistsMaxPosition(barindex start) const
 {
 	barindex pos = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
-		if (!(*it)->GetCount()) continue;
+		if (!(*it)->GetObjectCount()) continue;
 		barindex tmp = (--(*it)->End())->first;
 		if (tmp > pos) {
 			pos = tmp;
@@ -121,6 +121,14 @@ BmsChannel::MultiplyBarDivisionCount(double multiplier)
 	}
 }
 
+unsigned int 
+BmsChannel::GetObjectCount(barindex start, barindex length) {
+	unsigned int r = 0;
+	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
+		r += (*it)->GetObjectCount(start, length);
+	}
+	return r;
+}
 
 bool
 BmsChannel::IsChannel(void) const

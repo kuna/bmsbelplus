@@ -158,9 +158,14 @@ BmsBms::Merge(const BmsBms& other)
 
 void BmsBms::Training(BmsBms &out, measureindex sm, measureindex em, int repeat)
 {
-	// this modifies all channels / measures
 	out.Clear();
 
+	// copy all metadata
+	out.array_set_ = array_set_;
+	out.headers_ = headers_;
+	out.stp_manager_ = stp_manager_;
+
+	// this modifies all channels / measures
 	out.bar_manager_.SetResolution((double)bar_manager_.GetResolution() / BmsConst::BAR_DEFAULT_RESOLUTION);
 	int i = 0;
 	for (int rep = 0; rep < repeat; rep++) {
@@ -204,7 +209,6 @@ BmsBms::ToString(void) const
 		tmp.append("\n");
 	}
 	tmp.append(stp_manager_.ToString());
-	barindex max_bar = this->GetObjectExistsMaxBar();
 	barindex pos = 0;
 	for (int i = 0; i <= BmsConst::BAR_MAX_VALUE; ++i) {
 		unsigned int current_bar_count = bar_manager_[i];
@@ -212,19 +216,16 @@ BmsBms::ToString(void) const
 		// print if bar ratio isn't normal
 		if (current_bar_ratio != 1.0) {
 			char buf[1024];
-			sprintf(buf, "#%03d%ls:%f\n", i, L"02", current_bar_ratio);
+			sprintf(buf, "#%03d%s:%f\n", i, "02", current_bar_ratio);
 			tmp.append(buf);
-		}
-		if (pos > max_bar) {
-			// There might be ratio change although no more note left,
-			// so don't break the loop but continue. (CHILD commented)
-			// オブジェが無くても小節長変更はあるかもしれないのでループは 999 小節までだが
-			// チャンネルのオブジェ出力はここまで
-			continue;
 		}
 		// print note object
 		for (BmsChannelManager::ConstIterator it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
 			BmsChannel& current_channel = *it->second;
+			// if no note exists in that channel
+			// then don't print this measure
+			if (!current_channel.GetObjectCount(pos, current_bar_count))
+				continue;
 			for (BmsChannel::ConstIterator current_buffer = current_channel.Begin(); current_buffer != current_channel.End(); ++current_buffer) {
 				// get GCD for current measure
 				int division = bar_manager_.GetDivision(**current_buffer, i);
@@ -237,13 +238,14 @@ BmsBms::ToString(void) const
 					object_array_str.length() > 2 ||
 					(object_array_str.length() == 2 && object_array_str != "00")) {
 					char buf[1024];
-					sprintf(buf, "#%03d%S:", i, current_channel.GetChannelNumber().ToCharPtr());
+					sprintf(buf, "#%03d%s:", i, current_channel.GetChannelNumber().ToCharPtr());
 					tmp.append(buf);
 					tmp.append(object_array_str);
 					tmp.append("\n");
 				}
 			}
 		}
+		tmp.append("\n");
 		pos += current_bar_count;
 	}
 	return tmp;

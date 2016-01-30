@@ -70,7 +70,7 @@ namespace bmstest
 			 * - Very Large bms file (note 1024000 ?)
 			 * - Extreme large measure ratio & count (256 * 1000)
 			 *
-			 * Note: Needs loading time about 3 sec in Release mode
+			 * Note: Needs loading time about 4 sec in Release mode
 			 * (previous version needs 700ms)
 			 */
 			BmsBms bms;
@@ -117,7 +117,7 @@ namespace bmstest
 			int lastbar = bms.GetObjectExistsMaxBar();
 			WriteLog("Last Bar : %d", lastbar);
 			WriteLog("Time: %d", int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 1000));
-			Assert::AreEqual(78270, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 100) * 10);
+			Assert::AreEqual(78260, int(bms.GetTimeManager().GetTimeFromBar(lastbar) * 100) * 10);
 		}
 
 		TEST_METHOD(BMS_STOP_Test) {

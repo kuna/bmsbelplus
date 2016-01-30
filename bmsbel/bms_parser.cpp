@@ -60,6 +60,7 @@ namespace BmsParser {
 		line_ = 0;
 		line_data_.clear();
 		log_.clear();
+		memset(bgm_dup_count, 0, sizeof(bgm_dup_count));
 
 		syntax_tag_.clear();
 		panic_ = false;
@@ -204,7 +205,9 @@ namespace BmsParser {
 			sum_measure += bms_.GetBarManager().GetRatio(i);
 		}
 		while (sum_measure > INT_MAX / BmsConst::BAR_DEFAULT_RESOLUTION) {
+			int resolution_ = bms_.GetBarManager().GetResolution();
 			double mul = 0.5;
+			if (resolution_ % 5 == 0) mul = 0.2;
 			bms_.GetBarManager().SetResolution(mul);
 			sum_measure *= mul;
 		}
@@ -449,7 +452,7 @@ namespace BmsParser {
 		
 		BmsWord channel = BmsWord(std::string(str + 3, 2));
 		if (channel == 2) return;
-		int bar_ = atoi(std::string(str, 3).c_str());
+		int measure_ = atoi(std::string(str, 3).c_str());
 		const char* value_s_ = ParseColon(str);
 		if (!value_s_) {
 			WriteLogLine("line %d - cannot parse measure length (%s)", line_, str);
@@ -471,14 +474,14 @@ namespace BmsParser {
 
 		// construct channel
 		// if BGM channel, then allow multiple channel
-		unsigned int channel_dup_count = bms_.GetChannelManager()[channel].GetBufferCount();
-		if (channel != 1) channel_dup_count = 0;
+		unsigned int channel_dup_count = 0;
+		if (channel == 1) channel_dup_count = bgm_dup_count[measure_]++;
 
 		// write down values (write 00 value, too.)
-		barindex bar_measure = bms_.GetBarManager().GetBarNumberByMeasure(bar_);
+		barindex bar_measure = bms_.GetBarManager().GetBarNumberByMeasure(measure_);
 		for (int i = 0; i < word_array_.size(); i++) {
 			barindex bar_index = bar_measure +
-				bms_.GetBarManager()[bar_] * i / word_array_.size();
+				bms_.GetBarManager()[measure_] * i / word_array_.size();
 			bms_.GetChannelManager()[channel][channel_dup_count]
 				.Set(bar_index, word_array_[i]);
 		}

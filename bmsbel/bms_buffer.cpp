@@ -32,9 +32,20 @@ BmsBuffer::~BmsBuffer()
 }
 
 unsigned int
-BmsBuffer::GetCount(void) const
+BmsBuffer::GetObjectCount() const
 {
 	return array_.size();
+}
+
+unsigned int
+BmsBuffer::GetObjectCount(barindex start, barindex length) const
+{
+	unsigned int r = 0;
+	for (auto it = Begin(start); it != End(); ++it) {
+		if (length >= 0 && it->first > start + length) break;
+		r++;
+	}
+	return r;
 }
 
 
@@ -114,7 +125,7 @@ BmsBuffer::Contains(const BmsWord &word) const
 void
 BmsBuffer::MagnifyBy(double multiplier)
 {
-	if (GetCount() == 0) return;
+	if (GetObjectCount() == 0) return;
 	for (auto it = --End();; --it) {
 		array_[it->first * multiplier] = array_[it->first];
 		DeleteAt(it->first);
@@ -126,7 +137,7 @@ BmsBuffer::MagnifyBy(double multiplier)
 std::string
 BmsBuffer::ToString(void) const
 {
-	if (this->GetCount() == 0) {
+	if (this->GetObjectCount() == 0) {
 		return "";
 	}
 
@@ -137,8 +148,8 @@ BmsBuffer::ToString(void) const
 	}
 
 	std::string tmp;
-	tmp.reserve(this->GetCount() / step * 2);
-	for (unsigned int i = 0; i < this->GetCount(); i += step) {
+	tmp.reserve(this->GetObjectCount() / step * 2);
+	for (unsigned int i = 0; i < this->GetObjectCount(); i += step) {
 		tmp.append(Get(i).ToCharPtr());
 	}
 	return tmp;
@@ -171,6 +182,12 @@ BmsBuffer::End(void) const
 
 BmsBuffer::Iterator
 BmsBuffer::Begin(barindex startbar) {
+	auto iters = array_.equal_range(startbar);
+	return iters.first;
+}
+
+BmsBuffer::ConstIterator
+BmsBuffer::Begin(barindex startbar) const {
 	auto iters = array_.equal_range(startbar);
 	return iters.first;
 }
