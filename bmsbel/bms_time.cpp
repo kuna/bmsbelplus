@@ -85,18 +85,26 @@ double BmsTimeManager::GetTimeFromBar(double bar) {
 	// if bigger then last bar
 	// then calculate time from last BPM
 	// (time depends on BPM, regardless of measure ratio)
+	// CAUTION: if STOP is included, time won't be increased continually.
 	if (bar >= array_.rbegin()->first) {
 		double lastbar = bar - array_.rbegin()->first;
-		return RBEGIN(array_).time
-			+ lastbar / bar_.GetResolution() * 4 / RBEGIN(array_).bpm * 60;
+		if (lastbar > 0)
+			return RBEGIN(array_).time + RBEGIN(array_).stop +
+				lastbar / bar_.GetResolution() * 4 / RBEGIN(array_).bpm * 60;
+		else
+			return RBEGIN(array_).time;
 	}
 	// else then linear assumption
-	// CAUTION: consider STOP time
+	// iter <= bar < iternext
+	// CAUTION: if STOP is included, time won't be increased continually.
 	auto iter__ = (--array_.equal_range(bar).second);
 	auto iternext__ = iter__;	iternext__++;
-	return IT(iter__).time + IT(iter__).stop +
-		(double)(bar - iter__->first) / (iternext__->first - iter__->first) *
-		(IT(iternext__).time - IT(iter__).time - IT(iter__).stop);
+	if (bar > iter__->first)
+		return IT(iter__).time + IT(iter__).stop + 
+			(bar - iter__->first) / (iternext__->first - iter__->first) *
+			(IT(iternext__).time - IT(iter__).time - +IT(iter__).stop);
+	else
+		return IT(iter__).time;
 }
 
 double BmsTimeManager::GetBPMFromTime(double time) {
