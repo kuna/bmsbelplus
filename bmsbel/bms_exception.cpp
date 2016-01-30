@@ -10,11 +10,6 @@ std::domain_error( "BmsException" )
 {
 }
 
-BmsException::~BmsException()
-{
-}
-
-
 // -- BmsInternalException -----------------------------------------------
 BmsInternalException::BmsInternalException( const char* file, unsigned int line ) :
 file_( file ),

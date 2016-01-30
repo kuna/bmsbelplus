@@ -21,7 +21,6 @@ private:
 class BmsException : public std::domain_error {
 public:
   explicit BmsException( void );
-  virtual ~BmsException();
 
   virtual std::string Message( void ) const = 0;
 };
