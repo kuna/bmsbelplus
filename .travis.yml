@@ -1,8 +1,6 @@
 language: cpp
 
 before-script:
-  - mkdir build
-  - cd build
-  - cmake ..
+  - cmake .
 
-script: make -C ./build
+script: make
