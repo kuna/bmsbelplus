@@ -1,5 +1,5 @@
-#include "bmsbel\bms_time.h"
-#include "bmsbel\bms_exception.h"
+#include "bmsbel/bms_time.h"
+#include "bmsbel/bms_exception.h"
 
 #include <algorithm>
 #include <vector>

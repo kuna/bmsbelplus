@@ -1,9 +1,9 @@
-#include "bmsbel\bms_buffer.h"
+#include "bmsbel/bms_buffer.h"
 
-#include "bmsbel\bms_define.h"
-#include "bmsbel\bms_util.h"
-#include "bmsbel\bms_exception.h"
-#include "bmsbel\bms_word.h"
+#include "bmsbel/bms_define.h"
+#include "bmsbel/bms_util.h"
+#include "bmsbel/bms_exception.h"
+#include "bmsbel/bms_word.h"
 
 
 BmsBuffer::BmsBuffer()

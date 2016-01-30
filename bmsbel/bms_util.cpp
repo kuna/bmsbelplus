@@ -2,14 +2,16 @@
 #include <ctype.h>
 #include <math.h>
 #include <errno.h>
+#include <memory.h>
+#include <string.h>
 
 #include <algorithm>
 #include <string>
 
-#include "bmsbel\bms_define.h"
-#include "bmsbel\bms_util.h"
-#include "bmsbel\bms_exception.h"
-#include "iconv\iconv.h"
+#include "bmsbel/bms_define.h"
+#include "bmsbel/bms_util.h"
+#include "bmsbel/bms_exception.h"
+#include "iconv/iconv.h"
 
 namespace {
 	const char HEX36_TABLE[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -207,7 +209,7 @@ bool BmsUtil::wchar_to_utf8(const wchar_t *org, char *out, int maxlen)
 	// because WCHAR is a little different from UTF8 (\0 bytes included)
 	//
 	iconv_t cd = iconv_open("UTF-8", "UTF-16LE");
-	if ((int)cd == -1)
+	if (cd == (void*)-1)
 		return false;
 
 	out[0] = 0;
@@ -227,7 +229,7 @@ bool BmsUtil::wchar_to_utf8(const wchar_t *org, char *out, int maxlen)
 bool BmsUtil::utf8_to_wchar(const char *org, wchar_t *out, int maxlen)
 {
 	iconv_t cd = iconv_open("UTF-16LE", "UTF-8");
-	if ((int)cd == -1)
+	if (cd == (void*)-1)
 		return false;
 
 	out[0] = 0;
@@ -247,7 +249,7 @@ bool BmsUtil::utf8_to_wchar(const char *org, wchar_t *out, int maxlen)
 bool BmsUtil::convert_to_utf8(const char *org, char *out, const char *encoding, int maxlen)
 {
 	iconv_t cd = iconv_open("UTF-8", encoding);
-	if ((int)cd == -1)
+	if (cd == (void*)-1)
 		return false;
 
 	out[0] = 0;
@@ -290,7 +292,7 @@ int BmsUtil::IsFileUTF8(const std::string& filename) {
 	// attempt to convert few lines
 	fseek(file, 0, SEEK_SET);
 	iconv_t cd = iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, BmsBelOption::DEFAULT_FALLBACK_ENCODING);
-	if ((int)cd == -1) {
+	if (cd == (void*)-1) {
 		// conversion is not supported
 		return -1;
 	}
@@ -317,7 +319,7 @@ int BmsUtil::IsUTF8(const char* text) {
 	if (strncmp(text, utf8BOM, 3) == 0) return true;
 	// initalize iconv
 	iconv_t cd = iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, BmsBelOption::DEFAULT_FALLBACK_ENCODING);
-	if ((int)cd == -1) {
+	if (cd == (void*)-1) {
 		// conversion is not supported
 		return -1;
 	}
@@ -362,7 +364,7 @@ bool BmsUtil::OpenFile(FILE **f, const char* filename, const char* mode) {
 	utf8_to_wchar(mode, mode_w, 100);
 	r = _wfopen_s(f, filename_w, mode_w);
 #else
-	r = _fopen_s(&f, filename, mode);
+	r = fopen_s(f, filename, mode);
 #endif
 	if (r != 0) {
 		return false;

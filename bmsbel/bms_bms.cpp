@@ -1,11 +1,11 @@
 #include <stdio.h>
 
-#include "bmsbel\bms_bms.h"
+#include "bmsbel/bms_bms.h"
 
-#include "bmsbel\bms_define.h"
-#include "bmsbel\bms_util.h"
-#include "bmsbel\bms_exception.h"
-#include "bmsbel\bms_parser.h"
+#include "bmsbel/bms_define.h"
+#include "bmsbel/bms_util.h"
+#include "bmsbel/bms_exception.h"
+#include "bmsbel/bms_parser.h"
 
 #include <algorithm>
 

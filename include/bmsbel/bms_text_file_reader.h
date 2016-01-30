@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include <string>
-#include "iconv\iconv.h"
+#include "iconv/iconv.h"
 
 class BmsTextFileReader {
 public:

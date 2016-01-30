@@ -1,0 +1,1 @@
+/home/kuna/Github/bmsbelplus/CMakeFiles/bmsbel.dir

@@ -1,6 +1,6 @@
-#include "bmsbel\bms_channel.h"
+#include "bmsbel/bms_channel.h"
 
-#include "bmsbel\bms_exception.h"
+#include "bmsbel/bms_exception.h"
 
 // -- BmsChannel ---------------------------------------------------------
 BmsChannel::BmsChannel(const BmsWord& channel_number) :

@@ -2,12 +2,14 @@
 
 #include <utility>
 
-#include "bmsbel\bms_parser.h"
-#include "bmsbel\bms_bms.h"
-#include "bmsbel\bms_util.h"
-#include "bmsbel\bms_exception.h"
+#include "bmsbel/bms_parser.h"
+#include "bmsbel/bms_bms.h"
+#include "bmsbel/bms_util.h"
+#include "bmsbel/bms_exception.h"
 #include <time.h>
 #include <stdarg.h>
+#include <memory.h>
+#include <string.h>
 
 /*
  * http://hitkey.nekokan.dyndns.info/cmds.htm

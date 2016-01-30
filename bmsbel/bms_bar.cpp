@@ -1,6 +1,6 @@
-#include "bmsbel\bms_bar.h"
-#include "bmsbel\bms_bms.h"
-#include "bmsbel\bms_util.h"
+#include "bmsbel/bms_bar.h"
+#include "bmsbel/bms_bms.h"
+#include "bmsbel/bms_util.h"
 
 // -- BmsBarManager ------------------------------------------------------
 BmsBarManager::BmsBarManager()
