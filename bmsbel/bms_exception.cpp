@@ -5,8 +5,7 @@
 
 
 // -- BmsException -------------------------------------------------------
-BmsException::BmsException( void ) :
-std::domain_error( "BmsException" )
+BmsException::BmsException( void )
 {
 }
 

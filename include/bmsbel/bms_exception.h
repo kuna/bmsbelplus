@@ -1,7 +1,6 @@
 #ifndef BMSBEL_EXCEPTION_H_
 #define BMSBEL_EXCEPTION_H_
 
-#include <stdexcept>
 #include <typeinfo>
 #include "bms_word.h"
 
@@ -18,7 +17,7 @@ private:
 
 
 // -- BmsException -------------------------------------------------------
-class BmsException : public std::domain_error {
+class BmsException {
 public:
   explicit BmsException( void );
 
