@@ -44,7 +44,7 @@ namespace BmsParser {
 		}
 	}
 
-	Parser::Parser(BmsBms& bms) : Parser(bms, {true, time(0)}) {}
+	Parser::Parser(BmsBms& bms) : Parser(bms, {true, (unsigned int)time(0)}) {}
 	Parser::Parser(BmsBms& bms, ParsingInfo info_) : bms_(bms), info_(info_) { Clear(); }
 
 	void Parser::WriteLogLine(const char* t, ...) {

@@ -257,6 +257,7 @@ BmsBms::SaveBmsFile(const char* path) {
 	if (fopen_s(&fp, path, "wb") == 0) {
 		fputs(ToString().c_str(), fp);
 		fclose(fp);
+		return true;
 	}
 	else return false;
 }

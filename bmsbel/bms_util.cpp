@@ -273,7 +273,7 @@ bool BmsUtil::convert_to_utf8(const char *org, char *out, const char *encoding, 
 //
 // global buffer for class
 //
-char utf8BOM[3] = { 0xEF, 0xBB, 0xBF };
+char utf8BOM[3] = { (char)0xEF, (char)0xBB, (char)0xBF };
 int BmsUtil::IsFileUTF8(const std::string& filename) {
 	FILE *file;
 	if (!OpenFile(&file, filename.c_str(), "r"))

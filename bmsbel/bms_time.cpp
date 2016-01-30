@@ -124,7 +124,7 @@ double BmsTimeManager::GetBPMFromBar(double bar) {
 
 namespace {
 	struct _BPMData {
-		int barsize;
+		barindex barsize;
 		double bpm;
 	};
 	bool _comp(_BPMData &a, _BPMData &b) { return a.barsize < b.barsize; }
@@ -139,7 +139,7 @@ double BmsTimeManager::GetMediumBPM() {
 		prevbar = it->first;
 	}
 	for (auto it = _bpm.begin(); it != _bpm.end(); ++it) {
-		_bpmarray.push_back({ it->first, it->second });
+		_bpmarray.push_back({ (barindex)it->first, (double)it->second });
 	}
 	std::sort(_bpmarray.begin(), _bpmarray.end(), _comp);
 	return _bpmarray[_bpmarray.size() / 2].bpm;
