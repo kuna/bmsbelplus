@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(bmsbel)
-include_directories("${bmsbel_SOURCE_DIR}/include")
-message("${bmsbel_SOURCE_DIR}/include")
+include_directories("include")
 file(GLOB SRC
   "bmsbel/*.cpp"
 )
