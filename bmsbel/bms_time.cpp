@@ -127,7 +127,7 @@ namespace {
 		barindex barsize;
 		double bpm;
 	};
-	bool _comp(_BPMData &a, _BPMData &b) { return a.barsize < b.barsize; }
+	bool _comp(const _BPMData &a, const _BPMData &b) { return a.barsize < b.barsize; }
 }
 
 double BmsTimeManager::GetMediumBPM() {
