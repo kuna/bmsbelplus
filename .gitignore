@@ -6,8 +6,11 @@
 ipch
 *.sdf
 *.opensdf
+
+# bin
 Debug
 Release
+*.so
 
 # dev libs
 lib
