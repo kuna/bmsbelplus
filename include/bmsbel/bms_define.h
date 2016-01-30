@@ -79,6 +79,26 @@ namespace BmsBelOption {
 
 #define BMSBEL_BAR_LARGEINT_
 
+
+
+// vs compatible
+#ifndef __STDC_WANT_SECURE_LIB__
+ 
+typedef long long int __int64;
+#define vsprintf_s(buf, fmt, vl)			vsprintf(buf, fmt, vl)
+#define strcpy_s(dst, size, src)			strcpy(dst, src)
+#define scanf_s(fmt, size, ...)				scanf(fmt, ##__VA_ARGS__)
+#define memmove_s(dst, size, src, count)	memmove(dst, src, count)
+#define gets_s(buf, size)					gets(buf)
+#define fopen_s(pFile,filename,mode)		((*(pFile))=fopen((filename),(mode)))==NULL
+#define _fopen_s(a,b,c)						fopen_s(a,b,c)
+
+#else
+
+#endif // __STDC_WANT_SECURE_LIB__
+
+
+
 #ifdef BMSBEL_BAR_LARGEINT_
 typedef __int64			barindex;
 #else

@@ -1,8 +1,7 @@
-#include "bmsbel\bms_regist_array.h"
-
-#include "bmsbel\bms_define.h"
-#include "bmsbel\bms_util.h"
-#include "bmsbel\bms_exception.h"
+#include "bmsbel/bms_regist_array.h"
+#include "bmsbel/bms_define.h"
+#include "bmsbel/bms_util.h"
+#include "bmsbel/bms_exception.h"
 
 bool
 BmsRegistArray::CheckConstruction(const std::string& name, const std::string& str)

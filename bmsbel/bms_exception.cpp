@@ -1,7 +1,7 @@
 #include <sstream>
 
-#include "bmsbel\bms_define.h"
-#include "bmsbel\bms_exception.h"
+#include "bmsbel/bms_define.h"
+#include "bmsbel/bms_exception.h"
 
 
 // -- BmsException -------------------------------------------------------

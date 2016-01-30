@@ -1,6 +1,7 @@
-#include "bmsbel\bms_note.h"
-#include "bmsbel\bms_define.h"
+#include "bmsbel/bms_note.h"
+#include "bmsbel/bms_define.h"
 
+#include <memory.h>
 
 
 namespace {

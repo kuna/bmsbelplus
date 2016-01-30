@@ -1,9 +1,10 @@
-#include "bmsbel\bms_define.h"
-#include "bmsbel\bms_exception.h"
+#include "bmsbel/bms_define.h"
+#include "bmsbel/bms_exception.h"
 
-#include "bmsbel\bms_header_table.h"
-#include "bmsbel\bms_util.h"
+#include "bmsbel/bms_header_table.h"
+#include "bmsbel/bms_util.h"
 
+#include <string.h>
 
 BmsHeaderTable::BmsHeaderTable(void) :
 table_()

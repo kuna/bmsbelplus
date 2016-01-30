@@ -1,10 +1,10 @@
 #include <errno.h>
 
-#include "bmsbel\bms_define.h"
-#include "bmsbel\bms_exception.h"
+#include "bmsbel/bms_define.h"
+#include "bmsbel/bms_exception.h"
 
-#include "bmsbel\bms_text_file_reader.h"
-#include "bmsbel\bms_util.h"
+#include "bmsbel/bms_text_file_reader.h"
+#include "bmsbel/bms_util.h"
 
 BmsTextFileReader::BmsTextFileReader(const std::string& filename, const char *encoding) :
 filename_(filename),
@@ -15,7 +15,7 @@ buf_iconv_out((char*)buf_char_utf8)
 	if (!BmsUtil::OpenFile(&file_, filename.c_str(), "r")) {
 		throw BmsFileOpenException(filename, errno);
 	}
-	if ((int)cd_ == -1) {
+	if ((void*)cd_ == (void*)-1) {
 		throw BmsFileNotSupportedEncoding(filename, errno);
 	}
 }

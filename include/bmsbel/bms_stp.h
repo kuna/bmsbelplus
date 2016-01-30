@@ -1,10 +1,11 @@
 #ifndef BMSBEL_BMS_STP_
 #define BMSBEL_BMS_STP_
 
-#include "bmsbel\bms_bar.h"
+#include "bms_bar.h"
 
 #include <sstream>
 #include <map>
+#include <stdio.h>
 
 class BmsSTPManager {
 public:
@@ -18,8 +19,8 @@ public:
 	
 	std::string ToString() const {
 		std::ostringstream ss;
-		for (auto it = Begin(); it != End(); ++it) {
-			char fmt[10]; sprintf_s(fmt, "%03.03f", it->first);
+		for (ConstIterator it = Begin(); it != End(); ++it) {
+			char fmt[10]; sprintf(fmt, "%03.03f", it->first);
 			ss << "#STP " << fmt << " " << it->second << "\n";
 		}
 		return ss.str();
