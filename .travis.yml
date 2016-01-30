@@ -1,6 +1,6 @@
 language: cpp
 
 before-script:
-  - cmake ./
+  - cmake.sh
 
-script: make
+script: make -C ./build
