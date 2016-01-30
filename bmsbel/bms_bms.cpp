@@ -542,30 +542,6 @@ double BmsBms::GetEndTime() {
 	return std::max(t, time_manager_.GetTimeFromBar(lastbar));
 }
 
-namespace {
-	int GetLaneIndex(int channel) {
-		// normal note
-		// 11 -- 17
-		// 21 -- 27
-		// invisible note
-		// 31 -- 36
-		// 41 -- 46
-		// longnote (loose)
-		// 51 -- 59
-		// 61 -- 69
-		// minefield
-		// D1 -- D9
-		// E1 -- E9
-		int channel_to_lane[] = {
-			0, 1, 2, 3, 4, 5, 0, 8, 6, 7,
-			10, 11, 12, 13, 14, 15, 10, 18, 16, 17,
-		};
-		int b = (channel - 36) / 36;
-		int s = channel % 36 % 10;
-		return ((b % 2) * 10 + channel_to_lane[s]);
-	}
-}
-
 void
 BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 {
@@ -587,8 +563,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 	for (int c = 0; c < 72; c++) if (c % 36 < 10) {
 		// normal note (#LNOBJ)
 		if (channel_manager_.IsExists(c + 36)) {	// 11 ~ 29
-			int channel = c + 36;
-			int laneidx = GetLaneIndex(channel);
+			BmsWord channel(c + 36);
 			barindex prev = 0;	// where previous note existed bar
 			ITER_CHANNEL(channel, iter) {
 				barindex bar = iter->first;
@@ -597,31 +572,30 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 				if (current_word == lnobj_word && prev) {
 					// it means end of the longnote
 					// if previous longnote not exists, then don't make it longnote (wrong BMS)
-					BmsNote prevnote = note_manager_[laneidx].Get(prev);
+					BmsNote prevnote = note_manager_[channel].Get(prev);
 					prevnote.type = BmsNote::NOTE_LNSTART;
-					note_manager_[laneidx].Set(prev, prevnote);
-					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+					note_manager_[channel].Set(prev, prevnote);
+					note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
 					prev = 0;
 				}
 				else {
 					if (current_word == lnobj_word)
 						printf("Bms Warning: wrong end of the longnote found.\n");
-					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_NORMAL, current_word));
+					note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_NORMAL, current_word));
 					prev = bar;
 				}
 			}
 		}
 		// long note (#LNTYPE)
 		if (channel_manager_.IsExists(c + 5 * 36)) {	// 51 ~ 69
-			int channel = c + 5 * 36;
-			int laneidx = GetLaneIndex(channel);
+			BmsWord channel(c + 5 * 36);
 			bool isln = false;
 			int step;	// used to find #LN
 			ITER_CHANNEL(channel, iter) {
 				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (!isln && current_word != BmsWord::MIN) {
-					note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNSTART, current_word));
+					note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNSTART, current_word));
 				}
 				else {
 					if (LNtype == 2) {
@@ -629,16 +603,16 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 						// then it's PRESS note(HELL CHARGE)
 						auto iternext = iter; ++iternext;
 						if (iternext != GetChannelManager()[channel].GetBuffer().End() && iternext->second != BmsWord::MIN) {
-							note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_PRESS, current_word));
+							note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_PRESS, current_word));
 							continue;
 						}
 						else {
-							note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+							note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
 						}
 					}
 					else {
 						if (current_word == BmsWord::MIN) continue;
-						note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+						note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
 					}
 				}
 				isln = !isln;
@@ -646,24 +620,22 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 		}
 		// mine note
 		if (channel_manager_.IsExists(c + 13 * 36)) {	// D1 ~ E9
-			int channel = c + 13 * 36;
-			int laneidx = GetLaneIndex(channel);
+			BmsWord channel(c + 13 * 36);
 			ITER_CHANNEL(channel, iter) {
 				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (current_word == BmsWord::MIN) continue;
-				note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_MINE, current_word));
+				note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_MINE, current_word));
 			}
 		}
 		// invisible note
 		if (channel_manager_.IsExists(c + 3 * 36)) {	// 31 ~ 49
-			int channel = c + 3 * 36;
-			int laneidx = GetLaneIndex(channel);
+			BmsWord channel(c + 3 * 36);
 			ITER_CHANNEL(channel, iter) {
 				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (current_word == BmsWord::MIN) continue;
-				note_manager_[laneidx].Set(bar, BmsNote(BmsNote::NOTE_HIDDEN, current_word));
+				note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_HIDDEN, current_word));
 			}
 		}
 	}

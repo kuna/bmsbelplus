@@ -117,7 +117,8 @@ public:
 	// use iterator to get note existing bar
 	void GetNoteExistBar(std::set<barindex> &barmap);
 
-	BmsNoteLane& operator[](int i) { return lanes_[i]; }
+	BmsNoteLane& operator[](int i);			// return by lane index
+	BmsNoteLane& operator[](BmsWord v);		// return by channel index -> lane
 
 	// about note modifing
 	// - better then modifying original bms file,

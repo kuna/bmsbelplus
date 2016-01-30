@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libogg", "libogg\libogg.vcxproj", "{EEE53DA1-5CF6-4E1B-AED2-8534504AA58C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libvorbis", "libvorbis\libvorbis.vcxproj", "{AB82F94B-0C26-498C-B109-86E93F1895CE}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmstest", "bmstest\bmstest.vcxproj", "{4120A5D2-62A1-4CC9-8A41-75C83954399C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{29707C0A-73E2-43DE-8F6D-F2DB06808D14} = {29707C0A-73E2-43DE-8F6D-F2DB06808D14}
@@ -25,14 +21,6 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{EEE53DA1-5CF6-4E1B-AED2-8534504AA58C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{EEE53DA1-5CF6-4E1B-AED2-8534504AA58C}.Debug|Win32.Build.0 = Debug|Win32
-		{EEE53DA1-5CF6-4E1B-AED2-8534504AA58C}.Release|Win32.ActiveCfg = Release|Win32
-		{EEE53DA1-5CF6-4E1B-AED2-8534504AA58C}.Release|Win32.Build.0 = Release|Win32
-		{AB82F94B-0C26-498C-B109-86E93F1895CE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{AB82F94B-0C26-498C-B109-86E93F1895CE}.Debug|Win32.Build.0 = Debug|Win32
-		{AB82F94B-0C26-498C-B109-86E93F1895CE}.Release|Win32.ActiveCfg = Release|Win32
-		{AB82F94B-0C26-498C-B109-86E93F1895CE}.Release|Win32.Build.0 = Release|Win32
 		{4120A5D2-62A1-4CC9-8A41-75C83954399C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4120A5D2-62A1-4CC9-8A41-75C83954399C}.Debug|Win32.Build.0 = Debug|Win32
 		{4120A5D2-62A1-4CC9-8A41-75C83954399C}.Release|Win32.ActiveCfg = Release|Win32

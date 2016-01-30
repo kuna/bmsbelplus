@@ -90,6 +90,7 @@ public:
 
 	barindex GetObjectExistsMaxPosition(void) const;
 	barindex GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction func) const;
+	void GetObjectExistBar(std::set<barindex> &barmap) const;
 
 	void MultiplyBarDivisionCount(double multiplier);
 

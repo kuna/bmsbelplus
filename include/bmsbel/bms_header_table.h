@@ -33,6 +33,9 @@ public:
 	bool Query(const std::string& key, double* v);
 	bool Query(const std::string& key, std::string& v);
 	bool Query(const std::string& key, char* v);
+#ifdef USE_MBCS
+	bool Query(const std::string& key, std::wstring& v);
+#endif
 
 	// -- Iterator ---------------------------------------------------------
 	typedef std::map<std::string, BmsHeader>::const_iterator Iterator;

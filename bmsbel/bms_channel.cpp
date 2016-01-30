@@ -463,6 +463,11 @@ BmsChannelManager::GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction f
 	return pos;
 }
 
+void BmsChannelManager::GetObjectExistBar(std::set<barindex> &barmap) const {
+	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
+		it->second->GetObjectExistBar(barmap);
+	}
+}
 
 void
 BmsChannelManager::MultiplyBarDivisionCount(double multiplier)
