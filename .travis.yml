@@ -4,7 +4,7 @@
 
 language: cpp
 compiler:
-  - g++
+  - clang++
 
 before_script:
   - mkdir build
