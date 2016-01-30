@@ -1,7 +1,5 @@
 # BmsBel+
 
-[![travis](https://travis-ci.org/kuna/bmsbelplus.svg)](https://travis-ci.org/kuna/bmsbelplus)
-
 BMS library for C++
 
 modifed by @lazykuna
@@ -20,8 +18,8 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 - nested #RANDOM statement
 - code coverage (processing)
 - documentation (processing)
+- compilable with g++/clang++ (c++11)
 - (TODO) create bmsbgmmanager / bmsbga object?
-- (TODO) compile with MinGW
 - (TODO) git wiki documentation
 
 ### just a little documentation ...
