@@ -222,7 +222,17 @@ namespace bmstest
 		}
 
 		TEST_METHOD(BMS_Save_Test) {
-			// (TODO)
+			/*
+			 * Test part
+			 * - Save
+			 * (COMMENT: if you want to save withou syntax being parsed, 
+			    you should get syntax line from parser and append it to this file.)
+			 */
+			BmsBms bms;
+			wchar_t filename[] = L"..\\test\\bms\\engine_XYZ.bms";
+			wchar_t filename_out[] = L"..\\test\\bms\\engine_out.bms";
+			bms.LoadBmsFile(filename);
+			bms.SaveBmsFile(filename_out);
 		}
 
 		TEST_METHOD(BMS_Negative_BPM) {
@@ -255,6 +265,14 @@ namespace bmstest
 			 * - RANDOM
 			 * - Training mode
 			 * - S-RANDOM
+			 */
+		}
+
+		TEST_METHOD(BMS_LNTYPE2) {
+			/*
+			 * Test part
+			 * - LNTYPE 2
+			 * - Note count (hellcharge)
 			 */
 		}
 #endif

@@ -32,15 +32,15 @@ public:
 	void SetRatio(unsigned int measure, double l);
 	double GetRatio(unsigned int measure) const;
 
-	unsigned int	GetMeasureByBarNumber(barindex bar) const;
+	measureindex	GetMeasureByBarNumber(barindex bar) const;
 	double			GetMeasureByBar(double bar) const;
-	barindex		GetBarNumberByMeasure(unsigned int measure) const;
+	barindex		GetBarNumberByMeasure(measureindex measure) const;
 	double			GetBarByMeasure(double measure) const;
 	double			GetPosByBar(double bar) const;
 	int				GetBarByPos(double pos, int step = 4) const;
 
 	/** @brief returns division(step) of measure */
-	unsigned int	GetDivision(const BmsBuffer& channelbuf, unsigned int measure) const;
+	unsigned int	GetDivision(const BmsBuffer& channelbuf, measureindex measure) const;
 	/** @brief get resolution of bar */
 	unsigned int	GetResolution() const { return barresolution_; }
 	/** @brief set resolution of bar */

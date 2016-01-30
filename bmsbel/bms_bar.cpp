@@ -5,12 +5,12 @@
 // -- BmsBarManager ------------------------------------------------------
 BmsBarManager::BmsBarManager()
 {
-	barresolution_ = BmsConst::BAR_DEFAULT_RESOLUTION;
 	Clear();
 }
 
 void BmsBarManager::Clear() {
 	// fill all array with default bar count
+	barresolution_ = BmsConst::BAR_DEFAULT_RESOLUTION;
 	for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++)
 		barcount_[i] = barresolution_;
 	InvalidateCache();
@@ -92,12 +92,13 @@ BmsBarManager::GetDivision(const BmsBuffer& channelbuf, unsigned int measure) co
 {
 	barindex bar = GetBarNumberByMeasure(measure);
 	barindex bar_end = GetBarNumberByMeasure(measure + 1);
-	int barsize = barcount_[measure];
-	unsigned int step = barsize;
+	barindex barsize = barcount_[measure];
+	barindex step = barsize;
 	for (auto it = channelbuf.Begin(); it != channelbuf.End(); ++it) {
 		if (it->first >= bar_end) break;
 		if (it->first >= bar) {
 			barindex relativepos = it->first - bar;
+			if (relativepos == 0) continue;
 			step = BmsUtil::GCD(step, relativepos);
 		}
 	}

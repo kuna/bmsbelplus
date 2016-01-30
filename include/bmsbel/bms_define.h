@@ -80,9 +80,11 @@ namespace BmsBelOption {
 #define BMSBEL_BAR_LARGEINT_
 
 #ifdef BMSBEL_BAR_LARGEINT_
-typedef __int64	barindex;
+typedef __int64			barindex;
 #else
-typedef int		barindex;
+typedef int				barindex;
 #endif
+
+typedef unsigned int	measureindex;
 
 #endif // BMSBEL_DEFINE_H_

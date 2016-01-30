@@ -107,8 +107,8 @@ BmsUtil::IntegerToHex36(int x)
 }
 
 
-int
-BmsUtil::GCD(int x, int y)
+barindex
+BmsUtil::GCD(barindex x, barindex y)
 {
 	if (x == 0 || y == 0) { return 0; }
 	x = x > 0 ? x : -x;
@@ -120,8 +120,8 @@ BmsUtil::GCD(int x, int y)
 	return x;
 }
 
-int
-BmsUtil::LCM(int x, int y)
+barindex
+BmsUtil::LCM(barindex x, barindex y)
 {
 	if (x == 0 || y == 0) { return 0; }
 	return x * y / BmsUtil::GCD(x, y);

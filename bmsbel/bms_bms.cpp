@@ -156,9 +156,37 @@ BmsBms::Merge(const BmsBms& other)
 	}
 }
 
-void BmsBms::Training(barindex startbar, barindex endbar, int repeat)
+void BmsBms::Training(BmsBms &out, measureindex sm, measureindex em, int repeat)
 {
+	// this modifies all channels / measures
+	out.Clear();
 
+	out.bar_manager_.SetResolution((double)bar_manager_.GetResolution() / BmsConst::BAR_DEFAULT_RESOLUTION);
+	int i = 0;
+	for (int rep = 0; rep < repeat; rep++) {
+		for (measureindex m = sm; m < em; m++) {
+			out.bar_manager_.SetRatio(i, bar_manager_.GetRatio(m));
+			i++;
+		}
+	}
+
+	barindex sbar = bar_manager_.GetBarByMeasure(sm);
+	barindex ebar = bar_manager_.GetBarByMeasure(em + 1) - 1;
+	barindex barsize = ebar - sbar + 1;
+	unsigned int bufidx = 0;
+	for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
+		bufidx = 0;
+		for (auto bt = it->second->Begin(); bt != it->second->End(); ++bt) {
+			BmsBuffer buf = (**bt).SubBuffer(sbar, barsize);
+			for (int rep = 0; rep < repeat; rep++) {
+				out.channel_manager_[it->first][bufidx].Merge(barsize * rep, buf);
+			}
+			bufidx++;
+		}
+	}
+
+	// finished, invalidate time
+	out.InvalidateTimeTable();
 }
 
 
@@ -250,6 +278,7 @@ BmsBms::SaveBmsFile(const wchar_t* path) {
 	if (_wfopen_s(&fp, path, L"wb") == 0) {
 		fputs(ToString().c_str(), fp);
 		fclose(fp);
+		return true;
 	}
 	else return false;
 }

@@ -24,8 +24,8 @@ namespace BmsUtil {
 
 	char IntegerToHex36(int x);
 
-	int GCD(int x, int y);
-	int LCM(int x, int y);
+	barindex GCD(barindex x, barindex y);
+	barindex LCM(barindex x, barindex y);
 	unsigned int GetDenominator(double x, unsigned int max);
 
 	void StringToUpper(std::string& str);
