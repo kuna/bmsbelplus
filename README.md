@@ -9,7 +9,7 @@ original code from http://childs.squares.net/program/bmsbel/index.html by CHILD,
 ### additional modification:
 - compilable /w vc++ compiler
 - support ```#LNTYPE 1```
-- support ```#LNTYPE 2
+- support ```#LNTYPE 2```
 - parse/process #BGA, #STP definition
 - UTF8/auto-encode support (additional bmsext suggestion from (http://cosmic.mearie.org/f/sonorous/bmsexts)[Kang Seonghoon])
 - (R-/H-/S-)RANDOM, MIRROR, ALL-LN, NO_LN, ALL-SCR, MORENOTE, LESSNOTE, SPEED_MULTIPLY, MOREMINE, NOMINE, SP-TO-DP, DP-TO-SP, BATTLE, Training(copy and repeat) option available
