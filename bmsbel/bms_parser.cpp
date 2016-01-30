@@ -3,595 +3,498 @@
 #include <utility>
 
 #include "bmsbel\bms_parser.h"
-
+#include "bmsbel\bms_bms.h"
 #include "bmsbel\bms_util.h"
 #include "bmsbel\bms_exception.h"
 #include <time.h>
+#include <stdarg.h>
 
+/*
+ * http://hitkey.nekokan.dyndns.info/cmds.htm
+ */
 
-// -- BmsParser::StartInfo -----------------------------------------------
-BmsParser::StartInfo::StartInfo(BmsBms&                   bms,
-	BmsRandom::RootStatement& root_statement,
-	Reactor&                  reactor) :
-	bms_(bms),
-	root_statement_(root_statement),
-	reactor_(reactor),
-	make_syntax_tree_(true),
-	ignore_channel_set_()
-{
-}
+namespace BmsParser {
+	namespace {
+		// simple utils
+		const char* Trim(const char* str) {
+			while ((*str == ' ' || *str == '\t')
+				&& *str != 0) ++str;
+			return str;
+		}
+		const char* ParseSeparator(const char* str) {
+			if (!str) return 0;
+			while (*str != ' ' && *str != '\t' && *str != '\0') ++str;
+			if (*str == 0) return 0;
+			else return str;
+		}
+		const char* ParseColon(const char* str) {
+			while (*str != ':') ++str;
+			if (*str == 0) return 0;
+			else return ++str;
+		}
+		bool IsBar(const char* str) {
+			return (BmsUtil::IsDigit(str[0]) &&
+				BmsUtil::IsDigit(str[1]) &&
+				BmsUtil::IsDigit(str[2]));
+		}
+		bool IsComment(const char* str) {
+			return *str != '#' || !*str;
+		}
+	}
 
-// -- BmsParser::ParsingInfo ---------------------------------------------
-BmsParser::ParsingInfo::ParsingInfo(StartInfo&  start_info,
-	FrameStack& frame_stack) :
-	bms_(start_info.bms_),
-	root_statement_(start_info.root_statement_),
-	reactor_(start_info.reactor_),
-	make_syntax_tree_(start_info.make_syntax_tree_),
-	ignore_channel_set_(start_info.ignore_channel_set_),
-	line_data_(),
-	frame_stack_(frame_stack),
-	random_value_queue_(),
-	is_first_parse_(true),
-	line_number_(0),
-	bar_(0),
-	channel_number_(BmsWord::MIN),
-	key_(),
-	value_(),
-	bar_change_ratio_(1.0),
-	word_array_()
-{
-}
+	Parser::Parser(BmsBms& bms) : Parser(bms, {true, time(0)}) {}
+	Parser::Parser(BmsBms& bms, ParsingInfo info_) : bms_(bms), info_(info_) { Clear(); }
 
-// -- BmsParser::Reactor -------------------------------------------------
-BmsParser::Reactor
-BmsParser::Reactor::DefaultObject;
-
-BmsParser::Reactor::Reactor(void) :
-random_value_(static_cast<unsigned int>(time(NULL)))
-{
-}
-
-BmsParser::Reactor::~Reactor()
-{
-}
-
-std::string
-BmsParser::Reactor::AtDuplicateHeader(Parser& parser,
-const std::string header,
-const std::string before,
-const std::string present)
-{
-	NOT_USE_VAR(before);
-	NOT_USE_VAR(present);
-	if (BmsBelOption::ERROR_ON_DUPLICATED_HEADER)
-		throw BmsParseDuplicateHeaderException(parser.GetInfo().line_number_, header);
-	else
-		// cover with new value
-		return present;
-}
-
-double
-BmsParser::Reactor::AtDuplicateBarChange(Parser& parser,
-unsigned int bar,
-double       before,
-double       present)
-{
-	NOT_USE_VAR(before);
-	NOT_USE_VAR(present);
-	throw BmsParseDuplicateBarChangeException(parser.GetInfo().line_number_, bar);
-}
-
-bool
-BmsParser::Reactor::AtParseError(Parser& parser, BmsParseException& e, const std::string& line)
-{
-	NOT_USE_VAR(parser);
-	NOT_USE_VAR(e);
-	NOT_USE_VAR(line);
-	return false;
-}
-
-unsigned int
-BmsParser::Reactor::AtGenerateRandom(Parser& parser, unsigned int max)
-{
-	NOT_USE_VAR(parser);
-	random_value_ = random_value_ * 22695477 + 1;
-	return (((random_value_ >> 16) & 32767) % max) + 1;
-}
-
-void
-BmsParser::Reactor::AtLineDataRead(Parser& parser)
-{
-	NOT_USE_VAR(parser);
-}
-
-void
-BmsParser::Reactor::AtParseStart(Parser& parser)
-{
-	NOT_USE_VAR(parser);
-}
-
-void
-BmsParser::Reactor::AtLineEnd(Parser& parser)
-{
-	NOT_USE_VAR(parser);
-}
-
-void
-BmsParser::Reactor::AtParseEnd(Parser& parser)
-{
-	NOT_USE_VAR(parser);
-}
-
-// -- BmsParser::Parser -----------------------------------------------------------
-#ifdef USE_MBCS
-void
-BmsParser::Parse(const std::wstring& filename_w, BmsBms& bms, const char *encoding)
-{
-	char filename[1024];
-	BmsUtil::wchar_to_utf8(filename_w.c_str(), filename, 1024);
-	Parse(filename, bms, encoding);
-}
-
-void
-BmsParser::Parse(const std::wstring& filename_w, BmsBms& bms)
-{
-	char filename[1024];
-	BmsUtil::wchar_to_utf8(filename_w.c_str(), filename, 1024);
-	Parse(filename, bms);
-}
+	void Parser::WriteLogLine(const char* t, ...) {
+		va_list vl;
+		va_start(vl, t);
+		char buf[1024] = { 0, };
+		vsprintf_s(buf, t, vl);
+		log_ << buf << "\n";
+#ifdef _DEBUG
+		printf("%s\n", buf);
 #endif
-
-void
-BmsParser::Parse(const std::string& filename, BmsBms& bms)
-{
-	if (BmsUtil::IsFileUTF8(filename))
-		BmsParser::Parse(filename, bms, "UTF-8");
-	else
-		BmsParser::Parse(filename, bms, BmsBelOption::DEFAULT_FALLBACK_ENCODING);
-}
-
-void
-BmsParser::Parse(const std::string& filename, BmsBms &bms, const char* encoding)
-{
-	// create default Reactor & StartInfo
-	BmsRandom::RootStatement root_statement;					// for #RANDOM or some etc. commands
-	BmsParser::Reactor reactor;									// handler - but don't do anything this time
-	BmsParser::StartInfo info(bms, root_statement, reactor);	// contains information about parsing BMS
-	BmsParser::Parse(filename, encoding, info);
-}
-
-void
-BmsParser::Parse(const std::string& filename, const char* encoding, StartInfo& start_info)
-{
-	BmsTextFileReader reader(filename, encoding);
-	BmsParser::Parse(reader, start_info);
-}
-
-void
-BmsParser::Parse(BmsTextFileReader& reader, StartInfo& start_info)
-{
-	std::auto_ptr<FrameStack> frame_stack_auto_ptr;
-	if (start_info.make_syntax_tree_) {
-		frame_stack_auto_ptr.reset(new FrameStackMakeSyntaxTree(start_info.bms_, start_info.root_statement_));
-	}
-	else {
-		frame_stack_auto_ptr.reset(new FrameStackMasterOnly(start_info.bms_));
 	}
 
-	BmsParser::Parser parser(start_info, *frame_stack_auto_ptr);
-	{
-		std::string tmp;
-		while (reader.ReadLine(tmp, true)) {
-			for (int i = tmp.length() - 1; i >= 0; --i) {
-				if (tmp[i] == L' ' || tmp[i] == L'\t') {
-					tmp.erase(i);
-				}
-				else {
-					break;
-				}
-			}
-			parser.info_.line_data_.push_back(tmp);
-			parser.info_.reactor_.AtLineDataRead(parser);
-		}
-	}
-	parser.Start();
-}
+	void Parser::Clear() {
+		line_ = 0;
+		line_data_.clear();
+		log_.clear();
+		memset(bgm_dup_count, 0, sizeof(bgm_dup_count));
 
-BmsParser::ParsingInfo&
-BmsParser::Parser::GetInfo(void)
-{
-	return info_;
-}
-
-BmsParser::Parser::Parser(StartInfo& start_info, FrameStack& frame_stack) :
-info_(start_info, frame_stack)
-{
-}
-
-void
-BmsParser::Parser::Start(void)
-{
-	info_.reactor_.AtParseStart(*this);
-
-	std::set<unsigned int> ignore_line_set;
-
-	info_.is_first_parse_ = true;
-	info_.line_number_ = 0;
-	info_.frame_stack_.SetRandomValue(0);
-
-	//
-	// first parsing
-	// - parse metadata / if clause / bar(measure) length first
-	//
-	for (std::vector<std::string>::const_iterator it = info_.line_data_.begin(); it != info_.line_data_.end(); ++it) {
-		info_.line_number_ += 1;
-		try {
-			this->ParseDefault(it->c_str());
-		}
-		catch (BmsParseException& e) {
-			if (NOT(info_.reactor_.AtParseError(*this, e, *it))) {
-				throw;
-			}
-			ignore_line_set.insert(info_.line_number_);
-		}
-		info_.reactor_.AtLineEnd(*this);
-	}
-	if (info_.frame_stack_.GetDepth() > 1) {
-		throw BmsParseNotFoundEndIfException(info_.line_number_);
+		syntax_tag_.clear();
+		panic_ = false;
 	}
 
-	info_.is_first_parse_ = false;
-	info_.line_number_ = 0;
-	info_.frame_stack_.SetRandomValue(0);
-
-	//
-	// second parsing
-	// - parse bar data
-	//
-	for (std::vector<std::string>::const_iterator it = info_.line_data_.begin(); it != info_.line_data_.end(); ++it) {
-		info_.line_number_ += 1;
-		if (ignore_line_set.find(info_.line_number_) != ignore_line_set.end()) {
-			continue;
-		}
-		try {
-			this->ParseDefault(it->c_str());
-		}
-		catch (BmsParseException& e) {
-			if (NOT(info_.reactor_.AtParseError(*this, e, *it))) {
-				throw;
-			}
-			ignore_line_set.insert(info_.line_number_);
-		}
-		info_.reactor_.AtLineEnd(*this);
-	}
-	if (info_.frame_stack_.GetDepth() > 1) {
-		throw BmsParseNotFoundEndIfException(info_.line_number_);
-	}
-
-	info_.reactor_.AtParseEnd(*this);
-}
-
-void
-BmsParser::Parser::ParseDefault(const char* str)
-{
-	while (*str == L' ' || *str == L'\t') {
-		++str;
-	}
-	switch (*str) {
-	case '#':
-		this->ParseHeaderOrBar(str + 1);
-		break;
-
-	case '\0':
-		break;
-
-	default:
-		this->ParseComment(str);
-		break;
-	}
-}
-
-void
-BmsParser::Parser::ParseComment(const char* str)
-{
-	// 今は特に何もしない
-	NOT_USE_VAR(str);
-}
-
-void
-BmsParser::Parser::ParseHeaderOrBar(const char* str)
-{
-	if (BmsUtil::IsDigit(*str)) {
-		this->ParseBar(str);
-	}
-	else if (BmsUtil::IsAlphabet(*str)) {
-		this->ParseHeaderKey(str);
-	}
-	else {
-		throw BmsParseInvalidCharAsHeaderOrBarException(info_.line_number_, std::string(str, 1));
-	}
-}
-
-void
-BmsParser::Parser::ParseHeaderKey(const char* str)
-{
-	info_.key_.clear();
-	for (unsigned int i = 0;; ++i) {
-		if (str[i] == ' ' || str[i] == '\t' || str[i] == '\0') {
-			info_.key_.assign(str, i);
-			BmsUtil::StringToUpper(info_.key_);
-			this->ParseHeaderSeparator(str + i);
-			break;
-		}
-		if (BmsUtil::IsNotHex36(str[i])) {
-			throw BmsParseInvalidCharAsHeaderKeyException(info_.line_number_, std::string(str + i, 1));
-		}
-	}
-}
-
-void
-BmsParser::Parser::ParseHeaderSeparator(const char* str)
-{
-	while (*str == ' ' || *str == '\t') {
-		++str;
-	}
-	this->ParseHeaderValue(str);
-}
-
-void
-BmsParser::Parser::ParseHeaderValue(const char* str)
-{
-	info_.value_.assign(str);
-
-	if (info_.key_ == "RANDOM" || info_.key_ == "IF" || info_.key_ == "ENDIF") {
-		this->ParseRandomStatement();
-		return;
-	}
-
-	if (info_.is_first_parse_) {
-		return;
-	}
-
-	WriteDownFunction function = &Parser::WriteDownHeader;
-	for (BmsRegistArraySet::Iterator it = info_.bms_.GetRegistArraySet().Begin(); it != info_.bms_.GetRegistArraySet().End(); ++it) {
-		if (BmsRegistArray::CheckConstruction(it->first, info_.key_)) {
-			function = &Parser::WriteDownRegistArray;
-			//this->WriteDownRegistArray(master_frame_data_);
-		}
-	}
-	info_.frame_stack_.CallWriteDownFunction(*this, function);
-}
-
-void
-BmsParser::Parser::WriteDownHeader(const FrameData& data)
-{
-	std::string header_value = info_.value_;
-	if (data.bms_.GetHeaders().IsExists(info_.key_)) {
-		header_value = info_.reactor_.AtDuplicateHeader(*this, info_.key_, data.bms_.GetHeaders()[info_.key_].ToString(), info_.value_);
-	}
-	data.bms_.GetHeaders().Set(info_.key_, header_value);
-}
-
-void
-BmsParser::Parser::WriteDownRegistArray(const FrameData& data)
-{
-	std::string header_value = info_.value_;
-	BmsWord pos(info_.key_.substr(info_.key_.length() - 2));
-	std::string array_name = info_.key_.substr(0, info_.key_.length() - 2);
-	if (NOT(data.bms_.GetRegistArraySet().Exists(array_name))) {
-		throw BMS_INTERNAL_EXCEPTION;
-	}
-	BmsRegistArray& regist_array = data.bms_.GetRegistArraySet()[array_name];
-
-	if (regist_array.IsExists(pos)) {
-		header_value = info_.reactor_.AtDuplicateHeader(*this, info_.key_, regist_array[pos], info_.value_);
-	}
-	regist_array.Set(pos, header_value);
-}
-
-void
-BmsParser::Parser::ParseBar(const char* str)
-{
-	if (BmsUtil::IsNotDigit(str[0]) ||
-		BmsUtil::IsNotDigit(str[1]) ||
-		BmsUtil::IsNotDigit(str[2])) {
-		throw BmsParseInvalidCharAsBarException(info_.line_number_, std::string(str, 3));
-	}
-	info_.bar_ = atoi(std::string(str, 3).c_str());
-	this->ParseChannel(str + 3);
-}
-
-void
-BmsParser::Parser::ParseChannel(const char* str)
-{
-	if (NOT(BmsWord::CheckConstruction(str))) {
-		throw BmsParseInvalidCharAsChannelException(info_.line_number_, std::string(str, 2));
-	}
-	info_.channel_number_ = BmsWord(str);
-	if (info_.ignore_channel_set_.find(info_.channel_number_) != info_.ignore_channel_set_.end()) {
-		return;
-	}
-	if ((info_.channel_number_ == BmsWord("02") && info_.is_first_parse_) ||
-		(info_.channel_number_ != BmsWord("02") && NOT(info_.is_first_parse_))) {
-		this->ParseColon(str + 2);
-	}
-}
-
-void
-BmsParser::Parser::ParseColon(const char* str)
-{
-	if (*str != ':') {
-		throw BmsParseInvalidCharAsColonException(info_.line_number_, std::string(str, 1));
-	}
-	if (info_.is_first_parse_) {
-		this->ParseBarChangeValue(str + 1);
-	}
-	else {
-		this->ParseObjectArray(str + 1);
-	}
-}
-
-void
-BmsParser::Parser::ParseBarChangeValue(const char* str)
-{
-	if (NOT(BmsUtil::StringToFloat(str, &info_.bar_change_ratio_))) {
-		throw BmsParseInvalidBarChangeValueException(info_.line_number_, std::string(str));
-	}
-	if (info_.bar_change_ratio_ <= 0.0) {
-		throw BmsParseInvalidBarChangeValueException(info_.line_number_, std::string(str));
-	}
-	info_.frame_stack_.CallWriteDownFunction(*this, &Parser::WriteDownBarChangeValue);
-}
-
-void
-BmsParser::Parser::WriteDownBarChangeValue(const FrameData& data)
-{
-	double tmp = info_.bar_change_ratio_;
-
-	if (data.bms_.GetBarManager()[info_.bar_].GetRatio() != 1.0) {
-		tmp = info_.reactor_.AtDuplicateBarChange(
-			*this, info_.bar_, data.bms_.GetBarManager()[info_.bar_].GetRatio(), info_.bar_change_ratio_);
-	}
-
-	unsigned int new_bar_division_count =
-		this->DecideBarDivisionCountFromBarChange(data.bms_.GetBarManager().GetBarDivisionCount(), tmp);
-	if (new_bar_division_count > data.bms_.GetBarManager().GetBarDivisionCount()) {
-		data.bms_.MultiplyBarDivisionCount(new_bar_division_count / data.bms_.GetBarManager().GetBarDivisionCount());
-	}
-	data.bms_.GetBarManager()[info_.bar_].SetRatio(tmp);
-}
-
-void
-BmsParser::Parser::ParseObjectArray(const char* str)
-{
-	info_.word_array_.clear();
-
-	if (*str == '\0' || *str == ' ' || *str == '\t') {
-		// 先頭で終了はオブジェが一つも無い
-		throw BmsParseNoObjectArrayException(info_.line_number_);
-	}
-
-	for (unsigned int i = 0; str[i] != '\0'; i += 2) {
-		if (BmsWord::CheckConstruction(str + i)) {
-			info_.word_array_.push_back(BmsWord(str + i));
-		}
-		else if (str[i] == '\0' || str[i] == ' ' || str[i] == '\t') {
-			// 末尾の空白無視
-			while (str[i] != '\0') {
-				if (str[i] != ' ' && str[i] != '\t') {
-					throw BmsParseInvalidEndAsObjectArrayException(info_.line_number_);
-				}
-				++i;
-			}
-			break;
+#ifdef USE_MBCS
+	bool Parser::Load(const wchar_t* path) {
+		FILE *fp;
+		if (_wfopen_s(&fp, path, L"rb") == 0) {
+			// read whole file (about limit to 10mb)
+			char *buf = new char[1024 * 1024 * 10];
+			int l = fread(buf, 1, 1024 * 1024 * 10, fp);
+			buf[l] = 0;
+			// parse
+			bool r = Parse(buf);
+			// cleanup
+			delete buf;
+			fclose(fp);
+			return r;
 		}
 		else {
-			throw BmsParseInvalidCharAsObjectArrayException(
-				info_.line_number_, std::string(str + i, str[i + 1] != L'\0' ? 2 : 1));
+			// IO error, but don't make log - log clering is a tidious thing...
+			return false;
+		}
+	}
+#endif
+
+	bool Parser::Load(const char* path) {
+		FILE *fp;
+		if (fopen_s(&fp, path, "rb") == 0) {
+			// read whole file (about limit to 10mb)
+			char *buf = new char[1024 * 1024 * 10];
+			int l = fread(buf, 1, 1024 * 1024 * 10, fp);
+			buf[l] = 0;
+			// parse
+			bool r = Parse(buf);
+			// cleanup
+			delete buf;
+			fclose(fp);
+			return r;
+		}
+		else {
+			// IO error, but don't make log - log clering is a tidious thing...
+			return false;
 		}
 	}
 
-	info_.frame_stack_.CallWriteDownFunction(*this, &Parser::WriteDownObjectArray);
+	bool Parser::Parse(const char* text) {
+		// initalize first
+		Clear();
+		bms_.Clear();
+		WriteLogLine("Bms parsing started");
+
+		// detect encoding
+		char* encodetext = 0;
+		if (!BmsUtil::IsUTF8(text)) {
+			encodetext = new char[1024 * 1024 * 10];
+			bool r = BmsUtil::convert_to_utf8(text, encodetext,
+				BmsBelOption::DEFAULT_FALLBACK_ENCODING, 1024 * 1024 * 10);
+			if (!r) {
+				delete encodetext;
+				encodetext = 0;
+			}
+			else {
+				text = encodetext;
+			}
+		}
+
+		// split lines
+		for (const char *p = text; p && !panic_;) {
+			// trim first
+			p = Trim(p);
+			// cut command
+			const char* pn = strchr(p, '\n');
+			std::string buf;
+			if (!pn)
+				buf.assign(p);
+			else
+				buf.assign(p, pn - p);
+			// trim end of the line
+			while (buf.size() > 0) {
+				if (buf.back() == '\r' || buf.back() == ' ' || buf.back() == '\t')
+					buf.pop_back();
+				else
+					break;
+			}
+			/*
+			 * it's more easy and better to distinguish random statement in here
+			 */
+			if (IsRandomStatement(buf.c_str()))
+				syntax_line_data_.push_back(buf);
+			else
+				line_data_.push_back(buf);
+			if (!pn) break;
+			p = pn + 1;
+		}
+		if (encodetext) delete encodetext;
+
+		// if there's panic in random statement,
+		// stop parsing
+		if (syntax_tag_.size() != 0) {
+			WriteLogLine("parsing error - statement hadn't finished completely.");
+			panic_ = true;
+		}
+		if (panic_) return false;
+
+		// parse lines
+		return ParseLines();
+	}
+
+	bool Parser::ParseLines() {
+		//
+		// if we should parse syntax tree then do it
+		// if #IF ~ #ENDIF clause had failed, then panic! stop parsing bms.
+		//
+		if (info_.make_syntax_tree_)
+			ProcessRandomStatement();
+
+		//
+		// second parsing
+		// - parse metadata / regist / barlengths
+		//
+		line_ = 0;
+		for (auto it = line_data_.begin(); it != line_data_.end(); ++it) {
+			++line_;
+			const char *p = Trim(it->c_str());
+			if (!*p || IsComment(p)) continue;
+			ParseHeaderOrBar(p + 1);
+		}
+
+		//
+		// before parse objects, we have to check resolution of the bar...
+		// if total sum of the measure is too big, we have to decrease resolution.
+		// if too small, then increase resolution.
+		//
+		// reduce if measure is over 2147483647 / 10240 ~= 209715
+		// (or you may can use __int64 as index - but that might cause decrease of the performance)
+		//
+#ifndef BMSBEL_BAR_LARGEINT_
+		double sum_measure = 0;
+		for (int i = 0; i < BmsConst::BAR_MAX_COUNT; i++) {
+			sum_measure += bms_.GetBarManager().GetRatio(i);
+		}
+		while (sum_measure > INT_MAX / BmsConst::BAR_DEFAULT_RESOLUTION) {
+			int resolution_ = bms_.GetBarManager().GetResolution();
+			double mul = 0.5;
+			if (resolution_ % 5 == 0) mul = 0.2;
+			bms_.GetBarManager().SetResolution(mul);
+			sum_measure *= mul;
+		}
+		while (sum_measure < 500) {
+			double mul = 2;
+			bms_.GetBarManager().SetResolution(mul);
+			sum_measure *= mul;
+		}
+#endif
+
+		//
+		// third parsing
+		// - parse objects and add them to buffer
+		//
+		line_ = 0;
+		for (auto it = line_data_.begin(); it != line_data_.end(); ++it) {
+			++line_;
+			const char *p = Trim(it->c_str());
+			if (!*p || IsComment(p)) continue;
+			ParseObjectArray(p + 1);
+		}
+
+		bms_.InvalidateTimeTable();
+		return true;
+	}
+
+	void Parser::ParseComment(const char* str)
+	{
+		NOT_USE_VAR(str);
+	}
+
+	//
+	// SyntaxTree
+	//
+
+#define KEY(v) (key_ == (v))
+	bool Parser::IsRandomStatement(const char* str) {
+		// we should parse a little(like if / endif clause)
+		// to know what part is syntax we're going to parse
+		if (IsComment(str)) return false;
+		str++;
+		const char *p = ParseSeparator(str);
+		if (!p) key_ = str;
+		else key_.assign(str, p - str);
+		BmsUtil::StringToUpper(key_);
+
+		if (KEY("RANDOM") || KEY("RONDOM") || KEY("SETRANDOM") || KEY("ENDRANDOM")) {
+			return true;
+		}
+		else if (KEY("IF") || KEY("SWITCH") || KEY("SETSWITCH")) {
+			syntax_tag_.push_back(key_);
+			return true;
+		}
+		else if (KEY("ENDIF") || KEY("ENDSW")) {
+			if (syntax_tag_.size() == 0) {
+				WriteLogLine("%d line - end tag without start tag", line_);
+				panic_ = true;
+				return false;
+			}
+			std::string starttag = syntax_tag_.back();
+			syntax_tag_.pop_back();
+			// check start ~ end tag matching
+			if (!(KEY("ENDIF") && starttag == "IF" ||
+				KEY("ENDSW") && starttag == "SWITCH" ||
+				KEY("ENDSW") && starttag == "SETSWITCH")) {
+				WriteLogLine("%d line - start ~ end tag doesn't match.", line_);
+				panic_ = true;
+			}
+			return true;
+		}
+		else {
+			if (syntax_tag_.size()) return true;
+			else return false;
+		}
+	}
+
+#define COND			(condition_[syntax_depth_])
+#define CONDMATCHED		(condition_matched_[syntax_depth_])
+#define CONDMATCH(x)	(random_value_[syntax_depth_] == (x))
+	void Parser::ProcessRandomStatement() {
+		// initalize
+		srand(info_.seed_);
+		int syntax_depth_ = 0;
+		std::deque<int>	random_value_;		// currently set random value
+		std::deque<int> condition_;			// is currently parsable?
+		std::deque<int> condition_matched_;	// is condition matched(parsed) before?
+		random_value_.push_back(-1);
+		condition_.push_back(0);
+		condition_matched_.push_back(0);
+
+		for (auto it = syntax_line_data_.begin(); it != syntax_line_data_.end(); ++it) {
+			const char *p = it->c_str() + 1;
+			const char *sep = ParseSeparator(p);
+			std::string key_, value_;
+			if (!sep) {
+				key_.assign(p);
+				value_ = "";
+			}
+			else {
+				key_.assign(p, sep - p);
+				value_.assign(sep + 1);
+			}
+			BmsUtil::StringToUpper(key_);
+			int num_ = atoi(value_.c_str());
+			if (key_ == "RANDOM" || key_ == "SETRANDOM" || key_ == "RONDOM" ||
+				key_ == "SWITCH" || key_ == "SETSWITCH") {
+				++syntax_depth_;
+				random_value_.push_back(-1);
+				condition_.push_back(0);
+				condition_matched_.push_back(0);
+				if (num_) {
+					if (key_ == "SETRANDOM" || key_ == "SETSWITCH") 
+						random_value_[syntax_depth_] = num_;
+					else 
+						random_value_[syntax_depth_] = rand() % num_ + 1;
+				}
+			}
+			else if (key_ == "ENDSW" || key_ == "ENDRANDOM") {
+				--syntax_depth_;
+				random_value_.pop_back();
+				condition_.pop_back();
+				condition_matched_.pop_back();
+			}
+			else if (key_ == "IF" || key_ == "ELSEIF") {
+				if (key_ == "IF") CONDMATCHED = 0;
+				if (!CONDMATCHED && CONDMATCH(num_))
+					COND = 1;
+				else
+					COND = 0;
+			}
+			else if (key_ == "ENDIF") {
+				COND = 0;
+			}
+			else if (key_ == "CASE") {
+				COND |= CONDMATCH(num_);
+			}
+			else if (key_ == "SKIP") {
+				// kind of `break`
+				COND = 0;
+			}
+			else if (key_ == "DEF") {
+				// kind of `default`
+				COND = 1;
+			}
+			else {
+				// else are basic commands - add them to line_data_
+				if (COND)
+					line_data_.push_back(*it);
+			}
+			CONDMATCHED += COND;
+		}
+
+		// after processing, clear syntax_line_data_
+		// since original data was translated.
+		syntax_line_data_.clear();
+	}
+
+	//
+	// HeaderOrBar
+	//
+	
+	void Parser::ParseHeaderOrBar(const char* str)
+	{
+		if (BmsUtil::IsDigit(*str)) {
+			this->ParseMeasure(str);
+		}
+		else if (BmsUtil::IsAlphabet(*str)) {
+			this->ParseHeaderKey(str);
+		}
+		else {
+			WriteLogLine("%d line - header parsing error (%s)", line_, str);
+		}
+	}
+
+	void Parser::ParseHeaderKey(const char* str)
+	{
+		key_.clear();
+		const char* val = ParseSeparator(str);
+		if (val) {
+			key_.assign(str, val - str);
+			ParseHeaderValue(val + 1);
+		}
+		else {
+			WriteLogLine("%d line - cannot find separator (%s)", line_, str);
+		}
+	}
+
+	void Parser::ParseHeaderValue(const char* str)
+	{
+		// regist value or metadata(header) value
+		value_.assign(str);
+		// #EXBPM behaves same as #BPM
+		if (key_ == "EXBPM") key_ = "BPM";
+		for (auto it = bms_.GetRegistArraySet().Begin(); it != bms_.GetRegistArraySet().End(); ++it) {
+			if (BmsRegistArray::CheckConstruction(it->first, key_)) {
+				BmsWord pos(key_.substr(key_.length() - 2));
+				it->second->Set(pos, value_);
+				return;
+			}
+		}
+		// if proper regist array hadn't found
+		// then add to header
+		if (key_ == "STP") {
+			const char* measure_s_ = ParseSeparator(str);
+			const char* time_s_ = ParseSeparator(measure_s_);
+			if (!measure_s_ || !time_s_) {
+				WriteLogLine("%d line - Failed to parse #STP (%s)", line_, str);
+				return;
+			}
+			double  measure_ = atof(measure_s_);
+			int time_ = atoi(time_s_);
+			bms_.GetSTPManager().Add(measure_, time_);
+		}
+		else {
+			bms_.GetHeaders().Set(key_, value_);
+		}
+	}
+
+	void Parser::ParseMeasure(const char* str)
+	{
+		if (!IsBar(str)) return;
+		// if channel isn't 02(BAR channel)
+		// then ignore
+		int channel = atoi(str + 3);
+		if (channel != 2) return;
+		int bar_ = atoi(std::string(str, 3).c_str());
+		const char* value_s_ = ParseColon(str);
+		if (!value_s_) {
+			WriteLogLine("line %d - cannot parse measure length (%s)", line_, str);
+			return;
+		}
+		double value_ = atof(Trim(value_s_));
+		bms_.GetBarManager().SetRatio(bar_, value_);
+	}
+
+	//
+	// Objects
+	//
+	void Parser::ParseObjectArray(const char* str) {
+		if (!IsBar(str)) return;
+		// if channel is 02 then ignore
+		
+		BmsWord channel = BmsWord(std::string(str + 3, 2));
+		if (channel == 2) return;
+		int measure_ = atoi(std::string(str, 3).c_str());
+		const char* value_s_ = ParseColon(str);
+		if (!value_s_) {
+			WriteLogLine("line %d - cannot parse measure length (%s)", line_, str);
+			return;
+		}
+		const char* value_ = Trim(value_s_);
+
+		// construct values
+		// if length is odd, ignore last one
+		std::vector<BmsWord> word_array_;
+		for (unsigned int i = 0; i < strlen(value_) - 1; i += 2) {
+			if (BmsWord::CheckConstruction(value_ + i)) {
+				word_array_.push_back(BmsWord(value_ + i));
+			}
+			else {
+				WriteLogLine("line %d - wrong note object (%s)", line_, std::string(value_ + i, 2).c_str());
+			}
+		}
+
+		// construct channel
+		// if BGM channel, then allow multiple channel
+		unsigned int channel_dup_count = 0;
+		if (channel == 1) channel_dup_count = bgm_dup_count[measure_]++;
+
+		// write down values (write 00 value, too.)
+		barindex bar_measure = bms_.GetBarManager().GetBarNumberByMeasure(measure_);
+		for (int i = 0; i < word_array_.size(); i++) {
+			barindex bar_index = bar_measure +
+				bms_.GetBarManager()[measure_] * i / word_array_.size();
+			bms_.GetChannelManager()[channel][channel_dup_count]
+				.Set(bar_index, word_array_[i]);
+		}
+	}
+
+
+	std::string Parser::GetLog() { return log_.str(); }
 }
 
-void
-BmsParser::Parser::WriteDownObjectArray(const FrameData& data)
-{
-	unsigned int to = data.bms_.GetBarManager().GetChannelPositionByBarNumber(info_.bar_);
-	unsigned int length = data.bms_.GetBarManager()[info_.bar_].GetLength();
-
-	if (length % info_.word_array_.size() != 0) {
-		unsigned int new_bar_division_count = this->DecideBarDivisionCountFromObjectArray(
-			data.bms_.GetBarManager().GetBarDivisionCount(), data.bms_.GetBarManager()[info_.bar_].GetRatio());
-
-		if (new_bar_division_count > data.bms_.GetBarManager().GetBarDivisionCount()) {
-			data.bms_.MultiplyBarDivisionCount(new_bar_division_count / data.bms_.GetBarManager().GetBarDivisionCount());
-			to = data.bms_.GetBarManager().GetChannelPositionByBarNumber(info_.bar_);
-			length = data.bms_.GetBarManager()[info_.bar_].GetLength();
-		}
-	}
-
-	unsigned int channel_dup_count;
-	if (info_.channel_number_ == BmsWord("01")) {
-		channel_dup_count = data.bgm_channel_counter_[info_.bar_];
-		data.bgm_channel_counter_[info_.bar_] += 1;
-	}
-	else {
-		channel_dup_count = 0;
-	}
-
-	int k = 0;
-	for (double i = static_cast<double>(to);
-		static_cast<unsigned int>(i) < to + length;
-		i += static_cast<double>(length) / static_cast<double>(info_.word_array_.size())) {
-		if (info_.word_array_[k] != BmsWord::MIN) {
-			data.bms_.GetChannelManager()[info_.channel_number_][channel_dup_count][static_cast<unsigned int>(i)]
-				= info_.word_array_[k];
-		}
-		//     BmsChannelManager& mg = bms.GetChannelManager();
-		//     BmsChannel& ch = mg[channel_];
-		//     BmsChannelBuffer& chbf = ch[channel_dup_count];
-		//     BmsWord wd = word_array[static_cast<unsigned int>( i )];
-		//     chbf[static_cast<unsigned int>( i )] = wd;
-		++k;
-	}
-}
-
-void
-BmsParser::Parser::ParseRandomStatement(void)
-{
-	if (info_.is_first_parse_) {
-		if (info_.key_ == "RANDOM") {
-			int tmp;
-			if (NOT(BmsUtil::StringToInteger(info_.value_, &tmp, 10))) {
-				throw BmsParseInvalidRandomValueException(info_.line_number_, info_.key_, info_.value_);
-			}
-			if (tmp <= 0) {
-				throw BmsParseInvalidRandomValueException(info_.line_number_, info_.key_, info_.value_);
-			}
-			unsigned int random_max = static_cast<unsigned int>(tmp);
-			info_.frame_stack_.PushGenerateRandom(random_max);
-			info_.frame_stack_.SetRandomValue(info_.reactor_.AtGenerateRandom(*this, random_max));
-			info_.random_value_queue_.push(info_.frame_stack_.GetRandomValue());
-		}
-		else if (info_.key_ == "IF") {
-			int prerequisite;
-			if (NOT(BmsUtil::StringToInteger(info_.value_, &prerequisite, 10)) ||
-				prerequisite <= 0) {
-				throw BmsParseInvalidRandomValueException(info_.line_number_, info_.key_, info_.value_);
-			}
-			info_.frame_stack_.PushIfStatement(static_cast<unsigned int>(prerequisite));
-		}
-		else if (info_.key_ == "ENDIF") {
-			if (info_.frame_stack_.GetDepth() <= 1) {
-				throw BmsParseUnexceptedEndIfException(info_.line_number_);
-			}
-			info_.frame_stack_.PopIfStatement();
-		}
-	}
-	else {
-		if (info_.key_ == "RANDOM") {
-			info_.frame_stack_.SetRandomValue(info_.random_value_queue_.front());
-			info_.random_value_queue_.pop();
-		}
-		else if (info_.key_ == "IF") {
-			int prerequisite;
-			if (NOT(BmsUtil::StringToInteger(info_.value_, &prerequisite, 10)) ||
-				prerequisite <= 0) {
-				throw BmsParseInvalidRandomValueException(info_.line_number_, info_.key_, info_.value_);
-			}
-			info_.frame_stack_.MoveChildIfStatement(static_cast<unsigned int>(prerequisite));
-		}
-		else if (info_.key_ == "ENDIF") {
-			if (info_.frame_stack_.GetDepth() <= 1) {
-				throw BmsParseUnexceptedEndIfException(info_.line_number_);
-			}
-			info_.frame_stack_.MoveParentIfStatement();
-		}
-	}
-}
-
+/* 
+ * we don't need primes now, sorry!
+ */
+#if 0
 namespace {
 	std::pair<unsigned int, unsigned int> factorization(unsigned int x) {
 		if (x == 0 || x == 1) {
@@ -609,60 +512,4 @@ namespace {
 		return std::make_pair(quotient, x);
 	}
 }
-
-unsigned int
-BmsParser::Parser::DecideBarDivisionCountFromBarChange(unsigned int current, double bar_change_ratio)
-{
-	unsigned int request = BmsUtil::GetDenominator(bar_change_ratio, BmsConst::BAR_DIVISION_COUNT_MAX);
-
-	if (current == 0 || request == 0) {
-		throw BMS_INTERNAL_EXCEPTION;
-	}
-
-	std::pair<unsigned int, unsigned int> factors = factorization(BmsUtil::LCM(current, request));
-	while (factors.first < factors.second * 4) {
-		factors.first *= 2;
-	}
-	if (factors.first > BmsConst::BAR_DIVISION_COUNT_MAX) {
-		unsigned int prev = 1;
-		for (unsigned int i = 1;; ++i) {
-			if (factorization(i).second != 1) {
-				continue;
-			}
-			if (current * i > BmsConst::BAR_DIVISION_COUNT_MAX) {
-				return current * prev;
-			}
-			prev = i;
-		}
-	}
-	return factors.first;
-}
-
-unsigned int
-BmsParser::Parser::DecideBarDivisionCountFromObjectArray(unsigned int current, double bar_change_ratio)
-{
-	unsigned int request = info_.word_array_.size() * BmsUtil::GetDenominator(bar_change_ratio, BmsConst::BAR_DIVISION_COUNT_MAX);
-	if (current == 0 || request == 0) {
-		throw BMS_INTERNAL_EXCEPTION;
-	}
-
-	std::pair<unsigned int, unsigned int> factors = factorization(BmsUtil::LCM(current, request));
-	while (factors.first < factors.second * 4) {
-		factors.first *= 2;
-	}
-	if (factors.first > BmsConst::BAR_DIVISION_COUNT_MAX) {
-		for (unsigned int i = 1;; ++i) {
-			if (factorization(i).second != 1) {
-				continue;
-			}
-			if (current * i > request * 3) {
-				return current * i;
-			}
-			if (current * i > BmsConst::BAR_DIVISION_COUNT_MAX) {
-				break;
-			}
-		}
-		throw BmsParseTooManyObjectException(info_.line_number_);
-	}
-	return factors.first;
-}
+#endif

@@ -1,46 +1,77 @@
 #include "bms_define.h"
 #include "bms_word.h"
-#include <deque>
-using namespace std;
+#include "bms_bar.h"
+#include <map>
+
+/*
+ * @comment
+ * timestamp of bms (translated data)
+ */
 
 struct BmsTime {
 	BmsTime() {}
-	BmsTime(double time, double stop, double beat, double absbeat, double bpm, bool measure, const BmsWord& miss) :
-		time(time), stop(stop), beat(beat), absbeat(absbeat), bpm(bpm), measure(measure), miss(miss) {}
+	BmsTime(double time, double stop, double bpm) :
+		time(time), stop(stop), bpm(bpm) {}
+	/** @brief incicates accessing time of current time signature (second) */
 	double time;
+	/** @brief incicates STOP time. don't include this in time value. */
 	double stop;
-	double beat;
-	double absbeat;
+	/** @brief rendering position (1 per screen height). calculated from bar number. */
 	double bpm;
-
-	bool measure;	// should we display measure bar here?
-	BmsWord miss;	// stores current miss BGA value
 };
 
-// BmsTimeManager
-// retains information about time, position, beat (relative to BmsBar/BmsBuffer)
+/*
+ * @description
+ * retains information about time, position, beat
+ * this class only transforms between time <-> bar.
+ * if you want to translate bar into beat / pos, use BmsBarManager class.
+ * CAUTION: must add at least 1 row (first timestamp)
+ *          add last note's timestamp (if you want to GetMediumBPM() work well)
+ */
 class BmsTimeManager {
-private:
-	std::deque<BmsTime> array_;
 public:
+	BmsTimeManager(BmsBarManager &bar_);
+
 	void Clear();
-	void Resize(int size);
-	int GetSize();
-	void AddRow(const BmsTime& bmstime);
-	void SetRow(const BmsTime& bmstime, int idx);
-	const BmsTime& GetRow(int idx);
-	const BmsTime& operator [](int idx);
-	int GetBarIndexFromTime(double time, int start = 0);
-	double GetAbsBeatFromTime(double time);
-	double GetBeatFromTime(double time);
-	double GetEndTime();
+	/** @brief Resets private iterator. Automatically called. */
+	void Reset();
+	/** @brief adds timemarker. Automatically calls Reset() */
+	void Add(barindex bar, const BmsTime& bmstime);
+	/** @brief */
+	void Delete(barindex bar);
 
-	// bpm
-	double GetBPMFromTime(double time);
-	double GetCommonBPM();
-	double GetMaxBPM();
-	double GetMinBPM();
+	// iterator
+	typedef std::map<barindex, BmsTime>::iterator Iterator;
+	Iterator Begin() { return array_.begin(); }
+	Iterator End() { return array_.end(); }
 
-	// bga
-	BmsWord GetMissBGAFromTime(double time);
+	// before you get any information about time or something,
+	// convert time into bar position
+	double			GetBarFromTime(double sec);
+	// COMMENT: GetTimeFromBar may wrong in negative Bpm;
+	// no, it is true in exactly, but suppose in this case:
+	// - Bpm is negative, and song ends, so last note has lower timestamp then previous one.
+	// in that case, last note bar's timestamp != song's total play time.
+	// you might need to find max timestamp by yourself, comparing each other.
+	double			GetTimeFromBar(double bar);
+
+	// BPM
+	double			GetBPMFromTime(double time);
+	double			GetBPMFromBar(double bar);
+	double			GetMediumBPM();
+	double			GetMaxBPM();
+	double			GetMinBPM();
+
+	// faster/slower bms speed
+	void			SetRate(double freq);
+private:
+	// bar is somtimes necessary
+	BmsBarManager& bar_;
+
+	// std::pair<bar number / time related object>
+	std::map<barindex, BmsTime> array_;
+
+	// for fast iteration
+	Iterator iter_;
+	Iterator iternext_;
 };

@@ -126,6 +126,58 @@ BmsHeaderTable::End(void) const
 	return table_.end();
 }
 
+bool
+BmsHeaderTable::Query(const std::string& key, int* v)
+{
+	if (IsExists(key)) {
+		*v = this->operator[](key).ToInteger();
+		return true;
+	}
+	return false;
+}
+
+bool
+BmsHeaderTable::Query(const std::string& key, char* v)
+{
+	if (IsExists(key)) {
+		strcpy(v, this->operator[](key).c_str());
+		return true;
+	}
+	return false;
+}
+
+bool
+BmsHeaderTable::Query(const std::string& key, std::string& v)
+{
+	if (IsExists(key)) {
+		v = this->operator[](key).ToString();
+		return true;
+	}
+	return false;
+}
+
+bool
+BmsHeaderTable::Query(const std::string& key, double* v)
+{
+	if (IsExists(key)) {
+		*v = this->operator[](key).ToFloat();
+		return true;
+	}
+	return false;
+}
+
+#ifdef USE_MBCS
+bool
+BmsHeaderTable::Query(const std::string& key, std::wstring& v)
+{
+	if (IsExists(key)) {
+		v = this->operator[](key).ToWString();
+		return true;
+	}
+	return false;
+}
+#endif
+
 // BmsHeader ---------------------------
 
 BmsHeader::BmsHeader() {}

@@ -24,8 +24,8 @@ namespace BmsUtil {
 
 	char IntegerToHex36(int x);
 
-	int GCD(int x, int y);
-	int LCM(int x, int y);
+	barindex GCD(barindex x, barindex y);
+	barindex LCM(barindex x, barindex y);
 	unsigned int GetDenominator(double x, unsigned int max);
 
 	void StringToUpper(std::string& str);
@@ -33,7 +33,9 @@ namespace BmsUtil {
 	
 	bool wchar_to_utf8(const wchar_t *org, char *out, int maxlen);
 	bool utf8_to_wchar(const char *org, wchar_t *out, int maxlen);
+	bool convert_to_utf8(const char *org, char *out, const char *encoding, int maxlen);
 	int IsFileUTF8(const std::string& filename);
+	int IsUTF8(const char* text);
 	bool OpenFile(FILE **f, const char* filename, const char* mode);
 };
 
