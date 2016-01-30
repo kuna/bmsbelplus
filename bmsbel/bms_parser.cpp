@@ -145,7 +145,8 @@ namespace BmsParser {
 			// trim end of the line
 			while (buf.size() > 0) {
 				if (buf.back() == '\r' || buf.back() == ' ' || buf.back() == '\t')
-					buf.pop_back();
+					//buf.pop_back(); - don't work in travis
+					buf.resize(buf.size() - 1);
 				else
 					break;
 			}
