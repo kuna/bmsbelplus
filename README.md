@@ -1,6 +1,7 @@
 # BmsBel+
 
 [![travis](https://travis-ci.org/kuna/bmsbelplus.svg)](https://travis-ci.org/kuna/bmsbelplus)
+[![Build status](https://ci.appveyor.com/api/projects/status/ik95v5ne5hssq85j?svg=true)](https://ci.appveyor.com/project/kuna/bmsbelplus)
 
 BMS library for C++
 
