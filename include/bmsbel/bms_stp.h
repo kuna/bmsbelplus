@@ -1,6 +1,7 @@
 #ifndef BMSBEL_BMS_STP_
 #define BMSBEL_BMS_STP_
 
+#include "bms_define.h"
 #include "bms_bar.h"
 
 #include <sstream>
