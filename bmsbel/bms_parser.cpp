@@ -100,7 +100,7 @@ namespace BmsParser {
 			// parse
 			bool r = Parse(buf);
 			// cleanup
-			delete buf;
+			delete[] buf;
 			fclose(fp);
 			return r;
 		}
@@ -160,7 +160,8 @@ namespace BmsParser {
 			if (!pn) break;
 			p = pn + 1;
 		}
-		if (encodetext) delete encodetext;
+		if (encodetext)
+			delete[] encodetext;
 
 		// if there's panic in random statement,
 		// stop parsing
