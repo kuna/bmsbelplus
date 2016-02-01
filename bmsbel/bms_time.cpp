@@ -112,7 +112,7 @@ double BmsTimeManager::GetBPMFromTime(double time) {
 	return GetBPMFromBar(GetBarFromTime(time));
 }
 
-double BmsTimeManager::GetBPMFromBar(double bar) {
+double BmsTimeManager::GetBPMFromBar(barindex bar) {
 	if (bar < 0) return array_.begin()->second.bpm;
 	/*
 	 * equal_range.first = return key-mapped-object if same key exists, return next when not.

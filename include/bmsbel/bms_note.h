@@ -51,7 +51,7 @@ public:
 	friend void swap(BmsNoteLane &a, BmsNoteLane &b) { a.notes_.swap(b.notes_); }
 
 	// iterator
-	typedef std::map<int, BmsNote>::iterator Iterator;
+	typedef std::map<barindex, BmsNote>::iterator Iterator;
 	Iterator Begin() { return notes_.begin(); };
 	Iterator Begin(int bar);
 	Iterator End() { return notes_.end(); };
@@ -63,15 +63,15 @@ public:
 #endif
 
 	// setter / getter
-	BmsNote Get(int bar) { 
+	BmsNote Get(barindex bar) { 
 		if (notes_.find(bar) != notes_.end()) return notes_[bar]; 
 		else return BmsNote();
 	}
 	// only allows NOT NONETYPE note.
-	void Set(int bar, const BmsNote& v) { 
+	void Set(barindex bar, const BmsNote& v) { 
 		if (v.type != BmsNote::NOTE_NONE) notes_[bar] = v; 
 	}
-	void Delete(int bar) { notes_.erase(bar); }
+	void Delete(barindex bar) { notes_.erase(bar); }
 	void Clear() { notes_.clear(); }
 
 	// <barpos, notecount(1)>
@@ -84,7 +84,7 @@ public:
 	);
 private:
 	// data
-	std::map<int, BmsNote> notes_;
+	std::map<barindex, BmsNote> notes_;
 #if 0
 	// iterator for each lane
 	Iterator iter_;
