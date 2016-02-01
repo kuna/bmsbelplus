@@ -48,7 +48,6 @@ public:
 	 * you may can set fallback from total calculated from BmsNoteManager.
 	 */
 	double GetTotal(double fallback = 200);
-	double GetIIDXTotal();						// calculated total in IIDX method
 
 	// note / key / bpm (metadata)
 	bool IsLongNoteExists();
