@@ -77,7 +77,7 @@ namespace BmsBelOption {
 // use this option at your own risk.
 //
 
-#define BMSBEL_BAR_LARGEINT_
+//#define BMSBEL_BAR_LARGEINT_
 
 
 

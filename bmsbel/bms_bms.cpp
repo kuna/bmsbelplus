@@ -156,7 +156,63 @@ BmsBms::Merge(const BmsBms& other)
 	}
 }
 
-void BmsBms::Training(BmsBms &out, measureindex sm, measureindex em, int repeat)
+void BmsBms::Cut(measureindex sm, measureindex em) {
+	// modify measures
+	int i = em - sm;
+	for (measureindex m = em; m >= sm; m--) {
+		bar_manager_.SetRatio(i, bar_manager_.GetRatio(m));
+		i--;
+	}
+
+	// modify all channels
+	barindex sbar = bar_manager_.GetBarByMeasure(sm);
+	barindex ebar = bar_manager_.GetBarByMeasure(em + 1) - 1;
+	barindex barsize = ebar - sbar + 1;
+	for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
+		for (auto bt = it->second->Begin(); bt != it->second->End(); ++bt) {
+			// remove all notes smaller/bigger then sbar
+			BmsBuffer buf_copy = (**bt);
+			for (auto nt = buf_copy.Begin(); nt != buf_copy.End(); ++nt) {
+				if (nt->first < sbar || nt->first > ebar) {
+					(*bt)->DeleteAt(nt->first);
+				}
+				else {
+					BmsWord _tmp = nt->second;
+					(*bt)->DeleteAt(nt->first);
+					(*bt)->Set(nt->first - sbar, _tmp);
+				}
+			}
+		}
+	}
+
+	// finished, invalidate time
+	InvalidateTimeTable();
+}
+
+void BmsBms::Repeat(int repeat) {
+	measureindex length = GetObjectExistsMaxMeasure();
+
+	for (measureindex m = length; m < length * repeat; m++) {
+		bar_manager_.SetRatio(m, bar_manager_.GetRatio(m % length));
+	}
+
+	barindex sbar = 0;
+	barindex ebar = bar_manager_.GetBarByMeasure(length) - 1;
+	barindex barsize = ebar - sbar + 1;
+	for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
+		for (auto bt = it->second->Begin(); bt != it->second->End(); ++bt) {
+			// remove all notes smaller/bigger then sbar
+			for (auto nt = (**bt).Begin(); nt != (**bt).End(); ++nt) {
+				BmsWord _tmp = nt->second;
+				for (int i = 1; i < repeat; i++) {
+					(**bt).Set(nt->first + barsize * i, _tmp);
+				}
+			}
+		}
+	}
+}
+
+void BmsBms::Copy(BmsBms& out)
 {
 	out.Clear();
 
@@ -167,25 +223,15 @@ void BmsBms::Training(BmsBms &out, measureindex sm, measureindex em, int repeat)
 
 	// this modifies all channels / measures
 	out.bar_manager_.SetResolution((double)bar_manager_.GetResolution() / BmsConst::BAR_DEFAULT_RESOLUTION);
-	int i = 0;
-	for (int rep = 0; rep < repeat; rep++) {
-		for (measureindex m = sm; m < em; m++) {
-			out.bar_manager_.SetRatio(i, bar_manager_.GetRatio(m));
-			i++;
-		}
+	for (measureindex m = 0; m < BmsConst::BAR_MAX_COUNT; m++) {
+		out.bar_manager_.SetRatio(m, bar_manager_.GetRatio(m));
 	}
 
-	barindex sbar = bar_manager_.GetBarByMeasure(sm);
-	barindex ebar = bar_manager_.GetBarByMeasure(em + 1) - 1;
-	barindex barsize = ebar - sbar + 1;
 	unsigned int bufidx = 0;
 	for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
 		bufidx = 0;
 		for (auto bt = it->second->Begin(); bt != it->second->End(); ++bt) {
-			BmsBuffer buf = (**bt).SubBuffer(sbar, barsize);
-			for (int rep = 0; rep < repeat; rep++) {
-				out.channel_manager_[it->first][bufidx].Merge(barsize * rep, buf);
-			}
+			out.channel_manager_[it->first][bufidx] = (**bt);
 			bufidx++;
 		}
 	}
@@ -543,6 +589,14 @@ double BmsBms::GetEndTime() {
 	return std::max(t, time_manager_.GetTimeFromBar(lastbar));
 }
 
+#define BMSNOTE(type, bar)\
+BmsNote(\
+	type,\
+	current_word,\
+	GetTimeManager().GetTimeFromBar(bar) * 1000,\
+	GetBarManager().GetPosByBar(bar)\
+)
+
 void
 BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 {
@@ -576,13 +630,13 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 					BmsNote prevnote = note_manager_[channel].Get(prev);
 					prevnote.type = BmsNote::NOTE_LNSTART;
 					note_manager_[channel].Set(prev, prevnote);
-					note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+					note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_LNEND, bar));
 					prev = 0;
 				}
 				else {
 					if (current_word == lnobj_word)
 						printf("Bms Warning: wrong end of the longnote found.\n");
-					note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_NORMAL, current_word));
+					note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_NORMAL, bar));
 					prev = bar;
 				}
 			}
@@ -596,7 +650,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (!isln && current_word != BmsWord::MIN) {
-					note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNSTART, current_word));
+					note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_LNSTART, bar));
 				}
 				else {
 					if (LNtype == 2) {
@@ -604,16 +658,16 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 						// then it's PRESS note(HELL CHARGE)
 						auto iternext = iter; ++iternext;
 						if (iternext != GetChannelManager()[channel].GetBuffer().End() && iternext->second != BmsWord::MIN) {
-							note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_PRESS, current_word));
+							note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_PRESS, bar));
 							continue;
 						}
 						else {
-							note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+							note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_LNEND, bar));
 						}
 					}
 					else {
 						if (current_word == BmsWord::MIN) continue;
-						note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_LNEND, current_word));
+						note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_LNEND, bar));
 					}
 				}
 				isln = !isln;
@@ -626,7 +680,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (current_word == BmsWord::MIN) continue;
-				note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_MINE, current_word));
+				note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_MINE, bar));
 			}
 		}
 		// invisible note
@@ -636,7 +690,7 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 				barindex bar = iter->first;
 				BmsWord current_word(iter->second);
 				if (current_word == BmsWord::MIN) continue;
-				note_manager_[channel].Set(bar, BmsNote(BmsNote::NOTE_HIDDEN, current_word));
+				note_manager_[channel].Set(bar, BMSNOTE(BmsNote::NOTE_HIDDEN, bar));
 			}
 		}
 	}

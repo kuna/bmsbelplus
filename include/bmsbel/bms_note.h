@@ -24,11 +24,14 @@ public:
 	bool operator!=(BmsNote& note) { return note.type != type; }
 public:
 	BmsNote();		// NONEtype note
-	BmsNote(int type, const BmsWord& value);
+	BmsNote(int type, const BmsWord& value, unsigned int time, double pos);
 	int type;		// available note type - refered on top
 
 	// under these are metadatas.
 	BmsWord value;
+	unsigned int time;
+	double pos;		// it's basically calculated, but you may can recalculate (just for CONSTANT speed)
+	int status;		// use this for etc data, or miss timing.
 	//int bar;
 	//int measure;
 };

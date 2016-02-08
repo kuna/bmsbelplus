@@ -33,11 +33,14 @@ namespace {
 //
 
 BmsNote::BmsNote() :
-type(NOTE_NONE) {}
+type(NOTE_NONE), status(0) {}
 
-BmsNote::BmsNote(int type, const BmsWord& value) :
+BmsNote::BmsNote(int type, const BmsWord& value, unsigned int time, double pos) :
 type(type),
-value(value) {}
+value(value),
+pos(pos),
+time(time),
+status(0) {}
 
 
 
@@ -77,7 +80,11 @@ void BmsNoteLane::GetNoteExistBar(std::set<barindex> &barmap) {
 BmsNoteLane::Iterator BmsNoteLane::Begin(int bar) {
 	Iterator it = notes_.equal_range(bar).second;
 	if (it == notes_.begin()) return it;
-	else --it;
+	else {
+		// must create new iterator as it's lvalue
+		Iterator it2 = --it;
+		return it2;
+	}
 }
 
 
@@ -194,20 +201,31 @@ void BmsNoteManager::HRandom(unsigned int seed, int s, int e) {
 		bool iscurrent[_MAX_NOTE_LANE] = { false, };
 		BmsNote currentrow[_MAX_NOTE_LANE];
 		int attempt = 0;
+		// initalize row data
+		for (int c = s; c <= e; c++) {
+			currentrow[c].type = BmsNote::NOTE_NONE;
+		}
 		// make new row data
 		for (int c = s; c <= e; c++) {
-			int newlane = rand() % keycount;
+			attempt = 0;
+			// check previous note data to check valid
+			BmsNote &currentnote = lanes_[c].Get(row);
+			if (currentnote.type == BmsNote::NOTE_NONE) continue;
+
+			/*
+			* find new lane to place note
+			* only difference(from HRANDOM) is here:
+			* we don't check isprev[] (is previously note existed?)
+			*/
+			int newlane = rand() % keycount + s;
 			while (isln[newlane] || iscurrent[newlane] || isprev[newlane]) {
-				newlane = (newlane + 1) % keycount;
+				newlane = (newlane - s + 1) % keycount + s;
 				attempt++;
-				if (attempt > keycount) {
-					while (iscurrent[newlane]) newlane = (newlane + 1) % keycount;
-					break;
-				}
+				_ASSERT(attempt <= keycount);	// this shouldn't happen
 			}
 			// copy previous note data to new temp row
-			currentrow[newlane] = lanes_[c].Get(row);
-			switch (lanes_[c].Get(row).type) {
+			currentrow[newlane] = currentnote;
+			switch (currentnote.type) {
 			case BmsNote::NOTE_LNSTART:
 				isln[newlane] = true;
 				break;
@@ -215,12 +233,13 @@ void BmsNoteManager::HRandom(unsigned int seed, int s, int e) {
 				isln[newlane] = false;
 				break;
 			}
-			iscurrent[c] = true;
+			iscurrent[newlane] = true;
 		}
 		// copy
 		for (int c = s; c <= e; c++) {
 			lanes_[c].Delete(row);
-			lanes_[c].Set(row, currentrow[c]);
+			if (currentrow[c].type != BmsNote::NOTE_NONE)
+				lanes_[c].Set(row, currentrow[c]);
 		}
 		memcpy(isprev, iscurrent, sizeof(isprev));
 	}
@@ -230,6 +249,7 @@ void BmsNoteManager::SRandom(unsigned int seed, int s, int e) {
 	// prepare
 	srand(seed);
 	int keycount = e - s + 1;
+	int failure = 0;			// failed notecount to randomize
 	std::set<barindex> notemap;
 	GetNoteExistBar(notemap);
 	// start to iterate all bars
@@ -240,24 +260,31 @@ void BmsNoteManager::SRandom(unsigned int seed, int s, int e) {
 		bool iscurrent[_MAX_NOTE_LANE] = { false, };
 		BmsNote currentrow[_MAX_NOTE_LANE];
 		int attempt = 0;
+		// initalize row data
+		for (int c = s; c <= e; c++) {
+			currentrow[c].type = BmsNote::NOTE_NONE;
+		}
 		// make new row data
 		for (int c = s; c <= e; c++) {
-			int newlane = rand() % keycount;
+			attempt = 0;
+			// check previous note data to check valid
+			BmsNote &currentnote = lanes_[c].Get(row);
+			if (currentnote.type == BmsNote::NOTE_NONE) continue;
+
 			/*
-			 * only difference is here:
+			 * find new lane to place note
+			 * only difference(from HRANDOM) is here:
 			 * we don't check isprev[] (is previously note existed?)
 			 */
+			int newlane = rand() % keycount + s;
 			while (isln[newlane] || iscurrent[newlane]) {
-				newlane = (newlane + 1) % keycount;
+				newlane = (newlane - s + 1) % keycount + s;
 				attempt++;
-				if (attempt > keycount) {
-					while (iscurrent[newlane]) newlane = (newlane + 1) % keycount;
-					break;
-				}
+				_ASSERT(attempt <= keycount);	// this shouldn't happen
 			}
 			// copy previous note data to new temp row
-			currentrow[newlane] = lanes_[c].Get(row);
-			switch (lanes_[c].Get(row).type) {
+			currentrow[newlane] = currentnote;
+			switch (currentnote.type) {
 			case BmsNote::NOTE_LNSTART:
 				isln[newlane] = true;
 				break;
@@ -265,12 +292,13 @@ void BmsNoteManager::SRandom(unsigned int seed, int s, int e) {
 				isln[newlane] = false;
 				break;
 			}
-			iscurrent[c] = true;
+			iscurrent[newlane] = true;
 		}
 		// copy
 		for (int c = s; c <= e; c++) {
 			lanes_[c].Delete(row);
-			lanes_[c].Set(row, currentrow[c]);
+			if (currentrow[c].type != BmsNote::NOTE_NONE) 
+				lanes_[c].Set(row, currentrow[c]);
 		}
 		memcpy(isprev, iscurrent, sizeof(isprev));
 	}
@@ -381,8 +409,12 @@ void BmsNoteManager::MoreNote(double ratio, int s, int e) {
 		}
 		for (; existingnote > 0; --existingnote) {
 			int newcol = s + rand() % keycount;
-			if (lanes_[newcol].Get(bar).type == BmsNote::NOTE_NONE)
-				lanes_[newcol].Set(bar, BmsNote(BmsNote::NOTE_NORMAL, 0));
+			BmsNote _tmp = lanes_[newcol].Get(bar);
+			if (_tmp.type == BmsNote::NOTE_NONE) {
+				// TODO need to set tmp note's bar position or it won't drawn correctly
+				_tmp.type = BmsNote::NOTE_NORMAL;
+				lanes_[newcol].Set(bar, _tmp);
+			}
 		}
 	}
 }
@@ -494,23 +526,33 @@ void BmsNoteManager::FixIncorrectLongNote() {
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
 		barindex bar = *it;
 		for (int c = 0; c < 10; c++) {
+			/*
+			 * case: LNSTART reached, but currently considered as longnote status
+			 */
 			if (lanes_[c].Get(bar).type == BmsNote::NOTE_LNSTART) {
-				if (isln[c] == false) {
-					lanes_[c].Get(bar).type == BmsNote::NOTE_LNEND;
+				if (isln[c] == true) {
+					BmsNote _tmp = lanes_[c].Get(bar);
+					_tmp.type = BmsNote::NOTE_LNEND;
+					lanes_[c].Set(bar, _tmp);
 					isln[c] = false;
 				}
-				else isln[c] = true;
+				else isln[c] = false;
 			}
+			/*
+			 * case: LNEND reached, but current not wasn't longnote.
+			 */
 			else if (lanes_[c].Get(bar).type == BmsNote::NOTE_LNEND) {
 				if (isln[c] == false) {
 					auto nextit = it;
+					BmsNote _tmp = lanes_[c].Get(bar);
 					if (++nextit == notemap.end())
-						lanes_[c].Get(bar).type == BmsNote::NOTE_NORMAL;
+						_tmp.type = BmsNote::NOTE_NORMAL;
 					else
-						lanes_[c].Get(bar).type == BmsNote::NOTE_LNSTART;
+						_tmp.type = BmsNote::NOTE_LNSTART;
+					lanes_[c].Set(bar, _tmp);
 					isln[c] = true;
 				}
-				else isln[c] = false;
+				else isln[c] = true;
 			}
 		}
 	}

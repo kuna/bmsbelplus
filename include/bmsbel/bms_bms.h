@@ -33,7 +33,10 @@ public:
 	// copy & repeat only that part - just for training.
 	// don't put this function in note class, 'cause this work need to modify ALL channels.
 	// need quite much calculation, maybe?
-	void Training(BmsBms& out, measureindex startmeasure, measureindex endmeasure, int repeat);
+	void Cut(measureindex startmeasure, measureindex endmeasure);
+	void Repeat(int repeat);
+
+	void Copy(BmsBms& out);
 
 	void Clear(void);
 
