@@ -91,6 +91,12 @@ namespace BmsParser {
 #endif
 
 	bool Parser::Load(const char* path) {
+#ifdef _WIN32
+		/* convert utf8 path to utf16 for windows */
+		wchar_t pathw[1024];
+		BmsUtil::utf8_to_wchar(path, pathw, 1024);
+		return Load(pathw);
+#else
 		FILE *fp;
 		if (fopen_s(&fp, path, "rb") == 0) {
 			// read whole file (about limit to 10mb)
@@ -108,6 +114,7 @@ namespace BmsParser {
 			// IO error, but don't make log - log clering is a tidious thing...
 			return false;
 		}
+#endif
 	}
 
 	bool Parser::Parse(const char* text) {

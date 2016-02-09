@@ -209,7 +209,7 @@ void BmsNoteManager::HRandom(unsigned int seed, int s, int e) {
 		for (int c = s; c <= e; c++) {
 			attempt = 0;
 			// check previous note data to check valid
-			BmsNote &currentnote = lanes_[c].Get(row);
+			BmsNote currentnote = lanes_[c].Get(row);
 			if (currentnote.type == BmsNote::NOTE_NONE) continue;
 
 			/*
@@ -268,7 +268,7 @@ void BmsNoteManager::SRandom(unsigned int seed, int s, int e) {
 		for (int c = s; c <= e; c++) {
 			attempt = 0;
 			// check previous note data to check valid
-			BmsNote &currentnote = lanes_[c].Get(row);
+			BmsNote currentnote = lanes_[c].Get(row);
 			if (currentnote.type == BmsNote::NOTE_NONE) continue;
 
 			/*
