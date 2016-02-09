@@ -6,6 +6,7 @@
 
 #include <limits>
 #include <assert.h>
+#include <limits.h>
 
 #ifndef NOT_USE_VAR
 #define NOT_USE_VAR( var ) ((void)var)
