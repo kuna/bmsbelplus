@@ -77,7 +77,6 @@ double BmsTimeManager::GetTimeFromBar(double bar) {
 		// cannot get proper pos
 		return 0;
 	}
-	BmsTime *row;
 	// if less then first data
 	// then no scroll
 	if (bar < array_.begin()->first)
@@ -102,7 +101,7 @@ double BmsTimeManager::GetTimeFromBar(double bar) {
 	if (bar > iter__->first)
 		return IT(iter__).time + IT(iter__).stop + 
 			(bar - iter__->first) / (iternext__->first - iter__->first) *
-			(IT(iternext__).time - IT(iter__).time - +IT(iter__).stop);
+			(IT(iternext__).time - IT(iter__).time - IT(iter__).stop);
 	else
 		return IT(iter__).time;
 }
@@ -112,7 +111,7 @@ double BmsTimeManager::GetBPMFromTime(double time) {
 	return GetBPMFromBar(GetBarFromTime(time));
 }
 
-double BmsTimeManager::GetBPMFromBar(double bar) {
+double BmsTimeManager::GetBPMFromBar(barindex bar) {
 	if (bar < 0) return array_.begin()->second.bpm;
 	/*
 	 * equal_range.first = return key-mapped-object if same key exists, return next when not.
@@ -164,5 +163,7 @@ double BmsTimeManager::GetMinBPM() {
 void BmsTimeManager::SetRate(double freq) {
 	for (auto it = array_.begin(); it != array_.end(); ++it) {
 		it->second.time *= freq;
+		it->second.bpm /= freq;
+		it->second.stop *= freq;
 	}
 }

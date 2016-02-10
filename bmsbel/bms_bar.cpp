@@ -56,11 +56,11 @@ BmsBarManager::GetMeasureByBar(double pos) const
 {
 	// find fast using cached data
 	auto iter = barcache_.equal_range(pos).first;
-	unsigned int bar = iter->second;
+	barindex bar = iter->first;
 	unsigned int measure = iter->second;
-	if (++iter == barcache_.end()) return bar;
+	if (++iter == barcache_.end()) return measure;
 	else {
-		return bar + barcount_[measure] * pos;
+		return measure + (pos - bar) / barcount_[measure];
 	}
 }
 

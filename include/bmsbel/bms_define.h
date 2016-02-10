@@ -5,6 +5,8 @@
 #define USING_STATIC_LIBICONV	1
 
 #include <limits>
+#include <assert.h>
+#include <limits.h>
 
 #ifndef NOT_USE_VAR
 #define NOT_USE_VAR( var ) ((void)var)
@@ -77,11 +79,11 @@ namespace BmsBelOption {
 // use this option at your own risk.
 //
 
-#define BMSBEL_BAR_LARGEINT_
+//#define BMSBEL_BAR_LARGEINT_
 
 
 
-// vs compatible
+// vs incompatible
 #ifndef __STDC_WANT_SECURE_LIB__
  
 typedef long long int __int64;
@@ -93,6 +95,7 @@ typedef long long int __int64;
 #define gets_s(buf, size)					gets(buf)
 #define fopen_s(pFile,filename,mode)		((*(pFile))=fopen((filename),(mode)))==NULL
 #define _fopen_s(a,b,c)						fopen_s(a,b,c)
+#define _ASSERT(x)							assert(x)
 
 #else
 

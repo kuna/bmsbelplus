@@ -1,6 +1,7 @@
 # BmsBel+
 
 [![travis](https://travis-ci.org/kuna/bmsbelplus.svg)](https://travis-ci.org/kuna/bmsbelplus)
+[![Build status](https://ci.appveyor.com/api/projects/status/ik95v5ne5hssq85j?svg=true)](https://ci.appveyor.com/project/kuna/bmsbelplus)
 
 BMS library for C++
 
@@ -67,12 +68,13 @@ bms.SaveBms("outfilepath.bms");
 - get sound, bitmap or etc tag datas
 ```
 // get Header
-if (bms.GetHeader().IsExists(L"TITLE"))
-	wprintf(L"Title: %ls", bms.GetHeader()[L"TITLE"])
+std::string title = "(none)";
+bms.GetHeader().Query("TITLE", title);
+//printf("Title: %s", bms.GetHeader()["TITLE"]);
 // get Resource
 BmsWord word("A0");
-if (bms.GetRegistArraySet()[L"WAV"].IsExists(word))
-	wprintf(L"WAV path of #WAVA0: %ls", bms.GetRegistArraySet()[L"WAV"][word]);
+if (bms.GetRegistArraySet()["WAV"].IsExists(word))
+	printf("WAV path of #WAVA0: %s", bms.GetRegistArraySet()["WAV"][word]);
 ```
 
 - get data for game play

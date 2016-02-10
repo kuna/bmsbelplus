@@ -314,19 +314,88 @@ int BmsUtil::IsFileUTF8(const std::string& filename) {
 	return 0;
 }
 
+/* private */
+bool is_utf8(const char * string)
+{
+	if (!string)
+		return 0;
+
+	const unsigned char * bytes = (const unsigned char *)string;
+	while (*bytes)
+	{
+		if ((// ASCII
+			// use bytes[0] <= 0x7F to allow ASCII control characters
+			bytes[0] == 0x09 ||
+			bytes[0] == 0x0A ||
+			bytes[0] == 0x0D ||
+			(0x20 <= bytes[0] && bytes[0] <= 0x7E)
+			)
+			) {
+			bytes += 1;
+			continue;
+		}
+
+		if ((// non-overlong 2-byte
+			(0xC2 <= bytes[0] && bytes[0] <= 0xDF) &&
+			(0x80 <= bytes[1] && bytes[1] <= 0xBF)
+			)
+			) {
+			bytes += 2;
+			continue;
+		}
+
+		if ((// excluding overlongs
+			bytes[0] == 0xE0 &&
+			(0xA0 <= bytes[1] && bytes[1] <= 0xBF) &&
+			(0x80 <= bytes[2] && bytes[2] <= 0xBF)
+			) ||
+			(// straight 3-byte
+			((0xE1 <= bytes[0] && bytes[0] <= 0xEC) ||
+			bytes[0] == 0xEE ||
+			bytes[0] == 0xEF) &&
+			(0x80 <= bytes[1] && bytes[1] <= 0xBF) &&
+			(0x80 <= bytes[2] && bytes[2] <= 0xBF)
+			) ||
+			(// excluding surrogates
+			bytes[0] == 0xED &&
+			(0x80 <= bytes[1] && bytes[1] <= 0x9F) &&
+			(0x80 <= bytes[2] && bytes[2] <= 0xBF)
+			)
+			) {
+			bytes += 3;
+			continue;
+		}
+
+		if ((// planes 1-3
+			bytes[0] == 0xF0 &&
+			(0x90 <= bytes[1] && bytes[1] <= 0xBF) &&
+			(0x80 <= bytes[2] && bytes[2] <= 0xBF) &&
+			(0x80 <= bytes[3] && bytes[3] <= 0xBF)
+			) ||
+			(// planes 4-15
+			(0xF1 <= bytes[0] && bytes[0] <= 0xF3) &&
+			(0x80 <= bytes[1] && bytes[1] <= 0xBF) &&
+			(0x80 <= bytes[2] && bytes[2] <= 0xBF) &&
+			(0x80 <= bytes[3] && bytes[3] <= 0xBF)
+			) ||
+			(// plane 16
+			bytes[0] == 0xF4 &&
+			(0x80 <= bytes[1] && bytes[1] <= 0x8F) &&
+			(0x80 <= bytes[2] && bytes[2] <= 0xBF) &&
+			(0x80 <= bytes[3] && bytes[3] <= 0xBF)
+			)
+			) {
+			bytes += 4;
+			continue;
+		}
+		return 0;
+	}
+	return 1;
+}
+
 int BmsUtil::IsUTF8(const char* text) {
 	// check BOM
-	if (strncmp(text, utf8BOM, 3) == 0) return true;
-	// initalize iconv
-	iconv_t cd = iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, BmsBelOption::DEFAULT_FALLBACK_ENCODING);
-	if (cd == (void*)-1) {
-		// conversion is not supported
-		return -1;
-	}
-	errno = 0;
-	char buf_char_out[BmsConst::BMS_MAX_LINE_BUFFER];
-	size_t len_char, len_char_out;
-	// check few lines
+	if (strncmp(text, utf8BOM, 3) == 0) return 1;
 	const char* p = text;
 	for (int i = 0; i < BmsBelOption::CONVERT_ATTEMPT_LINES && p; i++) {
 		const char* pn = strchr(p, '\n');
@@ -337,22 +406,13 @@ int BmsUtil::IsUTF8(const char* text) {
 			buf.assign(p, pn - p);
 
 		const char* buf_char = buf.c_str();
-		len_char = strlen(buf_char);
-		const char *buf_iconv = buf_char;
-		char *but_out_iconv = (char*)buf_char_out;
-		len_char_out = BmsConst::BMS_MAX_LINE_BUFFER;	// available characters for converting
-		int iconv_ret = iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_char_out);
-		*but_out_iconv = *(but_out_iconv + 1) = 0;		// NULL terminal character
-		if (errno || iconv_ret < 0) {
-			iconv_close(cd);
-			return 1;	// failed to convert Shift_JIS. maybe UTF-8?
-		}
+		if (!is_utf8(buf_char))
+			return 0;
 
 		if (!pn) break;
 		p = pn + 1;
 	}
-	iconv_close(cd);
-	return 0;
+	return 1;
 }
 
 bool BmsUtil::OpenFile(FILE **f, const char* filename, const char* mode) {

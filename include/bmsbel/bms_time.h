@@ -57,7 +57,7 @@ public:
 
 	// BPM
 	double			GetBPMFromTime(double time);
-	double			GetBPMFromBar(double bar);
+	double			GetBPMFromBar(barindex bar);
 	double			GetMediumBPM();
 	double			GetMaxBPM();
 	double			GetMinBPM();
