@@ -76,6 +76,13 @@ BmsBms::GetObjectExistsMaxMeasure(void) const
 	return bar_manager_.GetMeasureByBarNumber(GetObjectExistsMaxBar());
 }
 
+unsigned int 
+BmsBms::GetObjectExistsFirstMeasure() const
+{
+	barindex bar = channel_manager_.GetObjectExistsFirstPosition(&BmsChannel::IsChannel);
+	return bar_manager_.GetMeasureByBarNumber(bar);
+}
+
 barindex 
 BmsBms::GetObjectExistsMaxBar() const
 {
@@ -159,14 +166,14 @@ BmsBms::Merge(const BmsBms& other)
 void BmsBms::Cut(measureindex sm, measureindex em) {
 	// modify measures
 	int i = em - sm;
-	for (measureindex m = em; m >= sm; m--) {
+	for (measureindex m = em - 1; m >= sm; m--) {
 		bar_manager_.SetRatio(i, bar_manager_.GetRatio(m));
 		i--;
 	}
 
 	// modify all channels
 	barindex sbar = bar_manager_.GetBarByMeasure(sm);
-	barindex ebar = bar_manager_.GetBarByMeasure(em + 1) - 1;
+	barindex ebar = bar_manager_.GetBarByMeasure(em) - 1;
 	barindex barsize = ebar - sbar + 1;
 	for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
 		for (auto bt = it->second->Begin(); bt != it->second->End(); ++bt) {
@@ -196,20 +203,53 @@ void BmsBms::Repeat(int repeat) {
 		bar_manager_.SetRatio(m, bar_manager_.GetRatio(m % length));
 	}
 
+	//
+	// get repeated target bar
+	//
 	barindex sbar = 0;
 	barindex ebar = bar_manager_.GetBarByMeasure(length) - 1;
 	barindex barsize = ebar - sbar + 1;
 	for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
 		for (auto bt = it->second->Begin(); bt != it->second->End(); ++bt) {
-			// remove all notes smaller/bigger then sbar
 			for (auto nt = (**bt).Begin(); nt != (**bt).End(); ++nt) {
 				BmsWord _tmp = nt->second;
+				if (nt->first > ebar) break;
 				for (int i = 1; i < repeat; i++) {
 					(**bt).Set(nt->first + barsize * i, _tmp);
 				}
 			}
 		}
 	}
+
+	// invalidate
+	InvalidateTimeTable();
+}
+
+void BmsBms::Push(barindex bars) {
+	// push all objects
+	for (auto it = channel_manager_.Begin(); it != channel_manager_.End(); ++it) {
+		for (auto bt = it->second->Begin(); bt != it->second->End(); ++bt) {
+			// temporarily store
+			std::vector<std::pair<barindex, BmsWord>> note_buffer_;
+			BmsBuffer buf_copy = (**bt);
+			for (auto nt = buf_copy.Begin(); nt != buf_copy.End(); ++nt) {
+				note_buffer_.push_back(*nt);
+				(*bt)->DeleteAt(nt->first);
+			}
+			for (auto nt = note_buffer_.begin(); nt != note_buffer_.end(); ++nt) {
+				(*bt)->Set(nt->first + bars, nt->second);
+			}
+		}
+	}
+
+	// push 1 bar
+	for (int i = BmsConst::BAR_MAX_COUNT - 1; i >= 1; i--) {
+		bar_manager_.SetRatio(i, bar_manager_.GetRatio(i - 1));
+	}
+	bar_manager_.SetRatio(0, (double)bars / bar_manager_.GetResolution());
+
+	// invalidate
+	InvalidateTimeTable();
 }
 
 void BmsBms::Copy(BmsBms& out)
@@ -690,6 +730,12 @@ BmsBms::GetNoteData(BmsNoteManager &note_manager_)
 			}
 		}
 	}
+
+	//
+	// there might be invalid note after note modification (LN-invalid-end)
+	// so check them once again
+	//
+	note_manager_.FixIncorrectLongNote();
 }
 
 void

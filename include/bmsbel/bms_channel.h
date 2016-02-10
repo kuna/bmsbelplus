@@ -31,7 +31,8 @@ public:
 
 	unsigned int GetObjectCount(barindex start = 0, barindex length = -1) const;
 	void GetObjectExistBar(std::set<barindex> &barmap) const;
-	barindex GetObjectExistsMaxPosition(barindex start) const;
+	barindex GetObjectExistsMaxPosition() const;
+	barindex GetObjectExistsFirstPosition() const;
 
 	void MultiplyBarDivisionCount(double multiplier);
 
@@ -90,6 +91,7 @@ public:
 
 	barindex GetObjectExistsMaxPosition(void) const;
 	barindex GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction func) const;
+	barindex GetObjectExistsFirstPosition(BmsChannelConditionJudgeFunction func) const;
 	void GetObjectExistBar(std::set<barindex> &barmap) const;
 
 	void MultiplyBarDivisionCount(double multiplier);

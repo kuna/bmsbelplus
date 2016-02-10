@@ -99,7 +99,25 @@ BmsChannel::Contains(const BmsWord &word) const
 
 
 barindex
-BmsChannel::GetObjectExistsMaxPosition(barindex start) const
+BmsChannel::GetObjectExistsFirstPosition() const
+{
+	bool flag = false;
+	barindex pos = 0;
+	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
+		if (!(*it)->GetObjectCount()) continue;
+		barindex tmp = (*it)->Begin()->first;
+		if (tmp < pos || !flag) {
+			pos = tmp;
+			flag = true;
+		}
+	}
+	return pos;
+}
+
+
+
+barindex
+BmsChannel::GetObjectExistsMaxPosition() const
 {
 	barindex pos = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
@@ -454,9 +472,26 @@ BmsChannelManager::GetObjectExistsMaxPosition(BmsChannelConditionJudgeFunction f
 	barindex pos = 0;
 	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
 		if ((it->second->*func)()) {
-			barindex tmp = it->second->GetObjectExistsMaxPosition(pos > 0 ? pos : 0);
+			barindex tmp = it->second->GetObjectExistsMaxPosition();
 			if (tmp > pos) {
 				pos = tmp;
+			}
+		}
+	}
+	return pos;
+}
+
+barindex
+BmsChannelManager::GetObjectExistsFirstPosition(BmsChannelConditionJudgeFunction func) const
+{
+	bool flag = false;
+	barindex pos = 0;
+	for (ConstIterator it = this->Begin(); it != this->End(); ++it) {
+		if ((it->second->*func)()) {
+			barindex tmp = it->second->GetObjectExistsFirstPosition();
+			if (tmp < pos || !flag) {
+				pos = tmp;
+				flag = true;
 			}
 		}
 	}

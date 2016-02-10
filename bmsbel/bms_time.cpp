@@ -9,12 +9,13 @@
 #define IT(a) ((a)->second)
 
 BmsTimeManager::BmsTimeManager(BmsBarManager& bar_) : bar_(bar_) {
-	// add basic(120 BPM) time signature
-	array_[0] = BmsTime(0, 0, BmsConst::BMS_BASIC_BPM);
+	Clear();
 }
 
 void BmsTimeManager::Clear() {
+	// add basic(120 BPM) time signature
 	array_.clear();
+	array_[0] = BmsTime(0, 0, BmsConst::BMS_BASIC_BPM);
 }
 
 void BmsTimeManager::Reset() {

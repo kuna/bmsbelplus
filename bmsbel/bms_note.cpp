@@ -520,39 +520,37 @@ void BmsNoteManager::FixIncorrectLongNote() {
 	// first case must be fixed.
 	// second case well.. removing note isn't solution because keysound will be deleted.
 	// (you'll get miss if you don't hit not during LN... or act like HELLCHARGE note.)
-	bool isln[10] = { false, };
+	bool isln[20] = { false, };
 	std::set<barindex> notemap;
 	GetNoteExistBar(notemap);
 	for (auto it = notemap.begin(); it != notemap.end(); ++it) {
 		barindex bar = *it;
-		for (int c = 0; c < 10; c++) {
+		for (int c = 0; c < 20; c++) {
+			BmsNote _tmp = lanes_[c].Get(bar);
 			/*
 			 * case: LNSTART reached, but currently considered as longnote status
+			 * solution: ignore current note
 			 */
-			if (lanes_[c].Get(bar).type == BmsNote::NOTE_LNSTART) {
+			if (_tmp.type == BmsNote::NOTE_LNSTART) {
 				if (isln[c] == true) {
-					BmsNote _tmp = lanes_[c].Get(bar);
-					_tmp.type = BmsNote::NOTE_LNEND;
-					lanes_[c].Set(bar, _tmp);
-					isln[c] = false;
+					lanes_[c].Delete(bar);
 				}
-				else isln[c] = false;
+				isln[c] = true;
 			}
 			/*
-			 * case: LNEND reached, but current not wasn't longnote.
+			 * case: LNEND reached, but current note wasn't longnote.
+			 * solution: set NORMAL
 			 */
-			else if (lanes_[c].Get(bar).type == BmsNote::NOTE_LNEND) {
+			else if (_tmp.type == BmsNote::NOTE_LNEND) {
 				if (isln[c] == false) {
 					auto nextit = it;
-					BmsNote _tmp = lanes_[c].Get(bar);
 					if (++nextit == notemap.end())
 						_tmp.type = BmsNote::NOTE_NORMAL;
 					else
 						_tmp.type = BmsNote::NOTE_LNSTART;
 					lanes_[c].Set(bar, _tmp);
-					isln[c] = true;
 				}
-				else isln[c] = true;
+				isln[c] = false;
 			}
 		}
 	}

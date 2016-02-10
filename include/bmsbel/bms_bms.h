@@ -25,18 +25,23 @@ public:
 	BmsSTPManager&		GetSTPManager();
 
 	unsigned int GetObjectExistsMaxMeasure() const;
+	unsigned int GetObjectExistsFirstMeasure() const;
 	barindex GetObjectExistsMaxBar() const;
 	barindex GetPlayableMaxBar() const;
 
 	void Merge(const BmsBms& other);
 
+	/*
+	 * bms modification
+	 */
 	// copy & repeat only that part - just for training.
 	// don't put this function in note class, 'cause this work need to modify ALL channels.
 	// need quite much calculation, maybe?
 	void Cut(measureindex startmeasure, measureindex endmeasure);
 	void Repeat(int repeat);
+	void Push(barindex bars);	// how much want to move bar
 
-	void Copy(BmsBms& out);
+	void Copy(BmsBms& out);		// produce same BmsBms Object
 
 	void Clear(void);
 
