@@ -310,14 +310,10 @@ BmsBms::SaveBmsFile(const char* path) {
 
 bool
 BmsBms::LoadBmsFile(const char* path) {
-	FILE *fp;
-	if (fopen_s(&fp, path, "rb") == 0) {
-		BmsParser::Parser *parser_ = new BmsParser::Parser(*this);
-		bool r = parser_->Load(path);
-		delete parser_;
-		return r;
-	}
-	else return false;
+	BmsParser::Parser *parser_ = new BmsParser::Parser(*this);
+	bool r = parser_->Load(path);
+	delete parser_;
+	return r;
 }
 
 #ifdef USE_MBCS
