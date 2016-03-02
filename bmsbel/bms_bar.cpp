@@ -23,10 +23,10 @@ BmsBarManager::operator [](unsigned int pos) const
 }
 
 void
-BmsBarManager::SetRatio(unsigned int pos, double l) {
+BmsBarManager::SetRatio(unsigned int pos, double l, bool update) {
 	if (l < 0) return;
-	barcount_[pos] *= l;
-	InvalidateCache();
+	barcount_[pos] = barresolution_ * l;
+	if (update) InvalidateCache();
 }
 
 double 

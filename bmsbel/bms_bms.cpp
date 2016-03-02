@@ -247,6 +247,7 @@ void BmsBms::Push(barindex bars) {
 		bar_manager_.SetRatio(i, bar_manager_.GetRatio(i - 1));
 	}
 	bar_manager_.SetRatio(0, (double)bars / bar_manager_.GetResolution());
+	bar_manager_.InvalidateCache();
 
 	// invalidate
 	InvalidateTimeTable();

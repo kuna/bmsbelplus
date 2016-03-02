@@ -29,7 +29,7 @@ public:
 	// returns bar count by measure index
 	unsigned int operator [](unsigned int measure) const;
 
-	void SetRatio(unsigned int measure, double l);
+	void SetRatio(unsigned int measure, double l, bool update = true);
 	double GetRatio(unsigned int measure) const;
 
 	measureindex	GetMeasureByBarNumber(barindex bar) const;
@@ -45,13 +45,13 @@ public:
 	unsigned int	GetResolution() const { return barresolution_; }
 	/** @brief set resolution of bar */
 	void			SetResolution(double d);
+	/** @brief calculate cache. called when you SetRatio() */
+	void InvalidateCache();
 private:
 	/** @brief stores each bar count per measure */
 	unsigned int	barcount_[BmsConst::BAR_MAX_COUNT];
 	/** @brief cached for fast bar/measure search <total bar / measure index> */
 	std::map<barindex, int>	barcache_;
-	/** @brief calculate cache. called when you SetRatio() */
-	void InvalidateCache();
 	/*
 	 * @brief bars per measure.
 	 * basically it's value is BmsConst::MAX_BAR_CONST
