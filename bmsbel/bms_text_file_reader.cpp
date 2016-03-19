@@ -9,7 +9,7 @@
 BmsTextFileReader::BmsTextFileReader(const std::string& filename, const char *encoding) :
 filename_(filename),
 cd_(iconv_open(BmsBelOption::DEFAULT_UNICODE_ENCODING, encoding)),
-buf_iconv_in((const char*)buf_char),
+buf_iconv_in((ICONVCHR*)buf_char),
 buf_iconv_out((char*)buf_char_utf8)
 {
 	if (!BmsUtil::OpenFile(&file_, filename.c_str(), "r")) {
@@ -61,7 +61,7 @@ BmsTextFileReader::ReadLine(std::string& buffer, bool chomp)
 	// convert encoding
 	len_char = i;
 	len_char_utf8 = BmsConst::BMS_MAX_LINE_BUFFER;
-	buf_iconv_in = (const char*)buf_char;
+	buf_iconv_in = (ICONVCHR*)buf_char;
 	buf_iconv_out = (char*)buf_char_utf8;
 	int l = iconv(cd_, &buf_iconv_in, &len_char, &buf_iconv_out, &len_char_utf8);
 	if (l < 0) {

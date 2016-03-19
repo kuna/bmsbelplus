@@ -4,7 +4,13 @@
 #include <stdio.h>
 
 #include <string>
+#ifdef _WIN32
 #include "iconv/iconv.h"
+typedef const char ICONVCHR;
+#else
+#include <iconv.h>
+typedef char ICONVCHR;
+#endif
 
 class BmsTextFileReader {
 public:
@@ -22,7 +28,7 @@ private:
   char buf_char[BmsConst::BMS_MAX_LINE_BUFFER];
   char buf_char_utf8[BmsConst::BMS_MAX_LINE_BUFFER];
   size_t len_char, len_char_utf8;
-  const char *buf_iconv_in;
+  ICONVCHR *buf_iconv_in;
   char *buf_iconv_out;
 };
 
