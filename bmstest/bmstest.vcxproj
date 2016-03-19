@@ -99,7 +99,7 @@
     <ClCompile Include="unittest1.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\bmsbel+\lib\libiconv.lib" />
+    <Library Include="..\lib\libiconv.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

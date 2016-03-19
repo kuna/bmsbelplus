@@ -31,6 +31,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\bmsbel+\lib\libiconv.lib" />
+    <Library Include="..\lib\libiconv.lib" />
   </ItemGroup>
 </Project>
