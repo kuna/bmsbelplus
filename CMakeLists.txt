@@ -1,7 +1,19 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(bmsbel)
-include_directories("include")
+find_path(ICONV_INCLUDE_DIR
+	NAMES
+		iconv.h
+	PATHS
+		/usr/include
+		/usr/local/include
+)
+include_directories(SYSTEM
+	${ICONV_INCLUDE_DIR}
+)
+include_directories(
+	"include"
+)
 file(GLOB SRC
   "bmsbel/*.cpp"
 )

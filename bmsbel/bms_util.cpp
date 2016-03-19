@@ -11,7 +11,14 @@
 #include "bmsbel/bms_define.h"
 #include "bmsbel/bms_util.h"
 #include "bmsbel/bms_exception.h"
+
+#ifdef _WIN32
 #include "iconv/iconv.h"
+typedef const char ICONVCHR;
+#else
+#include <iconv.h>
+typedef char ICONVCHR;
+#endif
 
 namespace {
 	const char HEX36_TABLE[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -213,7 +220,7 @@ bool BmsUtil::wchar_to_utf8(const wchar_t *org, char *out, int maxlen)
 		return false;
 
 	out[0] = 0;
-	const char *buf_iconv = (const char*)org;
+	ICONVCHR *buf_iconv = (ICONVCHR*)org;
 	char *but_out_iconv = (char*)out;
 	size_t len_in = wcslen(org) * 2;
 	size_t len_out = maxlen;
@@ -233,7 +240,7 @@ bool BmsUtil::utf8_to_wchar(const char *org, wchar_t *out, int maxlen)
 		return false;
 
 	out[0] = 0;
-	const char *buf_iconv = (const char*)org;
+	ICONVCHR *buf_iconv = (ICONVCHR*)org;
 	char *but_out_iconv = (char*)out;
 	size_t len_in = strlen(org);
 	size_t len_out = maxlen * 2;
@@ -253,7 +260,7 @@ bool BmsUtil::convert_to_utf8(const char *org, char *out, const char *encoding, 
 		return false;
 
 	out[0] = 0;
-	const char *buf_iconv = (const char*)org;
+	ICONVCHR *buf_iconv = (ICONVCHR*)org;
 	char *but_out_iconv = (char*)out;
 	size_t len_in = strlen(org);
 	size_t len_out = maxlen;
@@ -300,7 +307,7 @@ int BmsUtil::IsFileUTF8(const std::string& filename) {
 	for (int i = 0; i < BmsBelOption::CONVERT_ATTEMPT_LINES && NOT(feof(file)); i++) {
 		fgets(buf_char, BmsConst::BMS_MAX_LINE_BUFFER, file);
 		len_char = strlen(buf_char);
-		const char *buf_iconv = buf_char;
+		ICONVCHR *buf_iconv = (ICONVCHR*)buf_char;
 		char *but_out_iconv = (char*)buf_char_out;
 		len_char_out = BmsConst::BMS_MAX_LINE_BUFFER;		// available characters for converting
 		int iconv_ret = iconv(cd, &buf_iconv, &len_char, &but_out_iconv, &len_char_out);
