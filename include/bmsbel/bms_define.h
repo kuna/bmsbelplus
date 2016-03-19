@@ -1,8 +1,8 @@
 #ifndef BMSBEL_DEFINE_H_
 #define BMSBEL_DEFINE_H_
 
-// must define it to use lib file
-#define USING_STATIC_LIBICONV	1
+// in case if you want to use it as static lib
+//#define USING_STATIC_LIBICONV	1
 
 #include <limits>
 #include <assert.h>
