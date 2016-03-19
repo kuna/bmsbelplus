@@ -30,4 +30,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\..\..\bmsbel+\lib\libiconv.lib" />
+  </ItemGroup>
 </Project>
